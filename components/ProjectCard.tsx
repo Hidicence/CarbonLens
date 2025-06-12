@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, Pressable, Image, Alert, Modal, TouchableOpacity, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Calendar, MapPin, MoreVertical, Trash2, Edit, X, AlertCircle, Users, AlertTriangle, CheckCircle, DollarSign, MessageSquare } from 'lucide-react-native';
+import { Calendar, MapPin, MoreVertical, Trash2, Edit, X, AlertCircle, Users, AlertTriangle, CheckCircle, DollarSign } from 'lucide-react-native';
 import { Project, ProjectStatus } from '@/types/project';
 import { useProjectStore } from '@/store/projectStore';
 import { useThemeStore } from '@/store/themeStore';
 import { useLanguageStore } from '@/store/languageStore';
 import StatusBadge from './StatusBadge';
 import Button from './Button';
+import AIAssistantButton from './AIAssistantButton';
 import Colors from '@/constants/colors';
 
 interface ProjectCardProps {
@@ -56,8 +57,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
     deleteProject(project.id);
   };
 
-  const handleAIFillPress = (e: any) => {
-    e.stopPropagation(); // 防止觸發卡片點擊
+  const handleAIFillPress = () => {
     router.push(`/ai-chat/${project.id}`);
   };
 
@@ -137,13 +137,13 @@ export default function ProjectCard({ project }: ProjectCardProps) {
                 <View style={styles.header}>
                   <Text style={[styles.title, styles.titleWithBackground]} numberOfLines={1}>{project.name}</Text>
                   <View style={styles.headerRight}>
-                    <TouchableOpacity 
-                      style={styles.aiButton}
+                    <AIAssistantButton
+                      variant="primary"
+                      size="small"
+                      title="AI填寫"
                       onPress={handleAIFillPress}
-                    >
-                      <MessageSquare size={18} color="white" />
-                      <Text style={styles.aiButtonText}>AI填寫</Text>
-                    </TouchableOpacity>
+                      style={styles.aiButton}
+                    />
                     <StatusBadge status={project.status} />
                     <Pressable 
                       style={styles.optionsButton}
@@ -219,13 +219,13 @@ export default function ProjectCard({ project }: ProjectCardProps) {
           <View style={styles.header}>
             <Text style={[styles.title, { color: theme.text }]} numberOfLines={1}>{project.name}</Text>
             <View style={styles.headerRight}>
-              <TouchableOpacity 
-                style={[styles.aiButton, { backgroundColor: 'rgba(59, 130, 246, 1)' }]}
+              <AIAssistantButton
+                variant="secondary"
+                size="small"
+                title="AI填寫"
                 onPress={handleAIFillPress}
-              >
-                <MessageSquare size={18} color="white" />
-                <Text style={styles.aiButtonText}>AI填寫</Text>
-              </TouchableOpacity>
+                style={styles.aiButton}
+              />
               <StatusBadge status={project.status} />
               <Pressable 
                 style={styles.optionsButton}

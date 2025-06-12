@@ -1,12 +1,13 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { View, Text, StyleSheet, FlatList, SafeAreaView, Pressable, TextInput, Dimensions, Platform, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Plus, Search, FolderPlus, X, BarChart3, TrendingDown, TrendingUp, ChevronRight, Building, Settings, Wrench, MessageSquare } from 'lucide-react-native';
+import { Plus, Search, FolderPlus, X, BarChart3, TrendingDown, TrendingUp, ChevronRight, Building, Settings, Wrench } from 'lucide-react-native';
 import { useProjectStore } from '@/store/projectStore';
 import { useFloatingAIStore } from '@/store/floatingAIStore';
 import ProjectCard from '@/components/ProjectCard';
 import EmptyState from '@/components/EmptyState';
 import PageTitle from '@/components/PageTitle';
+import AIAssistantButton from '@/components/AIAssistantButton';
 import Colors from '@/constants/colors';
 import { useThemeStore } from '@/store/themeStore';
 import { formatEmissions } from '@/utils/helpers';
@@ -474,15 +475,13 @@ export default function ProjectsScreen() {
         
         {/* 快捷操作按鈕 */}
         <View style={styles.operationalQuickActions}>
-          <TouchableOpacity 
-            style={[styles.operationalQuickAction, { backgroundColor: '#10B981', borderWidth: 1, borderColor: '#10B981' }]}
+          <AIAssistantButton
+            variant="primary"
+            size="medium"
+            title="AI助手"
             onPress={() => router.push('/operational/ai-assistant')}
-          >
-            <MessageSquare size={18} color="white" />
-            <Text style={[styles.operationalQuickActionText, { color: 'white' }]}>
-              AI 助手
-            </Text>
-          </TouchableOpacity>
+            style={styles.operationalQuickAction}
+          />
           
           <TouchableOpacity 
             style={[styles.operationalQuickAction, { backgroundColor: theme.background, borderWidth: 1, borderColor: theme.border }]}
