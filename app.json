@@ -1,0 +1,56 @@
+{
+  "expo": {
+    "name": "Carbon Tracker",
+    "slug": "carbon-tracker",
+    "version": "1.0.6",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "carbon-tracker",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/images/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#1E1E1E"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.carbonlens.app",
+      "runtimeVersion": {
+        "policy": "appVersion"
+      },
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#1E1E1E"
+      },
+      "package": "com.carbonlens.app",
+      "runtimeVersion": "1.0.6"
+    },
+    "web": {
+      "bundler": "metro",
+      "favicon": "./assets/images/favicon.png"
+    },
+    "plugins": [
+      "expo-router"
+    ],
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "80220fcd-95e7-4fcf-9c23-f3cfb22d7808"
+      }
+    },
+    "owner": "hidicence",
+    "updates": {
+      "url": "https://u.expo.dev/80220fcd-95e7-4fcf-9c23-f3cfb22d7808"
+    }
+  }
+}

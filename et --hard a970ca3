@@ -1,0 +1,3 @@
+error: inflate: data stream error (incorrect data check)
+error: corrupt loose object '0eadf2a99c20926ac5e55088f1f40770e45b6a96'
+fatal: unable to read 0eadf2a99c20926ac5e55088f1f40770e45b6a96

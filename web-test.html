@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CarbonLens Web 測試</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .container {
+            text-align: center;
+            padding: 2rem;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+        }
+        button {
+            background: #007AFF;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 10px;
+        }
+        button:hover {
+            background: #005ce6;
+        }
+        #status {
+            margin-top: 20px;
+            padding: 10px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌱 CarbonLens Web 基本測試</h1>
+        <p>如果您能看到這個頁面，表示 Web 服務器正常運行</p>
+        
+        <button onclick="testClick()">點擊測試 JavaScript</button>
+        <button onclick="testConsole()">測試控制台</button>
+        
+        <div id="status">
+            <p>狀態：頁面已載入 ✅</p>
+            <p>時間：<span id="time"></span></p>
+        </div>
+    </div>
+
+    <script>
+        let clickCount = 0;
+        
+        function updateTime() {
+            document.getElementById('time').textContent = new Date().toLocaleString('zh-TW');
+        }
+        
+        function testClick() {
+            clickCount++;
+            document.getElementById('status').innerHTML += 
+                `<p>按鈕點擊 ${clickCount} 次 ✅</p>`;
+            console.log('按鈕被點擊:', clickCount);
+        }
+        
+        function testConsole() {
+            console.log('控制台測試:', {
+                timestamp: new Date(),
+                userAgent: navigator.userAgent,
+                platform: navigator.platform
+            });
+            document.getElementById('status').innerHTML += 
+                '<p>控制台測試完成 ✅ (請查看瀏覽器開發者工具)</p>';
+        }
+        
+        // 初始化
+        updateTime();
+        setInterval(updateTime, 1000);
+        
+        console.log('CarbonLens Web 測試頁面已載入');
+    </script>
+</body>
+</html> 
