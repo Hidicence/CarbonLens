@@ -4,11 +4,11 @@ import { TransportCalculationParams, TransportEquipment, SelectedEquipmentItem }
 import Colors from '@/constants/colors';
 
 // Format emissions to display with units
-export const formatEmissions = (amount: number): string => {
+export const formatEmissions = (amount: number, t?: any): string => {
   if (amount >= 1000) {
-    return `${(amount / 1000).toFixed(2)} 噸CO₂e`;
+    return `${(amount / 1000).toFixed(2)} ${t ? t('units.tonnes') : '噸'}CO₂e`;
   }
-  return `${amount.toFixed(2)} 公斤CO₂e`;
+  return `${amount.toFixed(2)} ${t ? t('units.kg') : '公斤'}CO₂e`;
 };
 
 // Format currency to display with units
@@ -155,14 +155,14 @@ export const getMostRecentDate = (records: EmissionRecord[]): string => {
 };
 
 // Get stage label
-export const getStageLabel = (stage: ProductionStage): string => {
+export const getStageLabel = (stage: ProductionStage, t?: any): string => {
   switch(stage) {
     case 'pre-production':
-      return '前期製作';
+      return t ? t('stage.pre-production') : '前期製作';
     case 'production':
-      return '拍攝製作';
+      return t ? t('stage.production') : '拍攝製作';
     case 'post-production':
-      return '後期製作';
+      return t ? t('stage.post-production') : '後期製作';
     default:
       return '';
   }

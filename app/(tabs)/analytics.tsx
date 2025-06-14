@@ -433,7 +433,7 @@ export default function AnalyticsScreen() {
       <View style={styles.statsGrid}>
         <StatCard
           title={t('emissions.total')}
-          value={formatEmissions(overallStats.totalEmissions)}
+          value={formatEmissions(overallStats.totalEmissions, t)}
           change={0}
           icon={Globe}
           color="#3b82f6"
@@ -450,7 +450,7 @@ export default function AnalyticsScreen() {
       <View style={styles.statsGrid}>
         <StatCard
           title={t('emissions.average')}
-          value={formatEmissions(overallStats.averageEmissions)}
+          value={formatEmissions(overallStats.averageEmissions, t)}
           change={0}
           icon={BarChart3}
           color="#f59e0b"
@@ -465,7 +465,7 @@ export default function AnalyticsScreen() {
       </View>
 
       {/* 趨勢圖表 */}
-      <ChartCard title="最近排放趨勢">
+              <ChartCard title={t('analytics.trends.recent.emissions')}>
         {chartData.labels.length > 0 ? (
           <LineChartAdapter
             data={chartData}
@@ -490,7 +490,7 @@ export default function AnalyticsScreen() {
         <Text style={[styles.insightTitle, { color: theme.text }]}>{t('analytics.insights')}</Text>
         <Text style={[styles.insightText, { color: theme.secondaryText }]}>
           {overallStats.totalEmissions > 0 
-            ? `${t('analytics.insights.total.emissions.prefix')} ${formatEmissions(overallStats.totalEmissions)}${t('analytics.insights.optimization.suffix')}`
+            ? `${t('analytics.insights.total.emissions.prefix')} ${formatEmissions(overallStats.totalEmissions, t)}${t('analytics.insights.optimization.suffix')}`
             : t('analytics.insights.no.data')
           }
         </Text>
@@ -516,7 +516,7 @@ export default function AnalyticsScreen() {
                   <View style={styles.projectInfo}>
                     <Text style={[styles.projectName, { color: theme.text }]}>{project.name}</Text>
                     <Text style={[styles.projectEmissions, { color: theme.secondaryText }]}>
-                      {formatEmissions(projectSummary.totalEmissions)}
+                      {formatEmissions(projectSummary.totalEmissions, t)}
                     </Text>
                   </View>
                   <View style={[styles.statusBadge, { 
@@ -558,7 +558,7 @@ export default function AnalyticsScreen() {
               </Text>
             </View>
             <Text style={[styles.statValue, { color: theme.text }]}>
-              {formatEmissions(overallStageStats.stats['pre-production'])}
+              {formatEmissions(overallStageStats.stats['pre-production'], t)}
             </Text>
             <Text style={[styles.statLabel, { color: theme.secondaryText }]}>{t('stage.pre-production')}</Text>
           </View>
@@ -573,7 +573,7 @@ export default function AnalyticsScreen() {
               </Text>
             </View>
             <Text style={[styles.statValue, { color: theme.text }]}>
-              {formatEmissions(overallStageStats.stats['production'])}
+              {formatEmissions(overallStageStats.stats['production'], t)}
             </Text>
             <Text style={[styles.statLabel, { color: theme.secondaryText }]}>{t('stage.production')}</Text>
           </View>
@@ -590,7 +590,7 @@ export default function AnalyticsScreen() {
               </Text>
             </View>
             <Text style={[styles.statValue, { color: theme.text }]}>
-              {formatEmissions(overallStageStats.stats['post-production'])}
+              {formatEmissions(overallStageStats.stats['post-production'], t)}
             </Text>
             <Text style={[styles.statLabel, { color: theme.secondaryText }]}>{t('stage.post-production')}</Text>
           </View>
@@ -605,14 +605,14 @@ export default function AnalyticsScreen() {
               </Text>
             </View>
             <Text style={[styles.statValue, { color: theme.text }]}>
-              {formatEmissions(overallStageStats.total)}
+              {formatEmissions(overallStageStats.total, t)}
             </Text>
             <Text style={[styles.statLabel, { color: theme.secondaryText }]}>{t('emissions.total')}</Text>
           </View>
         </View>
 
         {/* 階段分佈圖表 */}
-        <ChartCard title="生命週期階段分佈">
+        <ChartCard title={t('analytics.lifecycle.stage.distribution')}>
           {stageChartData.length > 0 ? (
             <PieChartAdapter
               data={stageChartData}
@@ -628,7 +628,7 @@ export default function AnalyticsScreen() {
             <View style={styles.noDataContainer}>
               <Layers size={32} color={theme.secondaryText} />
               <Text style={[styles.noDataText, { color: theme.secondaryText }]}>
-                暫無階段數據
+                {t('analytics.common.no.stage.data')}
               </Text>
             </View>
           )}
@@ -636,16 +636,15 @@ export default function AnalyticsScreen() {
 
         {/* 營運分攤說明 */}
         <View style={[styles.insightCard, { backgroundColor: theme.card }]}>
-          <Text style={[styles.insightTitle, { color: theme.text }]}>營運分攤邏輯</Text>
+          <Text style={[styles.insightTitle, { color: theme.text }]}>{t('analytics.operational.allocation.logic')}</Text>
           <Text style={[styles.insightText, { color: theme.secondaryText }]}>
-            日常營運排放已按照專業碳足跡管理原則分攤：60% 歸類為前期製作階段，40% 歸類為後期製作階段。
-            這樣的分配更準確地反映了營運活動對各生命週期階段的影響。
+            {t('analytics.operational.allocation.description')}
           </Text>
         </View>
 
         {/* 專案階段詳情 */}
         <View style={[styles.projectCard, { backgroundColor: theme.card }]}>
-          <Text style={[styles.sectionTitle, { color: theme.text }]}>各專案階段明細</Text>
+          <Text style={[styles.sectionTitle, { color: theme.text }]}>{t('analytics.project.stage.details')}</Text>
           {(projects && projects.length > 0) ? (
             <View style={styles.projectList}>
               {projects.map((project) => {
@@ -661,32 +660,32 @@ export default function AnalyticsScreen() {
                     
                     <View style={styles.stageBreakdown}>
                       <View style={styles.stageItem}>
-                        <Text style={[styles.stageLabel, { color: '#3b82f6' }]}>前期</Text>
+                        <Text style={[styles.stageLabel, { color: '#3b82f6' }]}>{t('analytics.stage.labels.pre-production')}</Text>
                         <Text style={[styles.stageValue, { color: theme.text }]}>
-                          {formatEmissions(stageEmissions['pre-production'])}
+                          {formatEmissions(stageEmissions['pre-production'], t)}
                         </Text>
                         {operationalAllocation && operationalAllocation['pre-production'] > 0 && (
                           <Text style={[styles.stageAllocation, { color: theme.secondaryText }]}>
-                            含營運 {formatEmissions(operationalAllocation['pre-production'])}
+                            {t('analytics.common.contains.operational')} {formatEmissions(operationalAllocation['pre-production'], t)}
                           </Text>
                         )}
                       </View>
                       
                       <View style={styles.stageItem}>
-                        <Text style={[styles.stageLabel, { color: '#f59e0b' }]}>拍攝</Text>
+                        <Text style={[styles.stageLabel, { color: '#f59e0b' }]}>{t('analytics.stage.labels.production')}</Text>
                         <Text style={[styles.stageValue, { color: theme.text }]}>
-                          {formatEmissions(stageEmissions['production'])}
+                          {formatEmissions(stageEmissions['production'], t)}
                         </Text>
                       </View>
                       
                       <View style={styles.stageItem}>
-                        <Text style={[styles.stageLabel, { color: '#10b981' }]}>後期</Text>
+                        <Text style={[styles.stageLabel, { color: '#10b981' }]}>{t('analytics.stage.labels.post-production')}</Text>
                         <Text style={[styles.stageValue, { color: theme.text }]}>
-                          {formatEmissions(stageEmissions['post-production'])}
+                          {formatEmissions(stageEmissions['post-production'], t)}
                         </Text>
                         {operationalAllocation && operationalAllocation['post-production'] > 0 && (
                           <Text style={[styles.stageAllocation, { color: theme.secondaryText }]}>
-                            含營運 {formatEmissions(operationalAllocation['post-production'])}
+                            {t('analytics.common.contains.operational')} {formatEmissions(operationalAllocation['post-production'], t)}
                           </Text>
                         )}
                       </View>
@@ -699,7 +698,7 @@ export default function AnalyticsScreen() {
             <View style={styles.noDataContainer}>
               <Target size={32} color={theme.secondaryText} />
               <Text style={[styles.noDataText, { color: theme.secondaryText }]}>
-                暫無專案數據
+                {t('analytics.common.no.project.data')}
               </Text>
             </View>
           )}
@@ -720,7 +719,7 @@ export default function AnalyticsScreen() {
                 <TrendingUp size={20} color="#8b5cf6" />
               </View>
               <Text style={[styles.statChangeText, { color: '#8b5cf6' }]}>
-                核心指標
+                {t('analytics.common.core.indicators')}
               </Text>
             </View>
             <Text style={[styles.statValue, { color: theme.text }]}>
@@ -735,19 +734,19 @@ export default function AnalyticsScreen() {
                 <Activity size={20} color="#f59e0b" />
               </View>
               <Text style={[styles.statChangeText, { color: '#f59e0b' }]}>
-                日均效率
+                {t('analytics.common.daily.efficiency')}
               </Text>
             </View>
             <Text style={[styles.statValue, { color: theme.text }]}>
-              {formatEmissions(efficiencyStats.avgDailyEmissions)}
+              {formatEmissions(efficiencyStats.avgDailyEmissions, t)}
             </Text>
-            <Text style={[styles.statLabel, { color: theme.secondaryText }]}>平均每日排放</Text>
+            <Text style={[styles.statLabel, { color: theme.secondaryText }]}>{t('analytics.common.avg.daily.emissions')}</Text>
           </View>
         </View>
 
         {/* 專案效率排名 */}
         <View style={[styles.projectCard, { backgroundColor: theme.card }]}>
-          <Text style={[styles.sectionTitle, { color: theme.text }]}>專案效率排名</Text>
+          <Text style={[styles.sectionTitle, { color: theme.text }]}>{t('analytics.project.efficiency.ranking')}</Text>
           {efficiencyStats.projectEfficiency.length > 0 ? (
             <View style={styles.projectList}>
               {efficiencyStats.projectEfficiency
@@ -773,7 +772,7 @@ export default function AnalyticsScreen() {
                   </View>
                   <View style={styles.efficiencyMetrics}>
                     <Text style={[styles.metricText, { color: theme.secondaryText }]}>
-                      {formatEmissions(project.totalEmissions)}
+                      {formatEmissions(project.totalEmissions, t)}
                     </Text>
                     <Text style={[styles.metricText, { color: theme.secondaryText }]}>
                       NT$ {(project.budget || 0).toLocaleString()}
@@ -786,14 +785,14 @@ export default function AnalyticsScreen() {
             <View style={styles.noDataContainer}>
               <Target size={32} color={theme.secondaryText} />
               <Text style={[styles.noDataText, { color: theme.secondaryText }]}>
-                暫無專案效率數據
+                {t('analytics.common.no.efficiency.data')}
               </Text>
             </View>
           )}
         </View>
 
         {/* 效率趨勢圖 */}
-        <ChartCard title="效率趨勢分析">
+        <ChartCard title={t('analytics.efficiency.trend.analysis')}>
           {efficiencyStats.monthlyTrend.length > 0 ? (
             <LineChartAdapter
               data={{
@@ -812,7 +811,7 @@ export default function AnalyticsScreen() {
             <View style={styles.noDataContainer}>
               <TrendingUp size={32} color={theme.secondaryText} />
               <Text style={[styles.noDataText, { color: theme.secondaryText }]}>
-                暫無趨勢數據
+                {t('analytics.common.no.trend.data')}
               </Text>
             </View>
           )}
@@ -820,32 +819,35 @@ export default function AnalyticsScreen() {
 
         {/* 效率洞察 */}
         <View style={[styles.insightCard, { backgroundColor: theme.card }]}>
-          <Text style={[styles.insightTitle, { color: theme.text }]}>效率分析洞察</Text>
+          <Text style={[styles.insightTitle, { color: theme.text }]}>{t('analytics.efficiency.analysis.insights')}</Text>
           <Text style={[styles.insightText, { color: theme.secondaryText }]}>
             {efficiencyStats.bestProject && efficiencyStats.worstProject
-              ? `效率最佳專案「${efficiencyStats.bestProject.projectName}」每元預算產生 ${efficiencyStats.bestProject.carbonPerBudget.toFixed(4)} kg CO₂e，` +
-                `而「${efficiencyStats.worstProject.projectName}」為 ${efficiencyStats.worstProject.carbonPerBudget.toFixed(4)} kg CO₂e。` +
-                `建議分析高效專案的成功做法，並應用到其他專案中。`
+              ? t('analytics.efficiency.best.project.text')
+                .replace('{bestProjectName}', efficiencyStats.bestProject.projectName)
+                .replace('{bestValue}', efficiencyStats.bestProject.carbonPerBudget.toFixed(4))
+                .replace('{worstProjectName}', efficiencyStats.worstProject.projectName)
+                .replace('{worstValue}', efficiencyStats.worstProject.carbonPerBudget.toFixed(4))
               : efficiencyStats.carbonPerBudget > 0
-              ? `目前整體碳排放效率為每元預算 ${efficiencyStats.carbonPerBudget.toFixed(4)} kg CO₂e，` +
-                `平均每日排放 ${formatEmissions(efficiencyStats.avgDailyEmissions)}。持續優化可進一步提升效率。`
-              : '開始記錄專案數據以獲得效率分析洞察。'
+              ? t('analytics.efficiency.current.efficiency.text')
+                .replace('{efficiency}', efficiencyStats.carbonPerBudget.toFixed(4))
+                .replace('{dailyEmissions}', formatEmissions(efficiencyStats.avgDailyEmissions, t))
+              : t('analytics.efficiency.start.recording')
             }
           </Text>
         </View>
 
         {/* 效率改善建議 */}
         <View style={[styles.projectCard, { backgroundColor: theme.card }]}>
-          <Text style={[styles.sectionTitle, { color: theme.text }]}>效率改善建議</Text>
+          <Text style={[styles.sectionTitle, { color: theme.text }]}>{t('analytics.efficiency.improvement.suggestions')}</Text>
           <View style={styles.suggestionList}>
             <View style={styles.suggestionItem}>
               <View style={[styles.suggestionIcon, { backgroundColor: '#10b981' + '15' }]}>
                 <Target size={16} color="#10b981" />
               </View>
               <View style={styles.suggestionContent}>
-                <Text style={[styles.suggestionTitle, { color: theme.text }]}>預算配置優化</Text>
+                <Text style={[styles.suggestionTitle, { color: theme.text }]}>{t('analytics.efficiency.budget.optimization.title')}</Text>
                 <Text style={[styles.suggestionText, { color: theme.secondaryText }]}>
-                  根據效率排名調整預算分配，將更多資源投入高效專案
+                  {t('analytics.efficiency.budget.optimization.description')}
                 </Text>
               </View>
             </View>
@@ -855,9 +857,9 @@ export default function AnalyticsScreen() {
                 <Activity size={16} color="#3b82f6" />
               </View>
               <View style={styles.suggestionContent}>
-                <Text style={[styles.suggestionTitle, { color: theme.text }]}>流程標準化</Text>
+                <Text style={[styles.suggestionTitle, { color: theme.text }]}>{t('analytics.efficiency.process.standardization.title')}</Text>
                 <Text style={[styles.suggestionText, { color: theme.secondaryText }]}>
-                  將高效專案的最佳實踐制定為標準流程，提升整體效率
+                  {t('analytics.efficiency.process.standardization.description')}
                 </Text>
               </View>
             </View>
@@ -867,9 +869,9 @@ export default function AnalyticsScreen() {
                 <TrendingUp size={16} color="#f59e0b" />
               </View>
               <View style={styles.suggestionContent}>
-                <Text style={[styles.suggestionTitle, { color: theme.text }]}>持續監控</Text>
+                <Text style={[styles.suggestionTitle, { color: theme.text }]}>{t('analytics.efficiency.continuous.monitoring.title')}</Text>
                 <Text style={[styles.suggestionText, { color: theme.secondaryText }]}>
-                  建立定期效率評估機制，及時發現並解決效率問題
+                  {t('analytics.efficiency.continuous.monitoring.description')}
                 </Text>
               </View>
             </View>
@@ -885,7 +887,7 @@ export default function AnalyticsScreen() {
       if (isGeneratingReport) return;
       
       if (!projects || projects.length === 0) {
-        Alert.alert('無法生成報告', '您需要至少創建一個專案才能生成報告');
+        Alert.alert(t('analytics.reports.generate.no.projects'), t('analytics.reports.generate.no.projects.message'));
         return;
       }
 
@@ -908,17 +910,17 @@ export default function AnalyticsScreen() {
       const filePath = await generateCarbonFootprintReport(filteredProjects, filteredSummaries, reportOptions, organization);
       
               Alert.alert(
-        '報告生成成功',
-        '專業碳足跡報告已生成完成',
+        t('analytics.reports.generate.success'),
+        t('analytics.reports.generate.success.message'),
         [
-          { text: '查看報告', onPress: () => console.log('查看報告:', filePath) },
-          { text: '分享報告', onPress: () => shareReport(filePath, organization.name) },
-          { text: '確定', style: 'cancel' }
+          { text: t('analytics.reports.generate.view.report'), onPress: () => console.log('查看報告:', filePath) },
+          { text: t('analytics.reports.generate.share.report'), onPress: () => shareReport(filePath, organization.name) },
+          { text: t('analytics.reports.generate.confirm'), style: 'cancel' }
         ]
       );
     } catch (error) {
       console.error('報告生成失敗:', error);
-      Alert.alert('生成失敗', '報告生成失敗，請稍後重試');
+      Alert.alert(t('analytics.reports.generate.error'), t('analytics.reports.generate.error.message'));
     } finally {
       setIsGeneratingReport(false);
     }
@@ -937,7 +939,7 @@ export default function AnalyticsScreen() {
       {/* 報告統計概覽 */}
       <View style={[styles.chartCard, { backgroundColor: theme.card }]}>
         <Text style={[styles.chartTitle, { color: theme.text }]}>
-          報告生成中心
+          {t('analytics.reports.generation.center')}
         </Text>
         
         <View style={styles.statsGrid}>
@@ -951,7 +953,7 @@ export default function AnalyticsScreen() {
               {projects ? projects.length : 0}
             </Text>
             <Text style={[styles.statLabel, { color: theme.secondaryText }]}>
-              可分析專案
+              {t('analytics.common.available.projects')}
             </Text>
           </View>
           
@@ -962,10 +964,10 @@ export default function AnalyticsScreen() {
               </View>
             </View>
             <Text style={[styles.statValue, { color: theme.text }]}>
-              {formatEmissions(overallStats.totalEmissions)}
+              {formatEmissions(overallStats.totalEmissions, t)}
             </Text>
             <Text style={[styles.statLabel, { color: theme.secondaryText }]}>
-              總排放量
+              {t('analytics.common.total.emissions')}
             </Text>
           </View>
         </View>
@@ -974,7 +976,7 @@ export default function AnalyticsScreen() {
       {/* 專案選擇 */}
       <View style={[styles.chartCard, { backgroundColor: theme.card }]}>
         <Text style={[styles.chartTitle, { color: theme.text }]}>
-          專案選擇
+          {t('analytics.reports.project.selection')}
         </Text>
         
         <View style={styles.projectSelectionContainer}>
@@ -994,7 +996,7 @@ export default function AnalyticsScreen() {
                                   color: (selectedProjects && selectedProjects.length === 0) ? theme.primary : theme.text
               }
             ]}>
-                              {(selectedProjects && selectedProjects.length === 0) ? '✓ ' : ''}全部專案 ({projects ? projects.length : 0})
+                              {(selectedProjects && selectedProjects.length === 0) ? '✓ ' : ''}{t('analytics.common.all.projects')} ({projects ? projects.length : 0})
             </Text>
           </Pressable>
           
@@ -1036,7 +1038,7 @@ export default function AnalyticsScreen() {
                         {project.name}
                       </Text>
                       <Text style={[styles.projectEmissions, { color: theme.secondaryText }]}>
-                        {formatEmissions(summary?.totalEmissions || 0)} • {project.status === 'active' ? t('status.active') : project.status === 'completed' ? '已完成' : t('status.planning')}
+                        {formatEmissions(summary?.totalEmissions || 0, t)} • {project.status === 'active' ? t('status.active') : project.status === 'completed' ? '已完成' : t('status.planning')}
                       </Text>
                     </View>
                   </View>
@@ -1050,7 +1052,7 @@ export default function AnalyticsScreen() {
       {/* 報告類型選擇 */}
       <View style={[styles.chartCard, { backgroundColor: theme.card }]}>
         <Text style={[styles.chartTitle, { color: theme.text }]}>
-          報告設定
+          {t('analytics.reports.settings')}
         </Text>
         
         <View style={styles.reportFormatContainer}>
@@ -1073,12 +1075,10 @@ export default function AnalyticsScreen() {
                   { color: theme.text },
                   reportOptions.format === format && { color: theme.primary }
                 ]}>
-                  {format === 'comprehensive' ? '完整報告' : 
-                   format === 'summary' ? '摘要報告' : '執行摘要'}
+                  {t(`analytics.reports.format.${format}`)}
                 </Text>
                 <Text style={[styles.formatOptionDescription, { color: theme.secondaryText }]}>
-                  {format === 'comprehensive' ? '包含所有分析模組和詳細數據' : 
-                   format === 'summary' ? '核心指標和關鍵洞察' : '高階主管專用簡報'}
+                  {t(`analytics.reports.format.${format}.desc`)}
                 </Text>
               </View>
               {reportOptions.format === format && (
@@ -1092,18 +1092,18 @@ export default function AnalyticsScreen() {
       {/* 報告內容選項 */}
       <View style={[styles.chartCard, { backgroundColor: theme.card }]}>
         <Text style={[styles.chartTitle, { color: theme.text }]}>
-          報告內容
+          {t('analytics.reports.content')}
         </Text>
         
         <View style={styles.reportOptionsContainer}>
           {[
-            { key: 'includeOrganizationInfo', title: '組織基本資訊', icon: Building },
-            { key: 'includeExecutiveSummary', title: '執行摘要', icon: FileText },
-            { key: 'includeEmissionInventory', title: '排放清冊', icon: BarChart3 },
-            { key: 'includeLifecycleAnalysis', title: '生命週期分析', icon: Layers },
-            { key: 'includeEfficiencyMetrics', title: t('analytics.efficiency.metrics'), icon: TrendingUp },
-            { key: 'includeRecommendations', title: '減碳建議', icon: Lightbulb },
-            { key: 'includeDataSources', title: '數據來源', icon: Info },
+            { key: 'includeOrganizationInfo', title: t('analytics.reports.content.organization.info'), icon: Building },
+            { key: 'includeExecutiveSummary', title: t('analytics.reports.content.executive.summary'), icon: FileText },
+            { key: 'includeEmissionInventory', title: t('analytics.reports.content.emission.inventory'), icon: BarChart3 },
+            { key: 'includeLifecycleAnalysis', title: t('analytics.reports.content.lifecycle.analysis'), icon: Layers },
+            { key: 'includeEfficiencyMetrics', title: t('analytics.reports.content.efficiency.metrics'), icon: TrendingUp },
+            { key: 'includeRecommendations', title: t('analytics.reports.content.recommendations'), icon: Lightbulb },
+            { key: 'includeDataSources', title: t('analytics.reports.content.data.sources'), icon: Info },
           ].map(({ key, title, icon: Icon }) => (
             <Pressable
               key={key}
@@ -1136,13 +1136,11 @@ export default function AnalyticsScreen() {
         <View style={styles.insightHeader}>
           <Info size={20} color={theme.primary} />
           <Text style={[styles.insightTitle, { color: theme.text }]}>
-            國際標準符合性
+            {t('analytics.reports.international.standards.compliance')}
           </Text>
         </View>
         <Text style={[styles.insightText, { color: theme.secondaryText }]}>
-          本報告遵循 ISO 14064-1:2018 和 GHG Protocol 國際標準，
-          包含完整的排放係數來源、計算方法學和數據品質說明，
-          適用於第三方審查和國際客戶展示。
+          {t('analytics.reports.international.standards.description')}
         </Text>
       </View>
 
@@ -1162,15 +1160,15 @@ export default function AnalyticsScreen() {
             <Download size={20} color="white" />
           )}
           <Text style={styles.generateButtonText}>
-            {isGeneratingReport ? '生成中...' : 
-                           (selectedProjects && selectedProjects.length > 0)
-              ? `生成報告 (${selectedProjects.length}個專案)`
-              : `生成報告 (全部${projects ? projects.length : 0}個專案)`}
+            {isGeneratingReport ? t('analytics.reports.generate.generating') : 
+             (selectedProjects && selectedProjects.length > 0)
+              ? t('analytics.reports.generate.selected.projects').replace('{count}', selectedProjects.length.toString())
+              : t('analytics.reports.generate.all.projects').replace('{count}', (projects ? projects.length : 0).toString())}
           </Text>
         </Pressable>
         
         <Text style={[styles.generateButtonDescription, { color: theme.secondaryText }]}>
-          生成符合國際標準的碳足跡報告，支援審查和客戶展示
+          {t('analytics.reports.generate.description')}
         </Text>
       </View>
     </View>
@@ -1186,7 +1184,7 @@ export default function AnalyticsScreen() {
             {title}
           </Text>
           <Text style={[styles.placeholderSubtitle, { color: theme.secondaryText }]}>
-            功能開發中，敬請期待
+            {t('analytics.common.development.in.progress')}
           </Text>
         </View>
       </View>
