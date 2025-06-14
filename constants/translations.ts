@@ -321,6 +321,8 @@ const translations: TranslationSet = {
     'analytics.insights.optimization.suffix': '。建議專注於高排放專案的優化機會。',
     'analytics.insights.no.data': '尚無排放數據。開始為您的第一個專案記錄碳排放！',
     'analytics.no.trend.data': '無趨勢數據可用',
+    'analytics.stage.analysis': '階段分析',
+    'analytics.category.distribution': '類別分佈',
     'emissions.average': '平均排放量',
     
     // Operational categories and sources
@@ -794,6 +796,8 @@ const translations: TranslationSet = {
     'analytics.insights.optimization.suffix': '. Recommend focusing on optimization opportunities for high-emission projects.',
     'analytics.insights.no.data': 'No emission data yet. Start recording carbon emissions for your first project!',
     'analytics.no.trend.data': 'No trend data available',
+    'analytics.stage.analysis': 'Stage Analysis',
+    'analytics.category.distribution': 'Category Distribution',
     'emissions.average': 'Average Emissions',
     
     // Operational categories and sources (English)
