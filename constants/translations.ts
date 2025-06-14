@@ -674,6 +674,30 @@ const translations: TranslationSet = {
     // 最終遺漏的翻譯鍵 - AI 分析失敗
     'add.record.ai.analysis.failed': 'AI 分析失敗',
     'add.record.ai.analysis.failed.message': '文件分析過程中發生錯誤，請稍後重試或手動填寫資料',
+
+    // 分析頁面完整翻譯
+    'analytics.record.count': '記錄數量',
+    'stage.pre-production': '前期製作',
+    'stage.production': '拍攝製作',
+    'stage.post-production': '後期製作',
+    'status.active': '進行中',
+    'status.planning': '規劃中',
+    'status.completed': '已完成',
+    
+    // 階段分析頁面翻譯
+    'stage.invalid.parameter': '無效的階段參數',
+    'stage.no.records': '無記錄',
+    'stage.carbon.analysis': '碳排放分析',
+    'stage.total.emissions': '總碳排放量',
+    'stage.emission.records': '排放記錄',
+    'stage.related.projects': '相關專案',
+    'stage.recent.record': '最近記錄',
+    'stage.category.distribution': '排放類別分佈',
+    'stage.recent.trends': '最近記錄趨勢',
+    'stage.category.analysis': '排放類別分析',
+    'stage.record.count': '筆記錄',
+    'stage.no.records.message': '此階段尚無排放記錄',
+    'stage.recent.records': '最近記錄',
   },
   en: {
     // Common
@@ -1340,6 +1364,30 @@ const translations: TranslationSet = {
     // Final missing translation keys - AI analysis failed
     'add.record.ai.analysis.failed': 'AI Analysis Failed',
     'add.record.ai.analysis.failed.message': 'An error occurred during document analysis. Please try again later or fill in the data manually',
+
+    // Analytics page complete translations
+    'analytics.record.count': 'Record Count',
+    'stage.pre-production': 'Pre-production',
+    'stage.production': 'Production',
+    'stage.post-production': 'Post-production',
+    'status.active': 'Active',
+    'status.planning': 'Planning',
+    'status.completed': 'Completed',
+    
+    // Stage analysis page translations
+    'stage.invalid.parameter': 'Invalid stage parameter',
+    'stage.no.records': 'No records',
+    'stage.carbon.analysis': 'Carbon Emission Analysis',
+    'stage.total.emissions': 'Total Emissions',
+    'stage.emission.records': 'Emission Records',
+    'stage.related.projects': 'Related Projects',
+    'stage.recent.record': 'Recent Record',
+    'stage.category.distribution': 'Category Distribution',
+    'stage.recent.trends': 'Recent Record Trends',
+    'stage.category.analysis': 'Category Analysis',
+    'stage.record.count': 'records',
+    'stage.no.records.message': 'No emission records for this stage',
+    'stage.recent.records': 'Recent Records',
   }
 };
 

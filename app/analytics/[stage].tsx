@@ -11,6 +11,7 @@ import EmissionRecordItem from '@/components/EmissionRecordItem';
 import Colors from '@/constants/colors';
 import { useThemeStore } from '@/store/themeStore';
 import { ProductionStage } from '@/types/project';
+import { useTranslation } from '@/hooks/useTranslation';
 
 // 定義類型
 interface PieDataPoint {
@@ -43,11 +44,12 @@ export default function StageAnalyticsScreen() {
   const { projectEmissionRecords, projects } = useProjectStore();
   const { isDarkMode } = useThemeStore();
   const theme = isDarkMode ? Colors.dark : Colors.light;
+  const { t } = useTranslation();
   
   if (!stage) {
     return (
       <View style={[styles.container, { backgroundColor: theme.background }]}>
-        <Text style={{ color: theme.text }}>無效的階段參數</Text>
+        <Text style={{ color: theme.text }}>{t('stage.invalid.parameter')}</Text>
       </View>
     );
   }
@@ -100,7 +102,7 @@ export default function StageAnalyticsScreen() {
   
   // Get most recent record date
   const getMostRecentDate = () => {
-    if (stageRecords.length === 0) return '無記錄';
+    if (stageRecords.length === 0) return t('stage.no.records');
     
     const sortedRecords = [...stageRecords].sort((a, b) => 
       new Date(b.date).getTime() - new Date(a.date).getTime()
@@ -302,7 +304,7 @@ export default function StageAnalyticsScreen() {
         </Pressable>
         
         <Text style={styles.stageTitle}>{getStageLabel(stage)}</Text>
-        <Text style={styles.stageSubtitle}>碳排放分析</Text>
+        <Text style={styles.stageSubtitle}>{t('stage.carbon.analysis')}</Text>
       </LinearGradient>
       
       <ScrollView 
@@ -314,32 +316,32 @@ export default function StageAnalyticsScreen() {
           <View style={[styles.statCard, { backgroundColor: theme.card }]}>
             <BarChart3 size={24} color={stageColor} />
             <Text style={[styles.statValue, { color: theme.text }]}>{formatEmissions(totalEmissions)}</Text>
-            <Text style={[styles.statLabel, { color: theme.secondaryText }]}>總碳排放量</Text>
+            <Text style={[styles.statLabel, { color: theme.secondaryText }]}>{t('stage.total.emissions')}</Text>
           </View>
           
           <View style={[styles.statCard, { backgroundColor: theme.card }]}>
             <FileText size={24} color={stageColor} />
             <Text style={[styles.statValue, { color: theme.text }]}>{stageRecords.length}</Text>
-            <Text style={[styles.statLabel, { color: theme.secondaryText }]}>排放記錄</Text>
+            <Text style={[styles.statLabel, { color: theme.secondaryText }]}>{t('stage.emission.records')}</Text>
           </View>
           
           <View style={[styles.statCard, { backgroundColor: theme.card }]}>
             <Users size={24} color={stageColor} />
             <Text style={[styles.statValue, { color: theme.text }]}>{uniqueProjects}</Text>
-            <Text style={[styles.statLabel, { color: theme.secondaryText }]}>相關專案</Text>
+            <Text style={[styles.statLabel, { color: theme.secondaryText }]}>{t('stage.related.projects')}</Text>
           </View>
           
           <View style={[styles.statCard, { backgroundColor: theme.card }]}>
             <Calendar size={24} color={stageColor} />
             <Text style={[styles.statValue, { color: theme.text, fontSize: 16 }]}>{getMostRecentDate()}</Text>
-            <Text style={[styles.statLabel, { color: theme.secondaryText }]}>最近記錄</Text>
+            <Text style={[styles.statLabel, { color: theme.secondaryText }]}>{t('stage.recent.record')}</Text>
           </View>
         </View>
         
         {/* 圓餅圖 - 根據平台選擇不同實現 */}
         {categoriesData.length > 0 && (
           <View style={[styles.chartContainer, { backgroundColor: theme.card }]}>
-            <Text style={[styles.chartTitle, { color: theme.text }]}>排放類別分佈</Text>
+            <Text style={[styles.chartTitle, { color: theme.text }]}>{t('stage.category.distribution')}</Text>
             {Platform.OS === 'web' 
               ? renderSimplePieChart() 
               : renderNativePieChart()
@@ -350,7 +352,7 @@ export default function StageAnalyticsScreen() {
         {/* 條形圖 - 根據平台選擇不同實現 */}
         {barChartData.length > 0 && (
           <View style={[styles.chartContainer, { backgroundColor: theme.card }]}>
-            <Text style={[styles.chartTitle, { color: theme.text }]}>最近記錄趨勢</Text>
+            <Text style={[styles.chartTitle, { color: theme.text }]}>{t('stage.recent.trends')}</Text>
             {Platform.OS === 'web' 
               ? renderSimpleBarChart() 
               : renderNativeBarChart()
@@ -359,7 +361,7 @@ export default function StageAnalyticsScreen() {
         )}
         
         <View style={styles.sectionContainer}>
-          <Text style={[styles.sectionTitle, { color: theme.text }]}>排放類別分析</Text>
+          <Text style={[styles.sectionTitle, { color: theme.text }]}>{t('stage.category.analysis')}</Text>
           
           {categoriesData.length > 0 ? (
             <View style={styles.categoriesContainer}>
@@ -382,7 +384,7 @@ export default function StageAnalyticsScreen() {
                     <View style={styles.categoryInfo}>
                       <Text style={[styles.categoryName, { color: theme.text }]}>{category.name}</Text>
                       <Text style={[styles.categoryCount, { color: theme.secondaryText }]}>
-                        {category.count} 筆記錄
+                        {category.count} {t('stage.record.count')}
                       </Text>
                     </View>
                     <Text style={[styles.categoryValue, { color: category.color }]}>
@@ -409,13 +411,13 @@ export default function StageAnalyticsScreen() {
             </View>
           ) : (
             <Text style={[styles.emptyText, { color: theme.secondaryText }]}>
-              此階段尚無排放記錄
+              {t('stage.no.records.message')}
             </Text>
           )}
         </View>
         
         <View style={styles.sectionContainer}>
-          <Text style={[styles.sectionTitle, { color: theme.text }]}>最近記錄</Text>
+          <Text style={[styles.sectionTitle, { color: theme.text }]}>{t('stage.recent.records')}</Text>
           
           {stageRecords.length > 0 ? (
             <View style={styles.recordsContainer}>
@@ -432,7 +434,7 @@ export default function StageAnalyticsScreen() {
             </View>
           ) : (
             <Text style={[styles.emptyText, { color: theme.secondaryText }]}>
-              此階段尚無排放記錄
+              {t('stage.no.records.message')}
             </Text>
           )}
         </View>
