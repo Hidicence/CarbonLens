@@ -670,6 +670,10 @@ const translations: TranslationSet = {
     'add.record.ai.auto.fill': '自動填入',
     'add.record.ai.view.details': '查看詳情',
     'add.record.ai.process.later': '稍後處理',
+
+    // 最終遺漏的翻譯鍵 - AI 分析失敗
+    'add.record.ai.analysis.failed': 'AI 分析失敗',
+    'add.record.ai.analysis.failed.message': '文件分析過程中發生錯誤，請稍後重試或手動填寫資料',
   },
   en: {
     // Common
@@ -1332,6 +1336,10 @@ const translations: TranslationSet = {
     'add.record.ai.auto.fill': 'Auto Fill',
     'add.record.ai.view.details': 'View Details',
     'add.record.ai.process.later': 'Process Later',
+
+    // Final missing translation keys - AI analysis failed
+    'add.record.ai.analysis.failed': 'AI Analysis Failed',
+    'add.record.ai.analysis.failed.message': 'An error occurred during document analysis. Please try again later or fill in the data manually',
   }
 };
 
