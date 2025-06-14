@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from '@/hooks/useTranslation';
 import {
   View,
   Text,

@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useTranslation } from '@/hooks/useTranslation';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, SafeAreaView, Image, Alert, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { User, Mail, Phone, Building, MapPin, Camera, X, Check } from 'lucide-react-native';
@@ -47,8 +46,6 @@ export default function ProfileScreen() {
   }, [user, profile]);
   
   const handleChange = (field: string, value: string) => {
-  const { t } = useTranslation();
-
     setFormData({
       ...formData,
       [field]: value,

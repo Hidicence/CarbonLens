@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useTranslation } from '@/hooks/useTranslation';
 import { 
   View, 
   Text, 
@@ -40,8 +39,6 @@ export default function OrganizationSettingsScreen() {
   const [formData, setFormData] = useState(organization);
 
   const handleSave = () => {
-  const { t } = useTranslation();
-
     if (!formData.name.trim()) {
       Alert.alert(t('common.error'), t('organization.error.name.required'));
       return;

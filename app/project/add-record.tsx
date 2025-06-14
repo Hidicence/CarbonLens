@@ -28,6 +28,7 @@ import {
 } from 'lucide-react-native';
 import { useProjectStore } from '@/store/projectStore';
 import { EMISSION_CATEGORIES, EMISSION_SOURCES } from '@/mocks/projects';
+import { getTranslatedProjectCategories, getTranslatedProjectSources } from '@/utils/translations';
 import { 
   // 移除舊版設備數據的導入
   /*
@@ -94,6 +95,7 @@ export default function AddRecordScreen() {
   }>();
   const { addEmissionRecord, projects } = useProjectStore();
   const { isDarkMode } = useThemeStore();
+  const { t } = useLanguageStore();
   const theme = isDarkMode ? Colors.dark : Colors.light;
   
   const scrollViewRef = useRef<ScrollView>(null);
@@ -188,25 +190,29 @@ export default function AddRecordScreen() {
   const [equipmentError, setEquipmentError] = useState('');
   const [transportError, setTransportError] = useState('');
   
+  // 獲取翻譯後的類別和排放源
+  const translatedCategories = getTranslatedProjectCategories(t);
+  const translatedSources = getTranslatedProjectSources(t);
+
   // 簡化組別類別映射 - 每個組別只顯示最相關的類別
   const getCrewCategories = () => {
     const crewCategoryMapping = {
-      director: ['prod-1', 'prod-3'], // 交通、餐飲
-      camera: ['prod-2', 'prod-7'], // 攝影設備、照明設備
-      lighting: ['prod-7', 'prod-6'], // 照明設備、燃料
-      sound: ['prod-2', 'prod-6'], // 攝影設備、燃料
-      makeup: ['prod-3', 'prod-5'], // 餐飲、廢棄物
-      costume: ['prod-3', 'prod-5'], // 餐飲、廢棄物
-      props: ['prod-1', 'prod-5'], // 交通、廢棄物
-      transport: ['prod-1', 'prod-6'], // 交通、燃料
+      director: ['transport-prod', 'catering-prod'], // 交通、餐飲
+      camera: ['equipment-pre', 'energy-prod'], // 攝影設備、照明設備
+      lighting: ['energy-prod', 'equipment-pre'], // 照明設備、燃料
+      sound: ['equipment-pre', 'energy-prod'], // 攝影設備、燃料
+      makeup: ['catering-prod', 'waste-prod'], // 餐飲、廢棄物
+      costume: ['catering-prod', 'waste-prod'], // 餐飲、廢棄物
+      props: ['transport-prod', 'waste-prod'], // 交通、廢棄物
+      transport: ['transport-prod', 'energy-prod'], // 交通、燃料
     };
     
     // 根據選擇的組別，只顯示相關的類別
     const relevantCategoryIds = crewCategoryMapping[selectedCrew as keyof typeof crewCategoryMapping] || [];
     
-    return EMISSION_CATEGORIES.filter(cat => 
+    return translatedCategories.filter(cat => 
       relevantCategoryIds.includes(cat.id) &&
-      EMISSION_SOURCES.some(source => source.stage === 'production' && source.categoryId === cat.id)
+      translatedSources.some(source => source.stage === 'production' && source.categoryId === cat.id)
     );
   };
   
@@ -372,7 +378,7 @@ export default function AddRecordScreen() {
   // 當類別改變時，更新可用的排放源
   useEffect(() => {
     if (categoryId) {
-      const sources = EMISSION_SOURCES.filter(
+      const sources = translatedSources.filter(
         source => source.stage === stage && source.categoryId === categoryId
       );
       setAvailableSources(sources);
@@ -387,7 +393,7 @@ export default function AddRecordScreen() {
       setSourceId('');
       setSelectedSource(null);
     }
-  }, [categoryId, stage]);
+  }, [categoryId, stage, translatedSources]);
   
   // 當排放源ID改變時，更新選擇的排放源
   useEffect(() => {
@@ -993,7 +999,7 @@ export default function AddRecordScreen() {
   };
   
   // 獲取設備輸入標籤
-  const getEquipmentInputLabel = () => {
+  const getEquipmentInputLabel = (): string => {
     // 拍攝階段
     if (stage === 'production') {
       switch (currentEquipmentCategory) {
@@ -1285,7 +1291,6 @@ export default function AddRecordScreen() {
   
   // 渲染排放源選擇
   const renderSourceSection = () => {
-    const { t } = useLanguageStore();
     
     return (
       <View style={styles.section}>
@@ -1692,10 +1697,14 @@ export default function AddRecordScreen() {
                     
                     <Text style={[styles.equipmentEmissionFactor, { color: theme.primary }]}>
                       排放因子: {item.emissionFactor} 公斤CO₂e/
-                      {'powerConsumption' in item ? '小時' : 
-                       'fuelType' in item ? '公里' : 'servingSize' in item ? '份' : 
-                       'capacity' in item ? item.capacity : 
-                       'unit' in item ? item.unit : '單位'}
+                      {(() => {
+                        if ('powerConsumption' in item) return '小時';
+                        if ('fuelType' in item) return '公里';
+                        if ('servingSize' in item) return '份';
+                        if ('capacity' in item) return item.capacity as string;
+                        if ('unit' in item) return item.unit as string;
+                        return '單位';
+                      })() as string}
                     </Text>
                   </View>
                 </View>
@@ -2789,13 +2798,6 @@ const styles = StyleSheet.create({
   },
   selectedEquipmentListContent: {
     maxHeight: 150,
-  },
-  selectedEquipmentItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 8,
-    borderBottomWidth: 1,
   },
   selectedEquipmentInfo: {
     flex: 1,

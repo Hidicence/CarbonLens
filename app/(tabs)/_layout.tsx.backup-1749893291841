@@ -1,5 +1,4 @@
 import React, { useEffect } from 'react';
-import { useTranslation } from '@/hooks/useTranslation';
 import { View } from 'react-native';
 import { Tabs } from 'expo-router';
 import { useThemeStore } from '@/store/themeStore';

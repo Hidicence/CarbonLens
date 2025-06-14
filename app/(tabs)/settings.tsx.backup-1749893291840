@@ -1,5 +1,4 @@
 import React from 'react';
-import { useTranslation } from '@/hooks/useTranslation';
 import { View, Text, StyleSheet, ScrollView, SafeAreaView, Pressable, Switch, Alert, Image, Platform, Dimensions } from 'react-native';
 import { useRouter } from 'expo-router';
 import { 
@@ -58,8 +57,6 @@ export default function SettingsScreen() {
   };
 
   const handleClearData = () => {
-  const { t } = useTranslation();
-
     Alert.alert(
       t('settings.delete.all'),
       t('settings.delete.all.confirm'),

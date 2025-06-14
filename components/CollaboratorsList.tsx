@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from '@/hooks/useTranslation';
 import { 
   View, 
   Text, 
@@ -48,6 +49,7 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const isSmallScreen = SCREEN_WIDTH < 375;
 
 export default function CollaboratorsList({ projectId, onClose }: CollaboratorsListProps) {
+  const { t } = useTranslation();
   const { isDarkMode } = useThemeStore();
   const theme = isDarkMode ? Colors.dark : Colors.light;
   const { 
@@ -87,6 +89,8 @@ export default function CollaboratorsList({ projectId, onClose }: CollaboratorsL
     const keyboardDidShowListener = Keyboard.addListener(
       'keyboardDidShow',
       () => {
+  const { t } = useTranslation();
+
         setKeyboardVisible(true);
       }
     );
@@ -187,12 +191,12 @@ export default function CollaboratorsList({ projectId, onClose }: CollaboratorsL
   
   const handleRemoveCollaborator = (id: string, name: string) => {
     Alert.alert(
-      '移除協作者',
+      t('collaborators.remove'),
       `確定要移除 ${name} 嗎？`,
       [
-        { text: '取消', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         { 
-          text: '確定', 
+          text: t('common.confirm'), 
           onPress: () => {
             setIsLoading(true);
             
@@ -233,17 +237,17 @@ export default function CollaboratorsList({ projectId, onClose }: CollaboratorsL
   const getRoleLabel = (role: CollaboratorRole) => {
     switch (role) {
       case 'owner':
-        return '擁有者';
+        return t('role.owner');
       case 'admin':
-        return '管理員';
+        return t('role.admin');
       case 'editor':
-        return '編輯者';
+        return t('role.editor');
       case 'contributor':
-        return '貢獻者';
+        return t('role.contributor');
       case 'viewer':
-        return '檢視者';
+        return t('role.viewer');
       default:
-        return '未知';
+        return t('common.unknown');
     }
   };
   
@@ -266,7 +270,7 @@ export default function CollaboratorsList({ projectId, onClose }: CollaboratorsL
   
   const handleShareProject = () => {
     Alert.alert(
-      '分享專案',
+      t('projects.share'),
       '複製專案邀請連結，或透過其他應用程式分享',
       [
         { 
@@ -281,7 +285,7 @@ export default function CollaboratorsList({ projectId, onClose }: CollaboratorsL
             Alert.alert('提示', '分享功能即將推出');
           }
         },
-        { text: '取消', style: 'cancel' }
+        { text: t('common.cancel'), style: 'cancel' }
       ]
     );
   };
@@ -332,7 +336,7 @@ export default function CollaboratorsList({ projectId, onClose }: CollaboratorsL
                 style={[styles.input, { backgroundColor: theme.background, color: theme.text }]}
                 value={editName}
                 onChangeText={setEditName}
-                placeholder="輸入姓名"
+                placeholder={t('ui.placeholder.enter.name')}
                 placeholderTextColor={theme.secondaryText}
                 editable={!isLoading}
               />
@@ -344,7 +348,7 @@ export default function CollaboratorsList({ projectId, onClose }: CollaboratorsL
                 style={[styles.input, { backgroundColor: theme.background, color: theme.text }]}
                 value={editEmail}
                 onChangeText={setEditEmail}
-                placeholder="輸入電子郵件"
+                placeholder={t('ui.placeholder.enter.email')}
                 placeholderTextColor={theme.secondaryText}
                 keyboardType="email-address"
                 autoCapitalize="none"
@@ -383,7 +387,7 @@ export default function CollaboratorsList({ projectId, onClose }: CollaboratorsL
             
             <View style={styles.editActions}>
               <Button
-                title="取消"
+                title={t('common.cancel')}
                 onPress={cancelEditing}
                 variant="outline"
                 size="small"
@@ -391,7 +395,7 @@ export default function CollaboratorsList({ projectId, onClose }: CollaboratorsL
                 style={{ flex: 1, marginRight: 8 }}
               />
               <Button
-                title="儲存"
+                title={t('common.save')}
                 onPress={handleEditCollaborator}
                 variant="primary"
                 size="small"
@@ -488,7 +492,7 @@ export default function CollaboratorsList({ projectId, onClose }: CollaboratorsL
           
           <View style={styles.shareContainer}>
             <Button
-              title="分享專案"
+              title={t('projects.share')}
               onPress={handleShareProject}
               variant="outline"
               size="small"
@@ -549,7 +553,7 @@ export default function CollaboratorsList({ projectId, onClose }: CollaboratorsL
                 style={[styles.input, { backgroundColor: theme.background, color: theme.text }]}
                 value={newName}
                 onChangeText={setNewName}
-                placeholder="輸入姓名"
+                placeholder={t('ui.placeholder.enter.name')}
                 placeholderTextColor={theme.secondaryText}
                 editable={!isLoading}
               />
@@ -561,7 +565,7 @@ export default function CollaboratorsList({ projectId, onClose }: CollaboratorsL
                 style={[styles.input, { backgroundColor: theme.background, color: theme.text }]}
                 value={newEmail}
                 onChangeText={setNewEmail}
-                placeholder="輸入電子郵件"
+                placeholder={t('ui.placeholder.enter.email')}
                 placeholderTextColor={theme.secondaryText}
                 keyboardType="email-address"
                 autoCapitalize="none"
@@ -606,7 +610,7 @@ export default function CollaboratorsList({ projectId, onClose }: CollaboratorsL
             </View>
             
             <Button
-              title="新增協作者"
+              title={t('collaborators.add')}
               onPress={handleAddCollaborator}
               variant="primary"
               loading={isLoading}
@@ -615,7 +619,7 @@ export default function CollaboratorsList({ projectId, onClose }: CollaboratorsL
           </ScrollView>
         ) : (
           <Button
-            title="新增協作者"
+            title={t('collaborators.add')}
             onPress={() => setShowAddForm(true)}
             variant="primary"
             icon={<Plus size={16} color="#FFFFFF" />}

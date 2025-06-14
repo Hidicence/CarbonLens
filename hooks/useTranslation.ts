@@ -14,7 +14,7 @@ export const useTranslation = () => {
    * @param key 翻譯鍵名
    * @returns 翻譯後的文本
    */
-  const t = (key: TranslationKey): string => {
+  const t = (key: TranslationKey | string): string => {
     const currentLanguage = language as Languages;
     
     // 獲取對應語言的翻譯
@@ -29,7 +29,7 @@ export const useTranslation = () => {
     return translation;
   };
   
-  return t;
+  return { t };
 };
 
 export default useTranslation; 

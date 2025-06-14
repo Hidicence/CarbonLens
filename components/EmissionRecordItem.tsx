@@ -1,8 +1,10 @@
 import React from 'react';
+import { useTranslation } from '@/hooks/useTranslation';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { Calendar, MapPin, FileEdit, Film, Clapperboard, Calculator } from 'lucide-react-native';
 import { EmissionRecord, ProductionStage } from '@/types/project';
 import { EMISSION_CATEGORIES, STAGE_CATEGORIES, EMISSION_SOURCES } from '@/mocks/projects';
+import { getTranslatedProjectCategories, getTranslatedProjectSources, getTranslatedStageCategories } from '@/utils/translations';
 import Colors from '@/constants/colors';
 
 interface EmissionRecordItemProps {
@@ -11,16 +13,23 @@ interface EmissionRecordItemProps {
 }
 
 export default function EmissionRecordItem({ record, onPress }: EmissionRecordItemProps) {
+  const { t } = useTranslation();
+  
+  // 獲取翻譯後的類別和排放源
+  const translatedCategories = getTranslatedProjectCategories(t);
+  const translatedSources = getTranslatedProjectSources(t);
+  const translatedStageCategories = getTranslatedStageCategories(t);
+  
   // 查找類別 - 添加安全檢查
   const category = 
-    EMISSION_CATEGORIES.find(cat => cat.id === record.categoryId) || 
-    (STAGE_CATEGORIES && STAGE_CATEGORIES['pre-production'] ? STAGE_CATEGORIES['pre-production'].find(cat => cat.id === record.categoryId) : null) ||
-    (STAGE_CATEGORIES && STAGE_CATEGORIES['production'] ? STAGE_CATEGORIES['production'].find(cat => cat.id === record.categoryId) : null) ||
-    (STAGE_CATEGORIES && STAGE_CATEGORIES['post-production'] ? STAGE_CATEGORIES['post-production'].find(cat => cat.id === record.categoryId) : null);
+    translatedCategories.find(cat => cat.id === record.categoryId) || 
+    (translatedStageCategories && translatedStageCategories['pre-production'] ? translatedStageCategories['pre-production'].find(cat => cat.id === record.categoryId) : null) ||
+    (translatedStageCategories && translatedStageCategories['production'] ? translatedStageCategories['production'].find(cat => cat.id === record.categoryId) : null) ||
+    (translatedStageCategories && translatedStageCategories['post-production'] ? translatedStageCategories['post-production'].find(cat => cat.id === record.categoryId) : null);
 
   // 查找排放源
   const source = record.sourceId 
-    ? EMISSION_SOURCES.find(s => s.id === record.sourceId) 
+    ? translatedSources.find(s => s.id === record.sourceId) 
     : null;
 
   if (!category) {
@@ -60,9 +69,9 @@ export default function EmissionRecordItem({ record, onPress }: EmissionRecordIt
   };
 
   const stageLabels = {
-    'pre-production': '前期製作',
-    'production': '拍攝階段',
-    'post-production': '後期製作'
+    'pre-production': t('stage.pre-production'),
+    'production': t('stage.production'),
+    'post-production': t('stage.post-production')
   };
 
   return (

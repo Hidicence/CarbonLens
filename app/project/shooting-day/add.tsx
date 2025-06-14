@@ -20,6 +20,7 @@ import Colors from '@/constants/colors';
 import { useThemeStore } from '@/store/themeStore';
 import DatePickerField from '@/components/DatePickerField';
 import { CREW_OPTIONS, getCrewIcon, getCrewColor } from '@/constants/crews';
+import { useLanguageStore } from '@/store/languageStore';
 
 const EMISSION_CATEGORIES = [
   { 
@@ -111,6 +112,7 @@ export default function AddShootingDayRecord() {
   const { projectId, crew: initialCrew } = useLocalSearchParams<{ projectId: string, crew?: FilmCrew }>();
   const { addShootingDayRecord, emissionRecords } = useProjectStore();
   const { isDarkMode } = useThemeStore();
+  const { t } = useLanguageStore();
   const theme = isDarkMode ? Colors.dark : Colors.light;
 
   const [shootingDate, setShootingDate] = useState(new Date());
@@ -161,19 +163,19 @@ export default function AddShootingDayRecord() {
 
   const validateForm = () => {
     if (!location.trim()) {
-      Alert.alert('錯誤', '請輸入拍攝地點');
+      Alert.alert(t('common.error') || '錯誤', t('shooting.record.validation.location') || '請輸入拍攝地點');
       return false;
     }
     if (!selectedCategory) {
-      Alert.alert('錯誤', '請選擇排放類別');
+      Alert.alert(t('common.error') || '錯誤', t('shooting.record.validation.category') || '請選擇排放類別');
       return false;
     }
     if (!description.trim()) {
-      Alert.alert('錯誤', '請輸入活動描述');
+      Alert.alert(t('common.error') || '錯誤', t('shooting.record.validation.description') || '請輸入活動描述');
       return false;
     }
     if (!quantity.trim() || isNaN(parseFloat(quantity))) {
-      Alert.alert('錯誤', '請輸入有效的數量');
+      Alert.alert(t('common.error') || '錯誤', t('shooting.record.validation.quantity') || '請輸入有效的數量');
       return false;
     }
     return true;
@@ -197,7 +199,7 @@ export default function AddShootingDayRecord() {
     }
     if (!projectId) {
       console.log('專案 ID 不存在');
-      Alert.alert('錯誤', '專案 ID 不存在');
+      Alert.alert(t('common.error') || '錯誤', t('shooting.record.validation.project.id') || '專案 ID 不存在');
       return;
     }
 
@@ -226,13 +228,13 @@ export default function AddShootingDayRecord() {
       
       console.log('記錄保存成功');
 
-      Alert.alert('成功', '拍攝日記錄已保存', [
-        { text: '確定', onPress: () => router.back() }
+      Alert.alert(t('common.success') || '成功', t('shooting.record.success') || '拍攝日記錄已保存', [
+        { text: t('common.ok') || '確定', onPress: () => router.back() }
       ]);
     } catch (error) {
       console.error('保存失敗:', error);
       const errorMessage = error instanceof Error ? error.message : String(error);
-      Alert.alert('錯誤', `保存失敗：${errorMessage}`);
+      Alert.alert(t('common.error') || '錯誤', `${t('shooting.record.error') || '保存失敗'}：${errorMessage}`);
     } finally {
       setIsSaving(false);
     }
@@ -240,7 +242,7 @@ export default function AddShootingDayRecord() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
-      <Header title="添加拍攝日記錄" showBackButton />
+      <Header title={t('shooting.record.add') || '添加拍攝日記錄'} showBackButton />
       
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* 拍攝信息 */}
@@ -250,7 +252,7 @@ export default function AddShootingDayRecord() {
           </Text>
           
           <View style={styles.field}>
-            <Text style={[styles.label, { color: theme.text }]}>拍攝日期</Text>
+            <Text style={[styles.label, { color: theme.text }]}>{t('shooting.record.date') || '拍攝日期'}</Text>
             <DatePickerField
               value={shootingDate}
               onChange={setShootingDate}
@@ -259,7 +261,7 @@ export default function AddShootingDayRecord() {
           </View>
 
           <View style={styles.field}>
-            <Text style={[styles.label, { color: theme.text }]}>拍攝地點</Text>
+            <Text style={[styles.label, { color: theme.text }]}>{t('shooting.record.location') || '拍攝地點'}</Text>
             <View style={[styles.inputContainer, { backgroundColor: theme.background }]}>
               <MapPin size={20} color={theme.secondaryText} />
               <TextInput
@@ -273,7 +275,7 @@ export default function AddShootingDayRecord() {
           </View>
 
           <View style={styles.field}>
-            <Text style={[styles.label, { color: theme.text }]}>場次編號 (選填)</Text>
+            <Text style={[styles.label, { color: theme.text }]}>{t('shooting.record.scene') || '場次編號'} (選填)</Text>
             <TextInput
               style={[styles.textInput, { backgroundColor: theme.background, color: theme.text }]}
               value={sceneNumber}
@@ -287,7 +289,7 @@ export default function AddShootingDayRecord() {
         {/* 組別選擇 */}
         <View style={[styles.section, { backgroundColor: theme.card }]}>
           <Text style={[styles.sectionTitle, { color: theme.text }]}>
-            選擇組別
+            {t('shooting.record.crew') || '選擇組別'}
           </Text>
           
           <View style={styles.crewGrid}>
@@ -318,7 +320,7 @@ export default function AddShootingDayRecord() {
                       : theme.text 
                   }
                 ]}>
-                  {crew.name}
+                  {t(`crew.${crew.key}`) || crew.name}
                 </Text>
               </Pressable>
             ))}
@@ -328,7 +330,7 @@ export default function AddShootingDayRecord() {
         {/* 排放類別 */}
         <View style={[styles.section, { backgroundColor: theme.card }]}>
           <Text style={[styles.sectionTitle, { color: theme.text }]}>
-            排放類別
+            {t('shooting.record.category') || '排放類別'}
           </Text>
           
           <View style={styles.categoryGrid}>
@@ -396,7 +398,7 @@ export default function AddShootingDayRecord() {
           </Text>
           
           <View style={styles.field}>
-            <Text style={[styles.label, { color: theme.text }]}>活動描述</Text>
+            <Text style={[styles.label, { color: theme.text }]}>{t('shooting.record.description') || '活動描述'}</Text>
             <TextInput
               style={[styles.textInput, { backgroundColor: theme.background, color: theme.text }]}
               value={description}
@@ -410,7 +412,7 @@ export default function AddShootingDayRecord() {
 
           <View style={styles.field}>
             <Text style={[styles.label, { color: theme.text }]}>
-              數量 {selectedCategoryOption && `(${selectedCategoryOption.unit})`}
+              {t('shooting.record.quantity') || '數量'} {selectedCategoryOption && `(${selectedCategoryOption.unit})`}
             </Text>
             <TextInput
               style={[styles.textInput, { backgroundColor: theme.background, color: theme.text }]}
@@ -456,7 +458,7 @@ export default function AddShootingDayRecord() {
           )}
 
           <View style={styles.field}>
-            <Text style={[styles.label, { color: theme.text }]}>備註 (選填)</Text>
+            <Text style={[styles.label, { color: theme.text }]}>{t('shooting.record.notes') || '備註'} (選填)</Text>
             <TextInput
               style={[styles.textInput, { backgroundColor: theme.background, color: theme.text }]}
               value={notes}
@@ -474,7 +476,7 @@ export default function AddShootingDayRecord() {
 
       <View style={[styles.bottomAction, { backgroundColor: theme.card }]}>
         <Button
-          title="保存記錄"
+          title={t('shooting.record.save') || '保存記錄'}
           onPress={handleSave}
           variant="primary"
           loading={isSaving}

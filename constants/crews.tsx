@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from '@/hooks/useTranslation';
 import { 
   Film, 
   Camera, 
@@ -29,7 +30,7 @@ export const CREW_OPTIONS: CrewOption[] = [
   { key: 'camera', name: '攝影組', icon: Camera, color: '#4ECDC4' },
   { key: 'lighting', name: '燈光組', icon: Lightbulb, color: '#FFE66D' },
   { key: 'sound', name: '收音組', icon: Mic, color: '#A8E6CF' },
-  { key: 'makeup', name: '梳化組', icon: Palette, color: '#FFB3BA' },
+  { key: 'makeup', name: '化妝組', icon: Palette, color: '#FFB3BA' },
   { key: 'production', name: '製片組', icon: FileText, color: '#D4E6B7' },
 ];
 

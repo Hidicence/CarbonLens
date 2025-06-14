@@ -34,11 +34,13 @@ import {
 } from 'lucide-react-native';
 import { useProjectStore } from '@/store/projectStore';
 import { useThemeStore } from '@/store/themeStore';
+import { useLanguageStore } from '@/store/languageStore';
 import Colors from '@/constants/colors';
 import Header from '@/components/Header';
 import { formatEmissions } from '@/utils/helpers';
 import { NonProjectEmissionRecord, AllocationMethod } from '@/types/project';
 import { OPERATIONAL_CATEGORIES, OPERATIONAL_SOURCES } from '@/mocks/projects';
+import { getTranslatedOperationalCategories, getTranslatedOperationalSources } from '@/utils/translations';
 
 interface EmissionFactor {
   value: number;
@@ -70,6 +72,7 @@ export default function EditRecordScreen() {
   const { id } = useLocalSearchParams();
   const { nonProjectEmissionRecords, projects, updateNonProjectEmissionRecord } = useProjectStore();
   const { isDarkMode } = useThemeStore();
+  const { t } = useLanguageStore();
   const theme = isDarkMode ? Colors.dark : Colors.light;
 
   // 找到要編輯的記錄
@@ -115,18 +118,22 @@ export default function EditRecordScreen() {
     }
   }, [recordToEdit, router]);
 
+  // 獲取翻譯後的類別和排放源
+  const translatedCategories = getTranslatedOperationalCategories(t);
+  const translatedSources = getTranslatedOperationalSources(t);
+  
   // 獲取活躍專案
   const activeProjects = projects.filter(p => p.status === 'active');
 
   // 獲取類別資訊
   const getCategoryInfo = (categoryId: string) => {
-    const category = OPERATIONAL_CATEGORIES.find(cat => cat.id === categoryId);
+    const category = translatedCategories.find(cat => cat.id === categoryId);
     return category || { id: categoryId, name: categoryId, scope: 'unknown', color: theme.primary };
   };
 
   // 獲取排放源資訊
   const getSourceInfo = (sourceId: string) => {
-    const source = OPERATIONAL_SOURCES.find(src => src.id === sourceId);
+    const source = translatedSources.find(src => src.id === sourceId);
     return source || { id: sourceId, name: sourceId, categoryId: '', unit: '' };
   };
 
@@ -230,14 +237,14 @@ export default function EditRecordScreen() {
       <View style={styles.modalOverlay}>
         <View style={[styles.modalContent, { backgroundColor: theme.card }]}>
           <View style={styles.modalHeader}>
-            <Text style={[styles.modalTitle, { color: theme.text }]}>選擇排放類別</Text>
+            <Text style={[styles.modalTitle, { color: theme.text }]}>{t('add.record.modal.select.category')}</Text>
             <TouchableOpacity onPress={() => setShowCategoryModal(false)}>
               <X size={24} color={theme.text} />
             </TouchableOpacity>
           </View>
 
           <FlatList
-            data={OPERATIONAL_CATEGORIES}
+            data={translatedCategories}
             keyExtractor={item => item.id}
             renderItem={({ item }) => (
               <TouchableOpacity
@@ -277,7 +284,7 @@ export default function EditRecordScreen() {
 
   // 渲染排放源選擇模態框
   const renderSourceModal = () => {
-    const availableSources = OPERATIONAL_SOURCES.filter(source => 
+    const availableSources = translatedSources.filter(source => 
       source.categoryId === selectedCategory
     );
 
@@ -291,7 +298,7 @@ export default function EditRecordScreen() {
         <View style={styles.modalOverlay}>
           <View style={[styles.modalContent, { backgroundColor: theme.card }]}>
             <View style={styles.modalHeader}>
-              <Text style={[styles.modalTitle, { color: theme.text }]}>選擇排放源</Text>
+              <Text style={[styles.modalTitle, { color: theme.text }]}>{t('add.record.modal.select.source')}</Text>
               <TouchableOpacity onPress={() => setShowSourceModal(false)}>
                 <X size={24} color={theme.text} />
               </TouchableOpacity>

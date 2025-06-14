@@ -51,6 +51,7 @@ import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
 import { useProjectStore } from '@/store/projectStore';
 import { useThemeStore } from '@/store/themeStore';
+import { useTranslation } from '@/hooks/useTranslation';
 import Colors from '@/constants/colors';
 import Header from '@/components/Header';
 import Button from '@/components/Button';
@@ -59,6 +60,12 @@ import {
   OPERATIONAL_CATEGORIES, 
   OPERATIONAL_SOURCES
 } from '@/mocks/projects';
+import { 
+  getTranslatedOperationalCategories, 
+  getTranslatedOperationalSources,
+  getTranslatedCategoryName,
+  getTranslatedSourceName 
+} from '@/utils/translations';
 import { 
   NonProjectEmissionRecord, 
   AllocationMethod, 
@@ -242,6 +249,7 @@ const DataQualityBadge: React.FC<{
   animated?: boolean;
   theme: any;
 }> = ({ quality, animated = true, theme }) => {
+  const { t } = useTranslation();
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const rotateAnim = useRef(new Animated.Value(0)).current;
   
@@ -320,12 +328,12 @@ const DataQualityBadge: React.FC<{
       
       <View style={styles.qualityInfo}>
         <Text style={[styles.qualityLevel, { color: theme.text }]}>
-          {quality.level === 'platinum' ? '🏆 鉑金認證' :
-           quality.level === 'gold' ? '🥇 黃金認證' :
-           quality.level === 'silver' ? '🥈 白銀認證' : '🥉 銅級認證'}
+          {quality.level === 'platinum' ? t('add.record.quality.platinum') :
+           quality.level === 'gold' ? t('add.record.quality.gold') :
+           quality.level === 'silver' ? t('add.record.quality.silver') : t('add.record.quality.bronze')}
         </Text>
         <Text style={[styles.qualityDescription, { color: theme.secondaryText }]}>
-          資料可信度 {quality.score}% • {quality.factors.hasDocument ? '已附證明文件' : '建議上傳證明文件'}
+          {t('add.record.quality.reliability').replace('{score}', quality.score.toString())} • {quality.factors.hasDocument ? t('add.record.quality.has.document') : t('add.record.quality.suggest.document')}
         </Text>
       </View>
     </View>
@@ -340,6 +348,7 @@ const DocumentUploader: React.FC<{
   onAIAnalysis: (doc: EvidenceDocument) => Promise<void>;
   aiProcessing: AIProcessingState;
 }> = ({ documents, onDocumentsChange, theme, onAIAnalysis, aiProcessing }) => {
+  const { t } = useTranslation();
   const [uploading, setUploading] = useState(false);
   
   const pickDocument = async () => {
@@ -372,7 +381,7 @@ const DocumentUploader: React.FC<{
       }
     } catch (error) {
       console.error('文件上傳錯誤:', error);
-      Alert.alert('錯誤', '文件上傳失敗: ' + (error instanceof Error ? error.message : '未知錯誤'));
+      Alert.alert(t('common.error'), t('add.record.error.file.upload') + ': ' + (error instanceof Error ? error.message : t('add.record.error.unknown')));
     } finally {
       setUploading(false);
     }
@@ -438,10 +447,10 @@ const DocumentUploader: React.FC<{
         </View>
         <View style={styles.uploaderHeaderText}>
           <Text style={[styles.uploaderTitle, { color: theme.text }]}>
-            證明文件上傳
+            {t('add.record.document.upload.title')}
           </Text>
           <Text style={[styles.uploaderDescription, { color: theme.secondaryText }]}>
-            上傳相關證明文件可大幅提升資料可信度評分
+            {t('add.record.document.upload.description')}
           </Text>
         </View>
       </View>
@@ -461,7 +470,7 @@ const DocumentUploader: React.FC<{
           disabled={uploading}
         >
           <Paperclip size={18} color={theme.primary} />
-          <Text style={[styles.uploadButtonText, { color: theme.primary }]}>選擇文件</Text>
+          <Text style={[styles.uploadButtonText, { color: theme.primary }]}>{t('add.record.document.select')}</Text>
         </TouchableOpacity>
         
         <TouchableOpacity 
@@ -477,7 +486,7 @@ const DocumentUploader: React.FC<{
           disabled={uploading}
         >
           <Camera size={18} color={theme.primary} />
-          <Text style={[styles.uploadButtonText, { color: theme.primary }]}>拍照上傳</Text>
+          <Text style={[styles.uploadButtonText, { color: theme.primary }]}>{t('add.record.document.photo')}</Text>
         </TouchableOpacity>
       </View>
       
@@ -485,7 +494,7 @@ const DocumentUploader: React.FC<{
       {uploading && (
         <View style={[styles.uploadingIndicator, { backgroundColor: theme.primary + '10' }]}>
           <ActivityIndicator size="small" color={theme.primary} />
-          <Text style={[styles.uploadingText, { color: theme.primary }]}>正在上傳...</Text>
+          <Text style={[styles.uploadingText, { color: theme.primary }]}>{t('add.record.document.uploading')}</Text>
         </View>
       )}
       
@@ -495,15 +504,15 @@ const DocumentUploader: React.FC<{
           <View style={styles.aiProcessingHeader}>
             <Brain size={20} color={theme.primary} />
             <Text style={[styles.aiProcessingTitle, { color: theme.primary }]}>
-              AI 智慧分析中...
+              {t('add.record.document.ai.analyzing')}
             </Text>
           </View>
           
           <Text style={[styles.aiProcessingStage, { color: theme.text }]}>
-            {aiProcessing.stage === 'uploading' ? '📤 正在上傳文件...' :
-             aiProcessing.stage === 'ocr' ? '👁️ 正在識別文字...' :
-             aiProcessing.stage === 'analysis' ? '🤖 AI 正在分析內容...' :
-             aiProcessing.stage === 'validation' ? '✅ 正在驗證數據...' : '🎉 分析完成！'}
+            {aiProcessing.stage === 'uploading' ? t('add.record.ai.stage.uploading') :
+             aiProcessing.stage === 'ocr' ? t('add.record.ai.stage.ocr') :
+             aiProcessing.stage === 'analysis' ? t('add.record.ai.stage.analysis') :
+             aiProcessing.stage === 'validation' ? t('add.record.ai.stage.validation') : t('add.record.ai.stage.completed')}
           </Text>
           
           <View style={[styles.aiProgressBar, { backgroundColor: theme.border }]}>
@@ -519,7 +528,7 @@ const DocumentUploader: React.FC<{
           </View>
           
           <Text style={[styles.aiProgressText, { color: theme.secondaryText }]}>
-            {Math.round(aiProcessing.progress)}% 完成
+            {t('add.record.ai.progress.completed').replace('{progress}', Math.round(aiProcessing.progress).toString())}
           </Text>
         </View>
       )}
@@ -528,7 +537,7 @@ const DocumentUploader: React.FC<{
       {documents.length > 0 && (
         <View style={styles.documentsSection}>
           <Text style={[styles.documentsSectionTitle, { color: theme.text }]}>
-            已上傳文件 ({documents.length})
+            {t('add.record.document.uploaded')} ({documents.length})
           </Text>
           {documents.map((doc, index) => (
             <View key={doc.id} style={[styles.documentItem, { backgroundColor: theme.card, borderColor: theme.border }]}>
@@ -541,7 +550,7 @@ const DocumentUploader: React.FC<{
                 </Text>
                 <View style={styles.documentMeta}>
                   <Text style={[styles.documentType, { color: theme.primary }]}>
-                    {getDocumentTypeLabel(doc.type)}
+                    {getDocumentTypeLabel(doc.type, t)}
                   </Text>
                   <Text style={[styles.documentSize, { color: theme.secondaryText }]}>
                     {formatFileSize(doc.size)}
@@ -563,10 +572,10 @@ const DocumentUploader: React.FC<{
       {documents.length === 0 && (
         <View style={styles.emptyDocuments}>
           <Text style={[styles.emptyDocumentsText, { color: theme.secondaryText }]}>
-            📋 尚未上傳任何證明文件
+            {t('add.record.document.empty.title')}
           </Text>
           <Text style={[styles.emptyDocumentsHint, { color: theme.secondaryText }]}>
-            建議上傳發票或收據以獲得最高評分
+            {t('add.record.document.empty.subtitle')}
           </Text>
         </View>
       )}
@@ -584,13 +593,13 @@ const determineDocumentType = (filename: string): EvidenceDocument['type'] => {
   return 'other';
 };
 
-const getDocumentTypeLabel = (type: EvidenceDocument['type']): string => {
+const getDocumentTypeLabel = (type: EvidenceDocument['type'], t: any): string => {
   switch (type) {
-    case 'invoice': return '發票';
-    case 'receipt': return '收據';
-    case 'report': return '報告';
-    case 'photo': return '照片';
-    default: return '其他文件';
+    case 'invoice': return t('add.record.document.type.invoice');
+    case 'receipt': return t('add.record.document.type.receipt');
+    case 'report': return t('add.record.document.type.report');
+    case 'photo': return t('add.record.document.type.photo');
+    default: return t('add.record.document.type.other');
   }
 };
 
@@ -685,34 +694,7 @@ const analyzeDocumentWithAI = async (
   };
 };
 
-// 新手指導內容
-const HELP_CONTENT = {
-  category: {
-    title: "什麼是排放類別？",
-    content: "排放類別按照國際標準分為三個範疇：\n• 範疇1：公司直接產生的排放（如公司車輛用油）\n• 範疇2：購買能源產生的排放（如辦公室用電）\n• 範疇3：其他間接排放（如員工通勤、廢棄物）",
-    examples: ["辦公室用電 → 範疇2", "公司車輛加油 → 範疇1", "員工搭車通勤 → 範疇3"]
-  },
-  source: {
-    title: "如何選擇排放源？",
-    content: "排放源是具體產生碳排放的活動來源，每個類別下有不同的排放源選項。",
-    examples: ["用電：選擇'電力消耗'", "開車：選擇對應的車輛類型", "搭飛機：選擇'航空運輸'"]
-  },
-  quantity: {
-    title: "數量要怎麼填？",
-    content: "根據選擇的排放源，輸入對應的數值和單位：",
-    examples: ["用電：輸入'度數'(kWh)", "開車：輸入'公里數'(km)", "用油：輸入'公升數'(L)"]
-  },
-  description: {
-    title: "活動描述怎麼寫？",
-    content: "簡單描述這次活動的內容，幫助日後查詢和管理。",
-    examples: ["辦公室12月用電費", "業務拜訪台中客戶", "員工教育訓練餐飲"]
-  },
-  allocation: {
-    title: "分攤是什麼意思？",
-    content: "將這筆營運排放分配到相關專案中，可以更準確地計算每個專案的碳足跡。",
-    examples: ["辦公室電費分攤到所有進行中專案", "特定出差只分攤到相關專案"]
-  }
-};
+// 新手指導內容將使用翻譯函數
 
 // 車輛相關的額外字段
 interface VehicleFields {
@@ -733,6 +715,7 @@ interface ElectricityFields {
 
 export default function AddOperationalRecordScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
   const { addNonProjectEmissionRecord, projects } = useProjectStore();
   const { isDarkMode } = useThemeStore();
   const theme = isDarkMode ? Colors.dark : Colors.light;
@@ -838,9 +821,9 @@ export default function AddOperationalRecordScreen() {
 
       // 顯示成功提示
       Alert.alert(
-        '✅ 自動填表完成',
-        '已根據AI分析結果自動填入相關欄位，請檢查並確認數據正確性。',
-        [{ text: '確定' }]
+        t('add.record.ai.fill.success.title'),
+        t('add.record.ai.fill.success.message'),
+        [{ text: t('common.confirm') }]
       );
 
       // 如果有驗證問題，額外提醒
@@ -859,9 +842,14 @@ export default function AddOperationalRecordScreen() {
     }
   };
   
-  // 獲取選中的類別和排放源
-  const selectedCategory = OPERATIONAL_CATEGORIES.find(cat => cat.id === formData.categoryId);
-  const availableSources = OPERATIONAL_SOURCES.filter(source => 
+          // 獲取翻譯後的類別和排放源
+    const translatedCategories = getTranslatedOperationalCategories(t);
+    const translatedSources = getTranslatedOperationalSources(t);
+    
+    // 獲取選中的類別和排放源
+    const selectedCategory = translatedCategories.find(cat => cat.id === formData.categoryId);
+
+  const availableSources = translatedSources.filter(source => 
     source.categoryId === formData.categoryId
   );
   const selectedSource = availableSources.find(source => source.id === formData.sourceId);
@@ -964,11 +952,11 @@ export default function AddOperationalRecordScreen() {
   const validateForm = () => {
     const newErrors: { [key: string]: string } = {};
     
-    if (!formData.categoryId) newErrors.categoryId = '請選擇排放類別';
-    if (!formData.sourceId) newErrors.sourceId = '請選擇排放源';
-    if (!formData.description.trim()) newErrors.description = '請輸入活動描述';
-    if (!formData.quantity) newErrors.quantity = '請輸入數量';
-    if (!formData.amount) newErrors.amount = '請確保排放量已計算';
+    if (!formData.categoryId) newErrors.categoryId = t('add.record.validation.required').replace('{field}', t('add.record.category'));
+    if (!formData.sourceId) newErrors.sourceId = t('add.record.validation.select.source');
+          if (!formData.description.trim()) newErrors.description = t('validation.required').replace('{field}', t('add.record.description'));
+    if (!formData.quantity) newErrors.quantity = t('add.record.validation.required').replace('{field}', t('add.record.quantity'));
+          if (!formData.amount) newErrors.amount = t('validation.required').replace('{field}', t('add.record.amount'));
     
     const quantity = parseFloat(formData.quantity);
     if (isNaN(quantity) || quantity <= 0) {
@@ -989,7 +977,7 @@ export default function AddOperationalRecordScreen() {
       if (formData.allocationMethod === 'custom') {
         const totalPercentage = Object.values(formData.customPercentages).reduce((sum, p) => sum + p, 0);
         if (Math.abs(totalPercentage - 100) > 0.1) {
-          newErrors.customPercentages = '自訂分攤比例總和必須為100%';
+          newErrors.customPercentages = t('add.record.validation.custom.percentages');
         }
       }
       
@@ -998,7 +986,7 @@ export default function AddOperationalRecordScreen() {
           .filter(p => formData.targetProjects.includes(p.id))
           .reduce((sum, p) => sum + (p.budget || 0), 0);
         if (targetBudgetSum === 0) {
-          newErrors.allocationMethod = '選中的專案沒有預算，無法使用預算分攤';
+          newErrors.allocationMethod = t('add.record.validation.budget.allocation');
         }
       }
     }
@@ -1009,7 +997,7 @@ export default function AddOperationalRecordScreen() {
 
   const handleSave = async () => {
     if (!validateForm()) {
-      Alert.alert('請檢查表單', '請修正標示的錯誤後再次提交');
+      Alert.alert(t('add.record.form.check.title'), t('add.record.form.check.message'));
       return;
     }
 
@@ -1039,12 +1027,12 @@ export default function AddOperationalRecordScreen() {
 
       await addNonProjectEmissionRecord(record);
       
-      Alert.alert('新增成功', '營運記錄已成功新增', [
-        { text: '確定', onPress: () => router.back() }
+      Alert.alert(t('add.record.save.success.title'), t('add.record.save.success.message'), [
+        { text: t('common.confirm'), onPress: () => router.back() }
       ]);
     } catch (error) {
       console.error('Save record error:', error);
-      Alert.alert('新增失敗', '請稍後重試');
+      Alert.alert(t('add.record.save.failed.title'), t('add.record.save.failed.message'));
     } finally {
       setIsLoading(false);
     }
@@ -1073,14 +1061,14 @@ export default function AddOperationalRecordScreen() {
       <View style={styles.modalOverlay}>
         <View style={[styles.modalContent, { backgroundColor: theme.card }]}>
           <View style={styles.modalHeader}>
-            <Text style={[styles.modalTitle, { color: theme.text }]}>選擇排放類別</Text>
+            <Text style={[styles.modalTitle, { color: theme.text }]}>{t('add.record.modal.select.category')}</Text>
             <TouchableOpacity onPress={() => setShowCategoryModal(false)}>
               <X size={24} color={theme.text} />
             </TouchableOpacity>
           </View>
           
           <FlatList
-            data={OPERATIONAL_CATEGORIES}
+            data={translatedCategories}
             keyExtractor={item => item.id}
             renderItem={({ item }) => (
               <TouchableOpacity
@@ -1107,7 +1095,7 @@ export default function AddOperationalRecordScreen() {
                     {item.name}
                   </Text>
                                      <Text style={[styles.categoryOptionDesc, { color: theme.secondaryText }]}>
-                     範疇 {item.scope || 'N/A'}
+                     {t('add.record.scope.label')} {item.scope || t('add.record.scope.na')}
                    </Text>
                 </View>
                 {formData.categoryId === item.id && (
@@ -1132,7 +1120,7 @@ export default function AddOperationalRecordScreen() {
       <View style={styles.modalOverlay}>
         <View style={[styles.modalContent, { backgroundColor: theme.card }]}>
           <View style={styles.modalHeader}>
-            <Text style={[styles.modalTitle, { color: theme.text }]}>選擇排放源</Text>
+            <Text style={[styles.modalTitle, { color: theme.text }]}>{t('add.record.modal.select.source')}</Text>
             <TouchableOpacity onPress={() => setShowSourceModal(false)}>
               <X size={24} color={theme.text} />
             </TouchableOpacity>
@@ -1142,7 +1130,7 @@ export default function AddOperationalRecordScreen() {
             <View style={styles.emptyState}>
               <AlertCircle size={48} color={theme.secondaryText} />
               <Text style={[styles.emptyStateText, { color: theme.secondaryText }]}>
-                請先選擇排放類別
+                {t('add.record.select.category.first')}
               </Text>
             </View>
           ) : (
@@ -1176,7 +1164,7 @@ export default function AddOperationalRecordScreen() {
                       {item.description}
                     </Text>
                     <Text style={[styles.sourceOptionFactor, { color: theme.primary }]}>
-                      排放係數: {item.emissionFactor} kg CO₂e/{item.unit}
+                      {t('add.record.emission.factor.label')}: {item.emissionFactor} kg CO₂e/{item.unit}
                     </Text>
                   </View>
                   {formData.sourceId === item.id && (
@@ -1202,7 +1190,7 @@ export default function AddOperationalRecordScreen() {
       <View style={styles.modalOverlay}>
         <View style={[styles.modalContent, { backgroundColor: theme.card }]}>
           <View style={styles.modalHeader}>
-            <Text style={[styles.modalTitle, { color: theme.text }]}>分攤設定</Text>
+            <Text style={[styles.modalTitle, { color: theme.text }]}>{t('add.record.modal.allocation.settings')}</Text>
             <TouchableOpacity onPress={() => setShowAllocationModal(false)}>
               <X size={24} color={theme.text} />
             </TouchableOpacity>
@@ -1211,12 +1199,12 @@ export default function AddOperationalRecordScreen() {
           <ScrollView style={styles.modalBody}>
             {/* 分攤方式選擇 */}
             <View style={styles.allocationMethodSection}>
-              <Text style={[styles.sectionTitle, { color: theme.text }]}>分攤方式</Text>
+              <Text style={[styles.sectionTitle, { color: theme.text }]}>{t('add.record.allocation.method.section')}</Text>
               {[
-                { method: 'budget', title: '預算分攤', desc: '依據專案預算比例分攤' },
-                { method: 'equal', title: '平均分攤', desc: '平均分配到所有專案' },
-                { method: 'duration', title: '時間分攤', desc: '依據專案執行天數分攤' },
-                { method: 'custom', title: '自訂分攤', desc: '手動設定分攤比例' }
+                { method: 'budget', title: t('add.record.allocation.method.budget.title'), desc: t('add.record.allocation.method.budget.desc') },
+                { method: 'equal', title: t('add.record.allocation.method.equal.title'), desc: t('add.record.allocation.method.equal.desc') },
+                { method: 'duration', title: t('add.record.allocation.method.duration.title'), desc: t('add.record.allocation.method.duration.desc') },
+                { method: 'custom', title: t('add.record.allocation.method.custom.title'), desc: t('add.record.allocation.method.custom.desc') }
               ].map(({ method, title, desc }) => (
                 <TouchableOpacity
                   key={method}
@@ -1242,7 +1230,7 @@ export default function AddOperationalRecordScreen() {
 
             {/* 目標專案選擇 */}
             <View style={styles.targetProjectsSection}>
-              <Text style={[styles.sectionTitle, { color: theme.text }]}>目標專案</Text>
+              <Text style={[styles.sectionTitle, { color: theme.text }]}>{t('add.record.allocation.target.projects')}</Text>
               {activeProjects.map(project => (
                 <TouchableOpacity
                   key={project.id}
@@ -1265,7 +1253,7 @@ export default function AddOperationalRecordScreen() {
                   <View style={styles.projectOptionContent}>
                     <Text style={[styles.projectOptionName, { color: theme.text }]}>{project.name}</Text>
                     <Text style={[styles.projectOptionDesc, { color: theme.secondaryText }]}>
-                      預算: ${project.budget?.toLocaleString() || '未設定'}
+                      {t('add.record.project.budget.label')}: ${project.budget?.toLocaleString() || t('add.record.project.budget.not.set')}
                     </Text>
                   </View>
                   {formData.targetProjects.includes(project.id) && (
@@ -1278,7 +1266,7 @@ export default function AddOperationalRecordScreen() {
             {/* 自訂比例設定 */}
             {formData.allocationMethod === 'custom' && formData.targetProjects.length > 0 && (
               <View style={styles.customPercentageSection}>
-                <Text style={[styles.sectionTitle, { color: theme.text }]}>自訂分攤比例</Text>
+                <Text style={[styles.sectionTitle, { color: theme.text }]}>{t('add.record.allocation.custom.percentages')}</Text>
                 {formData.targetProjects.map(projectId => {
                   const project = activeProjects.find(p => p.id === projectId);
                   if (!project) return null;
@@ -1318,7 +1306,7 @@ export default function AddOperationalRecordScreen() {
           
           <View style={styles.modalFooter}>
             <Button
-              title="確定"
+              title={t('add.record.modal.confirm')}
               onPress={() => setShowAllocationModal(false)}
               variant="primary"
               style={{ flex: 1 }}
@@ -1339,7 +1327,7 @@ export default function AddOperationalRecordScreen() {
       <View style={styles.modalOverlay}>
         <View style={[styles.helpModalContent, { backgroundColor: theme.card }]}>
           <View style={[styles.modalHeader, { borderBottomColor: theme.border }]}>
-            <Text style={[styles.modalTitle, { color: theme.text }]}>🌱 新手指南</Text>
+            <Text style={[styles.modalTitle, { color: theme.text }]}>{t('add.record.modal.guide.title')}</Text>
             <TouchableOpacity onPress={() => setShowHelpModal(false)}>
               <X size={24} color={theme.secondaryText} />
             </TouchableOpacity>
@@ -1347,69 +1335,70 @@ export default function AddOperationalRecordScreen() {
           
           <ScrollView style={styles.helpModalBody} showsVerticalScrollIndicator={false}>
             <View style={styles.helpSection}>
-              <Text style={[styles.helpSectionTitle, { color: theme.text }]}>📝 如何填寫營運記錄？</Text>
+              <Text style={[styles.helpSectionTitle, { color: theme.text }]}>{t('add.record.help.how.to.fill')}</Text>
               <Text style={[styles.helpText, { color: theme.secondaryText }]}>
-                營運記錄是指公司日常營運中產生的碳排放活動，像是辦公室用電、公司車輛用油、員工差旅等。
+                {t('add.record.help.operational.description')}
               </Text>
             </View>
 
             <View style={styles.helpSection}>
-              <Text style={[styles.helpStepTitle, { color: theme.primary }]}>步驟 1: 選擇排放類別</Text>
+              <Text style={[styles.helpStepTitle, { color: theme.primary }]}>{t('add.record.help.step1.title')}</Text>
               <Text style={[styles.helpText, { color: theme.secondaryText }]}>
-                • 範疇1：公司直接控制的排放（如公司車輛）{'\n'}
-                • 範疇2：購買能源的排放（如用電、用氣）{'\n'}
-                • 範疇3：其他間接排放（如員工通勤、廢棄物）
+                {t('add.record.help.step1.scope1')}{'\n'}
+                {t('add.record.help.step1.scope2')}{'\n'}
+                {t('add.record.help.step1.scope3')}
               </Text>
             </View>
 
             <View style={styles.helpSection}>
-              <Text style={[styles.helpStepTitle, { color: theme.primary }]}>步驟 2: 選擇排放源</Text>
+              <Text style={[styles.helpStepTitle, { color: theme.primary }]}>{t('add.record.help.step2.title')}</Text>
               <Text style={[styles.helpText, { color: theme.secondaryText }]}>
-                根據類別選擇具體的排放源，系統會自動提供對應的計算係數。
+                {t('add.record.help.step2.scope1')}{'\n'}
+                {t('add.record.help.step2.scope2')}{'\n'}
+                {t('add.record.help.step2.scope3')}
               </Text>
             </View>
 
             <View style={styles.helpSection}>
-              <Text style={[styles.helpStepTitle, { color: theme.primary }]}>步驟 3: 輸入數量</Text>
+              <Text style={[styles.helpStepTitle, { color: theme.primary }]}>{t('add.record.help.step3.title')}</Text>
               <Text style={[styles.helpText, { color: theme.secondaryText }]}>
-                輸入對應單位的數量，例如：{'\n'}
-                • 用電：輸入度數 (kWh){'\n'}
-                • 開車：輸入公里數 (km){'\n'}
-                • 用油：輸入公升數 (L)
+                {t('add.record.help.step3.scope1')}{'\n'}
+                {t('add.record.help.step3.scope2')}{'\n'}
+                {t('add.record.help.step3.scope3')}
               </Text>
             </View>
 
             <View style={styles.helpSection}>
-              <Text style={[styles.helpStepTitle, { color: theme.primary }]}>步驟 4: 填寫描述</Text>
+              <Text style={[styles.helpStepTitle, { color: theme.primary }]}>{t('add.record.help.step4.title')}</Text>
               <Text style={[styles.helpText, { color: theme.secondaryText }]}>
-                簡單描述這次活動，例如：「辦公室12月電費」、「出差台中拜訪客戶」等。
+                {t('add.record.help.step4.scope1')}{'\n'}
+                {t('add.record.help.step4.scope2')}{'\n'}
+                {t('add.record.help.step4.scope3')}
               </Text>
             </View>
 
             <View style={styles.helpSection}>
-              <Text style={[styles.helpStepTitle, { color: theme.primary }]}>步驟 5: 分攤設定（可選）</Text>
+              <Text style={[styles.helpStepTitle, { color: theme.primary }]}>{t('add.record.help.step5.title')}</Text>
               <Text style={[styles.helpText, { color: theme.secondaryText }]}>
-                可以將這筆排放分攤到相關專案中，有四種分攤方式：{'\n'}
-                • 預算分攤：按專案預算比例分配{'\n'}
-                • 平均分攤：平均分配給各專案{'\n'}
-                • 時長分攤：按專案時間長度分配{'\n'}
-                • 自訂分攤：手動設定各專案比例
+                {t('add.record.help.step5.description')}{'\n'}
+                {t('add.record.help.step5.budget')}{'\n'}
+                {t('add.record.help.step5.equal')}{'\n'}
+                {t('add.record.help.step5.duration')}{'\n'}
+                {t('add.record.help.step5.custom')}
               </Text>
             </View>
 
             <View style={[styles.helpTip, { backgroundColor: theme.primary + '10' }]}>
-              <Text style={[styles.helpTipTitle, { color: theme.primary }]}>💡 小貼士</Text>
+              <Text style={[styles.helpTipTitle, { color: theme.primary }]}>{t('add.record.help.tip.title')}</Text>
               <Text style={[styles.helpText, { color: theme.secondaryText }]}>
-                • 每個字段旁邊的問號圖示可以查看詳細說明{'\n'}
-                • 系統會自動計算碳排放量{'\n'}
-                • 可以隨時點擊「新手指南」回到這裡
+                {t('add.record.help.tip.operational.description')}
               </Text>
             </View>
           </ScrollView>
           
           <View style={[styles.modalFooter, { borderTopColor: theme.border }]}>
             <Button
-              title="開始填寫"
+              title={t('add.record.modal.start.filling')}
               onPress={() => setShowHelpModal(false)}
               variant="primary"
               style={{ flex: 1 }}
@@ -1525,7 +1514,7 @@ export default function AddOperationalRecordScreen() {
                     <View style={styles.dataItem}>
                       <Text style={[styles.dataLabel, { color: theme.secondaryText }]}>排放類別：</Text>
                       <Text style={[styles.dataValue, { color: theme.text }]}>
-                        {OPERATIONAL_CATEGORIES.find(c => c.id === latestAIResult.suggestedCategory)?.name || latestAIResult.suggestedCategory}
+                        {translatedCategories.find(c => c.id === latestAIResult.suggestedCategory)?.name || latestAIResult.suggestedCategory}
                       </Text>
                     </View>
                   )}
@@ -1533,7 +1522,7 @@ export default function AddOperationalRecordScreen() {
                     <View style={styles.dataItem}>
                       <Text style={[styles.dataLabel, { color: theme.secondaryText }]}>排放源：</Text>
                       <Text style={[styles.dataValue, { color: theme.text }]}>
-                        {OPERATIONAL_SOURCES.find(s => s.id === latestAIResult.suggestedSource)?.name || latestAIResult.suggestedSource}
+                        {translatedSources.find(s => s.id === latestAIResult.suggestedSource)?.name || latestAIResult.suggestedSource}
                       </Text>
                     </View>
                   )}
@@ -1543,7 +1532,7 @@ export default function AddOperationalRecordScreen() {
               {/* 驗證問題 */}
               {latestAIResult.issues.length > 0 && (
                 <View style={styles.helpSection}>
-                  <Text style={[styles.helpSectionTitle, { color: theme.text }]}>需要注意的問題</Text>
+                  <Text style={[styles.helpSectionTitle, { color: theme.text }]}>{t('add.record.ai.issues.title')}</Text>
                   {latestAIResult.issues.map((issue, index) => (
                     <Text key={index} style={[styles.helpText, { color: '#EF4444' }]}>
                       ⚠️ {issue}
@@ -1556,7 +1545,7 @@ export default function AddOperationalRecordScreen() {
             {/* 操作按鈕 */}
             <View style={[styles.modalFooter, { borderTopColor: theme.border }]}>
               <Button
-                title="自動填入表單"
+                title={t('add.record.modal.auto.fill')}
                 onPress={() => {
                   applyAIResultToForm(latestAIResult);
                   setShowAiResult(false);
@@ -1566,7 +1555,7 @@ export default function AddOperationalRecordScreen() {
                 style={{ flex: 1, marginRight: 8 }}
               />
               <Button
-                title="關閉"
+                title={t('add.record.modal.close')}
                 onPress={() => setShowAiResult(false)}
                 variant="outline"
                 style={{ flex: 1, marginLeft: 8 }}
@@ -1591,7 +1580,7 @@ export default function AddOperationalRecordScreen() {
         <View style={styles.modalOverlay}>
           <View style={[styles.helpModalContent, { backgroundColor: theme.card, maxWidth: 400, minWidth: 300 }]}>
             <View style={[styles.modalHeader, { borderBottomColor: theme.border }]}>
-              <Text style={[styles.modalTitle, { color: theme.text }]}>🤖 AI 分析完成</Text>
+              <Text style={[styles.modalTitle, { color: theme.text }]}>🤖 {t('add.record.ai.analysis')}</Text>
               <TouchableOpacity onPress={() => setShowAiAlert(false)}>
                 <X size={24} color={theme.secondaryText} />
               </TouchableOpacity>
@@ -1599,19 +1588,19 @@ export default function AddOperationalRecordScreen() {
             
             <View style={styles.helpModalBody}>
               <Text style={[styles.helpText, { color: theme.text, marginBottom: 16 }]}>
-                文件類型: {currentAiResult.documentType}{'\n'}
-                可信度: {currentAiResult.confidence}%{'\n'}
+                {t('add.record.ai.document.type')}: {currentAiResult.documentType}{'\n'}
+                {t('add.record.ai.confidence')}: {currentAiResult.confidence}%{'\n'}
                 {'\n'}
-                識別到的數據:{'\n'}
-                {currentAiResult.extractedData.description || '未知'}
-                {currentAiResult.extractedData.quantity ? `\n數量: ${currentAiResult.extractedData.quantity} ${currentAiResult.extractedData.unit || ''}` : ''}
-                {currentAiResult.extractedData.amount ? `\n金額: NT$ ${currentAiResult.extractedData.amount}` : ''}
+                {t('add.record.ai.extracted.data')}:{'\n'}
+                {currentAiResult.extractedData.description || t('add.record.ai.unknown')}
+                {currentAiResult.extractedData.quantity ? `\n${t('add.record.ai.quantity.label')}: ${currentAiResult.extractedData.quantity} ${currentAiResult.extractedData.unit || ''}` : ''}
+                {currentAiResult.extractedData.amount ? `\n${t('add.record.ai.amount.label')}: NT$ ${currentAiResult.extractedData.amount}` : ''}
               </Text>
             </View>
 
             <View style={[styles.modalFooter, { borderTopColor: theme.border, flexDirection: 'column', gap: 8 }]}>
               <Button
-                title="🚀 自動填入表單"
+                title={t('add.record.ai.auto.fill')}
                 onPress={() => {
                   applyAIResultToForm(currentAiResult);
                   setShowAiAlert(false);
@@ -1621,7 +1610,7 @@ export default function AddOperationalRecordScreen() {
               />
               <View style={{ flexDirection: 'row', gap: 8 }}>
                 <Button
-                  title="查看詳細"
+                  title={t('add.record.ai.view.details')}
                   onPress={() => {
                     setShowAiResult(true);
                     setShowAiAlert(false);
@@ -1630,7 +1619,7 @@ export default function AddOperationalRecordScreen() {
                   style={{ flex: 1 }}
                 />
                 <Button
-                  title="稍後處理"
+                  title={t('add.record.ai.process.later')}
                   onPress={() => setShowAiAlert(false)}
                   variant="outline"
                   style={{ flex: 1 }}
@@ -1646,20 +1635,20 @@ export default function AddOperationalRecordScreen() {
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={styles.headerContainer}>
-      <Header title="新增營運記錄" showBackButton />
+      <Header title={t('add.record.title')} showBackButton />
         <TouchableOpacity 
           style={[styles.helpButton, { backgroundColor: theme.primary + '15' }]}
           onPress={() => setShowHelpModal(true)}
         >
           <AlertCircle size={20} color={theme.primary} />
-          <Text style={[styles.helpButtonText, { color: theme.primary }]}>新手指南</Text>
+          <Text style={[styles.helpButtonText, { color: theme.primary }]}>{t('add.record.guide.button')}</Text>
         </TouchableOpacity>
       </View>
       
       {/* 動畫進度條 */}
       <View style={[styles.progressContainer, { backgroundColor: theme.card }]}>
         <View style={styles.progressHeader}>
-          <Text style={[styles.progressLabel, { color: theme.text }]}>表單完成度</Text>
+          <Text style={[styles.progressLabel, { color: theme.text }]}>{t('add.record.progress.label')}</Text>
           <Animated.Text style={[styles.progressPercentage, { color: theme.primary }]}>
             {progressAnim.interpolate({
               inputRange: [0, 1],
@@ -1703,16 +1692,16 @@ export default function AddOperationalRecordScreen() {
         >
           {/* 基本資訊 */}
           <View style={[styles.section, { backgroundColor: theme.card }]}>
-            <Text style={[styles.sectionTitle, { color: theme.text }]}>基本資訊</Text>
+            <Text style={[styles.sectionTitle, { color: theme.text }]}>{t('add.record.basic.info')}</Text>
             
             {/* 排放類別 */}
             <View style={styles.fieldGroup}>
               <View style={styles.fieldLabelRow}>
                 <Text style={[styles.fieldLabel, { color: theme.text }]}>
-                  排放類別 *
+                  {t('add.record.category')} *
                   {selectedCategory && (
                     <Text style={[styles.fieldBadge, { color: theme.primary, backgroundColor: theme.primary + '20' }]}>
-                      {' '}範疇 {selectedCategory.scope}
+                      {' '}{t('add.record.category.scope')} {selectedCategory.scope}
                     </Text>
                   )}
                 </Text>
@@ -1720,9 +1709,9 @@ export default function AddOperationalRecordScreen() {
                   style={styles.helpIcon}
                   onPress={() => {
                     Alert.alert(
-                      HELP_CONTENT.category.title,
-                      HELP_CONTENT.category.content + '\n\n範例：\n' + HELP_CONTENT.category.examples.join('\n'),
-                      [{ text: '了解', style: 'default' }]
+                      t('add.record.help.category.title'),
+                      t('add.record.help.category.content') + '\n\n' + t('add.record.help.examples') + '\n' + [t('add.record.help.category.example.1'), t('add.record.help.category.example.2'), t('add.record.help.category.example.3')].join('\n'),
+                      [{ text: t('add.record.help.understand'), style: 'default' }]
                     );
                   }}
                 >
@@ -1730,7 +1719,7 @@ export default function AddOperationalRecordScreen() {
                 </TouchableOpacity>
               </View>
               <Text style={[styles.fieldHint, { color: theme.secondaryText }]}>
-                選擇這次活動屬於哪種類型的碳排放
+                {t('add.record.category.hint')}
               </Text>
               <TouchableOpacity
                 style={[
@@ -1753,7 +1742,7 @@ export default function AddOperationalRecordScreen() {
                   styles.selectFieldText,
                   { color: selectedCategory ? theme.text : theme.secondaryText }
                 ]}>
-                  {selectedCategory ? selectedCategory.name : '請選擇排放類別'}
+                  {selectedCategory ? selectedCategory.name : t('add.record.validation.required').replace('{field}', t('add.record.category'))}
                 </Text>
                 </View>
                 <ChevronDown size={20} color={theme.secondaryText} />
@@ -1765,7 +1754,7 @@ export default function AddOperationalRecordScreen() {
 
             {/* 排放源 */}
             <View style={styles.fieldGroup}>
-              <Text style={[styles.fieldLabel, { color: theme.text }]}>排放源 *</Text>
+              <Text style={[styles.fieldLabel, { color: theme.text }]}>{t('add.record.source')} *</Text>
               <TouchableOpacity
                 style={[
                   styles.selectField,
@@ -1779,7 +1768,7 @@ export default function AddOperationalRecordScreen() {
                   if (formData.categoryId) {
                     setShowSourceModal(true);
                   } else {
-                    Alert.alert('提示', '請先選擇排放類別');
+                    Alert.alert(t('add.record.alert.title'), t('add.record.alert.select.category.first'));
                   }
                 }}
                 disabled={!formData.categoryId}
@@ -1788,7 +1777,7 @@ export default function AddOperationalRecordScreen() {
                   styles.selectFieldText,
                   { color: selectedSource ? theme.text : theme.secondaryText }
                 ]}>
-                  {selectedSource ? selectedSource.name : '請選擇排放源'}
+                  {selectedSource ? selectedSource.name : t('add.record.source.placeholder')}
                 </Text>
                 <ChevronDown size={20} color={theme.secondaryText} />
               </TouchableOpacity>
@@ -1800,14 +1789,14 @@ export default function AddOperationalRecordScreen() {
             {/* 活動描述 */}
             <View style={styles.fieldGroup}>
               <View style={styles.fieldLabelRow}>
-              <Text style={[styles.fieldLabel, { color: theme.text }]}>活動描述 *</Text>
+              <Text style={[styles.fieldLabel, { color: theme.text }]}>{t('add.record.description')} *</Text>
                 <TouchableOpacity 
                   style={styles.helpIcon}
                   onPress={() => {
                     Alert.alert(
-                      HELP_CONTENT.description.title,
-                      HELP_CONTENT.description.content + '\n\n範例：\n' + HELP_CONTENT.description.examples.join('\n'),
-                      [{ text: '了解', style: 'default' }]
+                      t('add.record.help.description.title'),
+                      t('add.record.help.description.content') + '\n\n' + t('add.record.help.examples') + '\n' + [t('add.record.help.description.example.1'), t('add.record.help.description.example.2'), t('add.record.help.description.example.3')].join('\n'),
+                      [{ text: t('add.record.help.understand'), style: 'default' }]
                     );
                   }}
                 >
@@ -1815,7 +1804,7 @@ export default function AddOperationalRecordScreen() {
                 </TouchableOpacity>
               </View>
               <Text style={[styles.fieldHint, { color: theme.secondaryText }]}>
-                簡單描述這次活動，方便日後查詢和管理
+                {t('add.record.description.hint')}
               </Text>
               <TextInput
                 style={[
@@ -1828,7 +1817,7 @@ export default function AddOperationalRecordScreen() {
                 ]}
                 value={formData.description}
                 onChangeText={(text) => setFormData(prev => ({ ...prev, description: text }))}
-                placeholder="例如：辦公室12月電費、出差台中客戶拜訪"
+                placeholder={t('add.record.description.placeholder')}
                 placeholderTextColor={theme.secondaryText}
                 multiline
                 numberOfLines={3}
@@ -1841,7 +1830,7 @@ export default function AddOperationalRecordScreen() {
 
             {/* 日期 */}
             <View style={styles.fieldGroup}>
-              <Text style={[styles.fieldLabel, { color: theme.text }]}>發生日期</Text>
+              <Text style={[styles.fieldLabel, { color: theme.text }]}>{t('add.record.date.label')}</Text>
               <TouchableOpacity
                 style={[
                   styles.selectField,
@@ -1861,15 +1850,15 @@ export default function AddOperationalRecordScreen() {
 
             {/* 地點 */}
             <View style={styles.fieldGroup}>
-              <Text style={[styles.fieldLabel, { color: theme.text }]}>地點</Text>
+              <Text style={[styles.fieldLabel, { color: theme.text }]}>{t('add.record.location')}</Text>
               <View style={[styles.inputWithIcon, { backgroundColor: theme.background, borderColor: theme.border }]}>
                 <MapPin size={20} color={theme.secondaryText} />
                 <TextInput
-                  style={[styles.iconInput, { color: theme.text }]}
-                  value={formData.location}
-                  onChangeText={(text) => setFormData(prev => ({ ...prev, location: text }))}
-                  placeholder="活動發生地點"
-                  placeholderTextColor={theme.secondaryText}
+                                      style={[styles.iconInput, { color: theme.text }]}
+                    value={formData.location}
+                    onChangeText={(text) => setFormData(prev => ({ ...prev, location: text }))}
+                    placeholder={t('add.record.location.placeholder')}
+                    placeholderTextColor={theme.secondaryText}
                 />
               </View>
             </View>
@@ -1879,12 +1868,12 @@ export default function AddOperationalRecordScreen() {
           <View style={[styles.section, { backgroundColor: theme.card }]}>
             <View style={styles.sectionHeader}>
               <Calculator size={20} color={theme.primary} />
-              <Text style={[styles.sectionTitle, { color: theme.text, marginLeft: 8 }]}>排放量計算</Text>
+              <Text style={[styles.sectionTitle, { color: theme.text, marginLeft: 8 }]}>{t('add.record.emission.calculation')}</Text>
             </View>
 
             {selectedSource && (
               <View style={[styles.infoCard, { backgroundColor: theme.background }]}>
-                <Text style={[styles.infoTitle, { color: theme.text }]}>排放係數資訊</Text>
+                <Text style={[styles.infoTitle, { color: theme.text }]}>{t('add.record.emission.factor.info')}</Text>
                 <Text style={[styles.infoText, { color: theme.secondaryText }]}>
                   {selectedSource.emissionFactor} kg CO₂e/{selectedSource.unit}
                 </Text>
@@ -1895,15 +1884,15 @@ export default function AddOperationalRecordScreen() {
             <View style={styles.fieldGroup}>
               <View style={styles.fieldLabelRow}>
               <Text style={[styles.fieldLabel, { color: theme.text }]}>
-                數量 * {selectedSource && `(${selectedSource.unit})`}
+                {t('add.record.quantity')} * {selectedSource && `(${selectedSource.unit})`}
               </Text>
                 <TouchableOpacity 
                   style={styles.helpIcon}
                   onPress={() => {
                     Alert.alert(
-                      HELP_CONTENT.quantity.title,
-                      HELP_CONTENT.quantity.content + '\n\n範例：\n' + HELP_CONTENT.quantity.examples.join('\n'),
-                      [{ text: '了解', style: 'default' }]
+                      t('add.record.help.quantity.title'),
+                      t('add.record.help.quantity.content') + '\n\n' + t('add.record.help.examples') + '\n' + [t('add.record.help.quantity.example.1'), t('add.record.help.quantity.example.2'), t('add.record.help.quantity.example.3')].join('\n'),
+                      [{ text: t('add.record.help.understand'), style: 'default' }]
                     );
                   }}
                 >
@@ -1912,8 +1901,8 @@ export default function AddOperationalRecordScreen() {
               </View>
               <Text style={[styles.fieldHint, { color: theme.secondaryText }]}>
                 {selectedSource ? 
-                  `輸入這次活動的${selectedSource.unit}數量，例如：100` : 
-                  "先選擇排放源後會顯示對應單位"
+                  `${t('add.record.quantity.hint.before')}${selectedSource.unit}${t('add.record.quantity.hint.after')}` : 
+                  t('add.record.quantity.hint.select.first')
                 }
               </Text>
               <View style={[styles.inputWithUnit, { backgroundColor: theme.background, borderColor: errors.quantity ? theme.error : theme.border }]}>
@@ -1921,7 +1910,7 @@ export default function AddOperationalRecordScreen() {
                   style={[styles.unitInput, { color: theme.text }]}
                 value={formData.quantity}
                 onChangeText={(text) => setFormData(prev => ({ ...prev, quantity: text }))}
-                  placeholder={selectedSource ? "輸入數字" : "請先選擇排放源"}
+                  placeholder={selectedSource ? t('add.record.quantity.placeholder.number') : t('add.record.quantity.placeholder.select.first')}
                 placeholderTextColor={theme.secondaryText}
                 keyboardType="numeric"
               />
@@ -1954,7 +1943,7 @@ export default function AddOperationalRecordScreen() {
                   <View style={styles.resultContent}>
                     <View style={styles.resultHeader}>
                       <Calculator size={20} color={theme.primary} />
-                <Text style={[styles.resultLabel, { color: theme.text }]}>計算排放量</Text>
+                <Text style={[styles.resultLabel, { color: theme.text }]}>{t('add.record.result.label')}</Text>
                     </View>
                 <Text style={[styles.resultValue, { color: theme.primary }]}>
                   {formatEmissions(parseFloat(formData.amount))}
@@ -1974,14 +1963,14 @@ export default function AddOperationalRecordScreen() {
           <View style={[styles.section, { backgroundColor: theme.card }]}>
             <View style={styles.sectionHeader}>
               <Users size={20} color={theme.primary} />
-              <Text style={[styles.sectionTitle, { color: theme.text, marginLeft: 8 }]}>分攤設定</Text>
+              <Text style={[styles.sectionTitle, { color: theme.text, marginLeft: 8 }]}>{t('add.record.allocation.settings')}</Text>
             </View>
 
             <View style={styles.switchRow}>
               <View style={styles.switchInfo}>
-                <Text style={[styles.switchLabel, { color: theme.text }]}>是否分攤到專案</Text>
+                <Text style={[styles.switchLabel, { color: theme.text }]}>{t('add.record.allocation.enable')}</Text>
                 <Text style={[styles.switchDesc, { color: theme.secondaryText }]}>
-                  將此營運排放分攤到相關專案
+                  {t('add.record.allocation.description')}
                 </Text>
               </View>
               <Switch
@@ -2001,14 +1990,14 @@ export default function AddOperationalRecordScreen() {
                   <Settings size={20} color={theme.primary} />
                   <View style={styles.allocationButtonText}>
                     <Text style={[styles.allocationButtonTitle, { color: theme.text }]}>
-                      分攤方式: {
-                        formData.allocationMethod === 'budget' ? '預算分攤' :
-                        formData.allocationMethod === 'equal' ? '平均分攤' :
-                        formData.allocationMethod === 'duration' ? '時間分攤' : '自訂分攤'
+                      {t('add.record.allocation.method.label')}: {
+                        formData.allocationMethod === 'budget' ? t('add.record.allocation.method.budget') :
+                        formData.allocationMethod === 'equal' ? t('add.record.allocation.method.equal') :
+                        formData.allocationMethod === 'duration' ? t('add.record.allocation.method.duration') : t('add.record.allocation.method.custom')
                       }
                     </Text>
                     <Text style={[styles.allocationButtonDesc, { color: theme.secondaryText }]}>
-                      已選擇 {formData.targetProjects.length} 個專案
+                      {t('add.record.allocation.projects.selected').replace('{count}', formData.targetProjects.length.toString())}
                     </Text>
                   </View>
                 </View>
@@ -2030,7 +2019,7 @@ export default function AddOperationalRecordScreen() {
           {/* 數據品質評分 */}
           {(formData.categoryId || formData.sourceId || formData.description || documents.length > 0) && (
             <View style={[styles.section, { backgroundColor: theme.card }]}>
-              <Text style={[styles.sectionTitle, { color: theme.text }]}>數據品質評分</Text>
+              <Text style={[styles.sectionTitle, { color: theme.text }]}>{t('add.record.quality.score')}</Text>
               <DataQualityBadge quality={dataQuality} theme={theme} />
               
               {/* 評分詳細資訊 */}
@@ -2039,7 +2028,7 @@ export default function AddOperationalRecordScreen() {
                 onPress={() => setShowQualityDetails(!showQualityDetails)}
               >
                 <Text style={[styles.qualityDetailsText, { color: theme.secondaryText }]}>
-                  {showQualityDetails ? '隱藏詳細資訊' : '查看評分詳細資訊'}
+                  {showQualityDetails ? t('add.record.quality.hide.details') : t('add.record.quality.show.details')}
                 </Text>
                 <ChevronDown 
                   size={16} 
@@ -2052,10 +2041,10 @@ export default function AddOperationalRecordScreen() {
               
               {showQualityDetails && (
                 <View style={styles.qualityDetails}>
-                  <Text style={[styles.qualityFactorTitle, { color: theme.text }]}>評分因子</Text>
+                  <Text style={[styles.qualityFactorTitle, { color: theme.text }]}>{t('add.record.quality.factors')}</Text>
                   <View style={styles.qualityFactorRow}>
                     <Text style={[styles.qualityFactorLabel, { color: theme.secondaryText }]}>
-                      表單完整度
+                      {t('add.record.quality.completeness')}
                     </Text>
                     <Text style={[styles.qualityFactorValue, { color: theme.text }]}>
                       {dataQuality.factors.completeness}%
@@ -2063,7 +2052,7 @@ export default function AddOperationalRecordScreen() {
                   </View>
                   <View style={styles.qualityFactorRow}>
                     <Text style={[styles.qualityFactorLabel, { color: theme.secondaryText }]}>
-                      數據準確性
+                      {t('add.record.quality.accuracy')}
                     </Text>
                     <Text style={[styles.qualityFactorValue, { color: theme.text }]}>
                       {dataQuality.factors.accuracy}%
@@ -2071,7 +2060,7 @@ export default function AddOperationalRecordScreen() {
                   </View>
                   <View style={styles.qualityFactorRow}>
                     <Text style={[styles.qualityFactorLabel, { color: theme.secondaryText }]}>
-                      可追溯性
+                      {t('add.record.quality.traceability')}
                     </Text>
                     <Text style={[styles.qualityFactorValue, { color: theme.text }]}>
                       {dataQuality.factors.traceability}%
@@ -2080,10 +2069,10 @@ export default function AddOperationalRecordScreen() {
                   {dataQuality.factors.hasDocument && (
                     <View style={styles.qualityFactorRow}>
                       <Text style={[styles.qualityFactorLabel, { color: theme.secondaryText }]}>
-                        證明文件
+                        {t('add.record.quality.evidence')}
                       </Text>
                       <Text style={[styles.qualityFactorValue, { color: theme.primary }]}>
-                        {getDocumentTypeLabel(dataQuality.factors.documentType!)}
+                        {getDocumentTypeLabel(dataQuality.factors.documentType!, t)}
                       </Text>
                     </View>
                   )}
@@ -2094,7 +2083,7 @@ export default function AddOperationalRecordScreen() {
 
           {/* 證明文件上傳 */}
           <View style={[styles.section, { backgroundColor: theme.card }]}>
-            <Text style={[styles.sectionTitle, { color: theme.text }]}>證明文件</Text>
+            <Text style={[styles.sectionTitle, { color: theme.text }]}>{t('add.record.evidence')}</Text>
             <DocumentUploader 
               documents={documents}
               onDocumentsChange={setDocuments}
@@ -2141,7 +2130,7 @@ export default function AddOperationalRecordScreen() {
                   setCurrentAiResult(result);
                   setShowAiAlert(true);
                 } catch (error) {
-                  Alert.alert('AI 分析失敗', '請稍後重試或手動輸入數據');
+                  Alert.alert(t('add.record.ai.analysis.failed'), t('add.record.ai.analysis.failed.message'));
                   setAiProcessing({
                     isProcessing: false,
                     stage: 'uploading',
@@ -2155,7 +2144,7 @@ export default function AddOperationalRecordScreen() {
 
           {/* 備註 */}
           <View style={[styles.section, { backgroundColor: theme.card }]}>
-            <Text style={[styles.sectionTitle, { color: theme.text }]}>備註</Text>
+            <Text style={[styles.sectionTitle, { color: theme.text }]}>{t('add.record.notes')}</Text>
             <TextInput
               style={[
                 styles.textInput,
@@ -2168,7 +2157,7 @@ export default function AddOperationalRecordScreen() {
               ]}
               value={formData.notes}
               onChangeText={(text) => setFormData(prev => ({ ...prev, notes: text }))}
-              placeholder="其他相關說明或備註資訊"
+              placeholder={t('add.record.notes.placeholder')}
               placeholderTextColor={theme.secondaryText}
               multiline
               numberOfLines={4}
@@ -2179,13 +2168,13 @@ export default function AddOperationalRecordScreen() {
           {/* 提交按鈕 */}
           <View style={styles.buttonContainer}>
             <Button
-              title="取消"
+              title={t('add.record.cancel')}
               onPress={() => router.back()}
               variant="outline"
               style={{ flex: 1, marginRight: 8 }}
             />
             <Button
-              title="儲存記錄"
+              title={t('add.record.save.record')}
               onPress={handleSave}
               variant="primary"
               loading={isLoading}

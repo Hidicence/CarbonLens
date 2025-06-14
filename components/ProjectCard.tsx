@@ -5,7 +5,7 @@ import { Calendar, MapPin, MoreVertical, Trash2, Edit, X, AlertCircle, Users, Al
 import { Project, ProjectStatus } from '@/types/project';
 import { useProjectStore } from '@/store/projectStore';
 import { useThemeStore } from '@/store/themeStore';
-import { useLanguageStore } from '@/store/languageStore';
+import { useTranslation } from '@/hooks/useTranslation';
 import StatusBadge from './StatusBadge';
 import Button from './Button';
 import AIAssistantButton from './AIAssistantButton';
@@ -16,10 +16,10 @@ interface ProjectCardProps {
 }
 
 export default function ProjectCard({ project }: ProjectCardProps) {
+  const { t } = useTranslation();
   const router = useRouter();
   const { deleteProject, getAllocatedEmissions, calculateProjectEmissions } = useProjectStore();
   const { isDarkMode } = useThemeStore();
-  const { t } = useLanguageStore();
   const theme = isDarkMode ? Colors.dark : Colors.light;
   const [showOptions, setShowOptions] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -68,9 +68,9 @@ export default function ProjectCard({ project }: ProjectCardProps) {
 
   const formatEmissions = (emissions: number) => {
     if (emissions >= 1000) {
-      return `${(emissions / 1000).toFixed(1)} 噸CO₂e`;
+      return `${(emissions / 1000).toFixed(1)} ${t('unit.ton.co2e')}`;
     }
-    return `${emissions.toFixed(1)} kg CO₂e`;
+    return `${emissions.toFixed(1)} ${t('unit.kg.co2e')}`;
   };
   
   const formatEmissionsShort = (emissions: number) => {
@@ -140,7 +140,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
                     <AIAssistantButton
                       variant="primary"
                       size="small"
-                      title="AI填寫"
+                      title={t('ui.ai.fill')}
                       onPress={handleAIFillPress}
                       style={styles.aiButton}
                     />
@@ -162,7 +162,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
                   <View style={styles.detailItem}>
                     <Calendar size={14} color="rgba(255,255,255,0.8)" />
                     <Text style={[styles.detailText, styles.detailTextWithBackground]}>
-                      {project.startDate ? formatDate(project.startDate) : '未設定'}
+                      {project.startDate ? formatDate(project.startDate) : t('common.not.set')}
                       {project.endDate ? ` - ${formatDate(project.endDate)}` : ''}
                     </Text>
                   </View>
@@ -176,7 +176,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
                     <View style={styles.detailItem}>
                       <DollarSign size={14} color="rgba(255,255,255,0.8)" />
                       <Text style={[styles.detailText, styles.detailTextWithBackground]}>
-                        預算: ${project.budget.toLocaleString()}
+                        {t('projects.budget')}: ${project.budget.toLocaleString()}
                       </Text>
                     </View>
                   )}
@@ -187,7 +187,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
               <View style={[styles.emissionsRow, styles.emissionsRowWithBackground]}>
                 {/* 專案直接排放 */}
                 <View style={styles.emissionsColumn}>
-                  <Text style={[styles.emissionsLabel, styles.emissionsLabelWithBackground]}>專案直接排放</Text>
+                  <Text style={[styles.emissionsLabel, styles.emissionsLabelWithBackground]}>{t('emissions.project.direct')}</Text>
                   <Text style={[styles.emissionsValue, { color: '#10B981' }]}>
                     {formatEmissions(projectEmissionSummary.directEmissions)}
                   </Text>
@@ -195,7 +195,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
                 
                 {/* 分攤營運排放 */}
                 <View style={styles.emissionsColumn}>
-                  <Text style={[styles.emissionsLabel, styles.emissionsLabelWithBackground]}>分攤營運排放</Text>
+                  <Text style={[styles.emissionsLabel, styles.emissionsLabelWithBackground]}>{t('emissions.operational.allocated')}</Text>
                   <Text style={[styles.emissionsValue, { color: '#F59E0B' }]}>
                     {formatEmissions(projectEmissionSummary.allocatedEmissions)}
                   </Text>
@@ -203,7 +203,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
                 
                 {/* 總計排放量 */}
                 <View style={styles.emissionsColumn}>
-                  <Text style={[styles.emissionsLabel, styles.emissionsLabelWithBackground, { fontWeight: 'bold' }]}>總計排放量</Text>
+                  <Text style={[styles.emissionsLabel, styles.emissionsLabelWithBackground, { fontWeight: 'bold' }]}>{t('emissions.total')}</Text>
                   <Text style={[styles.emissionsValue, { color: 'white', fontWeight: 'bold' }]}>
                     {formatEmissions(projectEmissionSummary.totalEmissions)}
                   </Text>
@@ -222,7 +222,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
               <AIAssistantButton
                 variant="secondary"
                 size="small"
-                title="AI填寫"
+                                      title={t('ui.ai.fill')}
                 onPress={handleAIFillPress}
                 style={styles.aiButton}
               />
@@ -244,7 +244,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
             <View style={styles.detailItem}>
               <Calendar size={14} color={theme.secondaryText} />
               <Text style={[styles.detailText, { color: theme.secondaryText }]}>
-                {project.startDate ? formatDate(project.startDate) : '未設定'}
+                {project.startDate ? formatDate(project.startDate) : t('common.not.set')}
                 {project.endDate ? ` - ${formatDate(project.endDate)}` : ''}
               </Text>
             </View>
@@ -258,7 +258,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
               <View style={styles.detailItem}>
                 <DollarSign size={14} color={theme.secondaryText} />
                 <Text style={[styles.detailText, { color: theme.secondaryText }]}>
-                  預算: ${project.budget.toLocaleString()}
+  {t('projects.budget')}: ${project.budget.toLocaleString()}
                 </Text>
               </View>
             )}
@@ -269,7 +269,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
             <View style={[styles.emissionsRow, { borderTopColor: theme.border }]}>
               {/* 專案直接排放 */}
               <View style={styles.emissionsColumn}>
-                <Text style={[styles.emissionsLabel, { color: theme.secondaryText }]}>專案直接排放</Text>
+                <Text style={[styles.emissionsLabel, { color: theme.secondaryText }]}>{t('emissions.project.direct')}</Text>
                 <Text style={[styles.emissionsValue, { color: '#10B981' }]}>
                   {formatEmissions(projectEmissionSummary.directEmissions)}
                 </Text>
@@ -277,7 +277,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
               
               {/* 分攤營運排放 */}
               <View style={styles.emissionsColumn}>
-                <Text style={[styles.emissionsLabel, { color: theme.secondaryText }]}>分攤營運排放</Text>
+                <Text style={[styles.emissionsLabel, { color: theme.secondaryText }]}>{t('emissions.operational.allocated')}</Text>
                 <Text style={[styles.emissionsValue, { color: '#F59E0B' }]}>
                   {formatEmissions(projectEmissionSummary.allocatedEmissions)}
                   </Text>
@@ -285,7 +285,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
             
               {/* 總計排放量 */}
               <View style={styles.emissionsColumn}>
-                <Text style={[styles.emissionsLabel, { color: theme.text, fontWeight: 'bold' }]}>總計排放量</Text>
+                <Text style={[styles.emissionsLabel, { color: theme.text, fontWeight: 'bold' }]}>{t('emissions.total')}</Text>
                 <Text style={[styles.emissionsValue, { color: theme.primary, fontWeight: 'bold' }]}>
                   {formatEmissions(projectEmissionSummary.totalEmissions)}
                 </Text>

@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useTranslation } from '@/hooks/useTranslation';
 import { 
   View, 
   Text, 
@@ -87,8 +86,6 @@ export default function EditProjectScreen() {
   }, [project, t]);
   
   const validateForm = () => {
-  const { t } = useTranslation();
-
     const newErrors: {[key: string]: string} = {};
     
     if (!name.trim()) {

@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useTranslation } from '@/hooks/useTranslation';
 import { 
   View, 
   Text, 
@@ -55,8 +54,6 @@ export default function ProjectRecordsScreen() {
   // Simulate loading delay
   useEffect(() => {
     const timer = setTimeout(() => {
-  const { t } = useTranslation();
-
       setIsLoading(false);
     }, 500);
     

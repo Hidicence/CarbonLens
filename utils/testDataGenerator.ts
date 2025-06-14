@@ -1,21 +1,92 @@
 import { Project, NonProjectEmissionRecord, ProjectEmissionRecord } from '@/types/project';
 import { generateId } from './helpers';
+import { Languages } from '@/types/common';
+
+// 測試數據文字內容
+const testDataContent = {
+  zh: {
+    projects: [
+      {
+        name: '測試影集 - 愛在台北',
+        description: '描述兩位年輕人在台北相遇的浪漫愛情故事',
+        location: '台北市'
+      },
+      {
+        name: '測試廣告 - 綠色環保',
+        description: '推廣環保理念的30秒電視廣告',
+        location: '新北市'
+      },
+      {
+        name: '測試紀錄片 - 台灣山林',
+        description: '探索台灣山林生態的紀錄片',
+        location: '南投縣'
+      }
+    ],
+    operationalDescriptions: {
+      electricity: '辦公室電費',
+      commuting: '員工通勤排放',
+      vehicle: '公司車輛加油',
+      paper: '影印紙採購'
+    },
+    projectDescriptions: {
+      transport: '拍攝日交通運輸',
+      catering: '劇組餐飲'
+    }
+  },
+  en: {
+    projects: [
+      {
+        name: 'Test Series - Love in Taipei',
+        description: 'A romantic story about two young people meeting in Taipei',
+        location: 'Taipei City'
+      },
+      {
+        name: 'Test Commercial - Green Environment',
+        description: 'A 30-second TV commercial promoting environmental awareness',
+        location: 'New Taipei City'
+      },
+      {
+        name: 'Test Documentary - Taiwan Forests',
+        description: 'A documentary exploring Taiwan\'s forest ecosystems',
+        location: 'Nantou County'
+      }
+    ],
+    operationalDescriptions: {
+      electricity: 'Office Electricity Bill',
+      commuting: 'Employee Commuting Emissions',
+      vehicle: 'Company Vehicle Fuel',
+      paper: 'Printing Paper Purchase'
+    },
+    projectDescriptions: {
+      transport: 'Filming Day Transportation',
+      catering: 'Crew Catering'
+    }
+  }
+};
 
 // 生成測試專案數據
-export const generateTestProjects = (): Project[] => {
+export const generateTestProjects = (language: Languages = 'zh'): Project[] => {
   const now = new Date();
+  const content = testDataContent[language];
   
-  return [
-    {
+  return content.projects.map((project, index) => {
+    const statuses = ['active', 'active', 'planning'] as const;
+    const budgets = [2500000, 800000, 1200000]; // 250萬、80萬、120萬預算
+    const startDays = [-30, -20, 30]; // 相對於今天的開始天數
+    const endDays = [60, 40, 120]; // 相對於今天的結束天數
+    
+    return {
       id: generateId(),
-      name: '測試影集 - 愛在台北',
-      description: '描述兩位年輕人在台北相遇的浪漫愛情故事',
-      status: 'active',
-      startDate: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString(), // 30天前開始
-      endDate: new Date(now.getTime() + 60 * 24 * 60 * 60 * 1000).toISOString(), // 60天後結束
-      budget: 2500000, // 250萬預算
-      location: '台北市',
-      createdAt: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+      name: project.name,
+      description: project.description,
+      status: statuses[index],
+      startDate: new Date(now.getTime() + startDays[index] * 24 * 60 * 60 * 1000).toISOString(),
+      endDate: new Date(now.getTime() + endDays[index] * 24 * 60 * 60 * 1000).toISOString(),
+      budget: budgets[index],
+      location: project.location,
+      createdAt: startDays[index] < 0 
+        ? new Date(now.getTime() + startDays[index] * 24 * 60 * 60 * 1000).toISOString()
+        : new Date().toISOString(),
       collaborators: [],
       totalEmissions: 0,
       emissionSummary: {
@@ -26,56 +97,15 @@ export const generateTestProjects = (): Project[] => {
         directRecordCount: 0,
         allocatedRecordCount: 0,
       }
-    },
-    {
-      id: generateId(),
-      name: '測試廣告 - 綠色環保',
-      description: '推廣環保理念的30秒電視廣告',
-      status: 'active',
-      startDate: new Date(now.getTime() - 20 * 24 * 60 * 60 * 1000).toISOString(), // 20天前開始
-      endDate: new Date(now.getTime() + 40 * 24 * 60 * 60 * 1000).toISOString(), // 40天後結束
-      budget: 800000, // 80萬預算
-      location: '新北市',
-      createdAt: new Date(now.getTime() - 20 * 24 * 60 * 60 * 1000).toISOString(),
-      collaborators: [],
-      totalEmissions: 0,
-      emissionSummary: {
-        projectId: '',
-        directEmissions: 0,
-        allocatedEmissions: 0,
-        totalEmissions: 0,
-        directRecordCount: 0,
-        allocatedRecordCount: 0,
-      }
-    },
-    {
-      id: generateId(),
-      name: '測試紀錄片 - 台灣山林',
-      description: '探索台灣山林生態的紀錄片',
-      status: 'planning',
-      startDate: new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30天後開始
-      endDate: new Date(now.getTime() + 120 * 24 * 60 * 60 * 1000).toISOString(), // 120天後結束
-      budget: 1200000, // 120萬預算
-      location: '南投縣',
-      createdAt: new Date().toISOString(),
-      collaborators: [],
-      totalEmissions: 0,
-      emissionSummary: {
-        projectId: '',
-        directEmissions: 0,
-        allocatedEmissions: 0,
-        totalEmissions: 0,
-        directRecordCount: 0,
-        allocatedRecordCount: 0,
-      }
-    }
-  ];
+    };
+  });
 };
 
 // 生成測試日常營運排放記錄
-export const generateTestOperationalRecords = (): NonProjectEmissionRecord[] => {
+export const generateTestOperationalRecords = (language: Languages = 'zh'): NonProjectEmissionRecord[] => {
   const now = new Date();
   const records: NonProjectEmissionRecord[] = [];
+  const content = testDataContent[language];
   
   // 過去3個月的記錄
   for (let i = 0; i < 90; i += 7) { // 每週一筆記錄
@@ -89,7 +119,7 @@ export const generateTestOperationalRecords = (): NonProjectEmissionRecord[] => 
       amount: Math.floor(Math.random() * 500) + 800, // 800-1300 kgCO2e
       quantity: Math.floor(Math.random() * 800) + 1200, // 1200-2000 度電
       date: recordDate.toISOString().split('T')[0],
-      description: `辦公室電費 - ${recordDate.getFullYear()}年${recordDate.getMonth() + 1}月`,
+      description: `${content.operationalDescriptions.electricity} - ${recordDate.getFullYear()}${language === 'zh' ? '年' : '/'}${recordDate.getMonth() + 1}${language === 'zh' ? '月' : ''}`,
       isAllocated: true,
       allocationRule: {
         method: 'budget',
@@ -107,7 +137,7 @@ export const generateTestOperationalRecords = (): NonProjectEmissionRecord[] => 
       amount: Math.floor(Math.random() * 300) + 200, // 200-500 kgCO2e
       quantity: Math.floor(Math.random() * 150) + 100, // 100-250 人次
       date: recordDate.toISOString().split('T')[0],
-      description: `員工通勤排放 - ${recordDate.getFullYear()}年${recordDate.getMonth() + 1}月`,
+      description: `${content.operationalDescriptions.commuting} - ${recordDate.getFullYear()}${language === 'zh' ? '年' : '/'}${recordDate.getMonth() + 1}${language === 'zh' ? '月' : ''}`,
       isAllocated: true,
       allocationRule: {
         method: 'equal',
@@ -126,7 +156,7 @@ export const generateTestOperationalRecords = (): NonProjectEmissionRecord[] => 
         amount: Math.floor(Math.random() * 200) + 150, // 150-350 kgCO2e
         quantity: Math.floor(Math.random() * 80) + 60, // 60-140 公升
         date: recordDate.toISOString().split('T')[0],
-        description: `公司車輛加油 - ${recordDate.getFullYear()}年${recordDate.getMonth() + 1}月`,
+        description: `${content.operationalDescriptions.vehicle} - ${recordDate.getFullYear()}${language === 'zh' ? '年' : '/'}${recordDate.getMonth() + 1}${language === 'zh' ? '月' : ''}`,
         isAllocated: true,
         allocationRule: {
           method: 'duration',
@@ -146,7 +176,7 @@ export const generateTestOperationalRecords = (): NonProjectEmissionRecord[] => 
         amount: Math.floor(Math.random() * 50) + 30, // 30-80 kgCO2e
         quantity: Math.floor(Math.random() * 10) + 5, // 5-15 箱
         date: recordDate.toISOString().split('T')[0],
-        description: `影印紙採購 - ${recordDate.getFullYear()}年${recordDate.getMonth() + 1}月`,
+        description: `${content.operationalDescriptions.paper} - ${recordDate.getFullYear()}${language === 'zh' ? '年' : '/'}${recordDate.getMonth() + 1}${language === 'zh' ? '月' : ''}`,
         isAllocated: true,
         allocationRule: {
           method: 'equal',
@@ -162,9 +192,10 @@ export const generateTestOperationalRecords = (): NonProjectEmissionRecord[] => 
 };
 
 // 生成測試專案排放記錄
-export const generateTestProjectRecords = (projectIds: string[]): ProjectEmissionRecord[] => {
+export const generateTestProjectRecords = (projectIds: string[], language: Languages = 'zh'): ProjectEmissionRecord[] => {
   const records: ProjectEmissionRecord[] = [];
   const now = new Date();
+  const content = testDataContent[language];
   
   projectIds.forEach((projectId, index) => {
     // 為每個專案生成一些拍攝記錄
@@ -182,7 +213,7 @@ export const generateTestProjectRecords = (projectIds: string[]): ProjectEmissio
         amount: Math.floor(Math.random() * 300) + 200, // 200-500 kgCO2e
         quantity: Math.floor(Math.random() * 500) + 300, // 300-800 公里
         date: recordDate.toISOString().split('T')[0],
-        description: `拍攝日交通運輸 - 第${i + 1}天`,
+        description: `${content.projectDescriptions.transport} - ${language === 'zh' ? '第' : 'Day '}${i + 1}${language === 'zh' ? '天' : ''}`,
         stage: 'production',
         createdAt: recordDate.toISOString(),
         updatedAt: recordDate.toISOString()
@@ -197,7 +228,7 @@ export const generateTestProjectRecords = (projectIds: string[]): ProjectEmissio
         amount: Math.floor(Math.random() * 150) + 100, // 100-250 kgCO2e
         quantity: Math.floor(Math.random() * 30) + 20, // 20-50 人次
         date: recordDate.toISOString().split('T')[0],
-        description: `劇組餐飲 - 第${i + 1}天`,
+        description: `${content.projectDescriptions.catering} - ${language === 'zh' ? '第' : 'Day '}${i + 1}${language === 'zh' ? '天' : ''}`,
         stage: 'production',
         createdAt: recordDate.toISOString(),
         updatedAt: recordDate.toISOString()
@@ -213,7 +244,7 @@ export const generateTestProjectRecords = (projectIds: string[]): ProjectEmissio
           amount: Math.floor(Math.random() * 200) + 100, // 100-300 kgCO2e
           quantity: Math.floor(Math.random() * 80) + 40, // 40-120 公升
           date: recordDate.toISOString().split('T')[0],
-          description: `發電機燃油 - 第${i + 1}天`,
+          description: `${language === 'zh' ? '發電機燃油' : 'Generator Fuel'} - ${language === 'zh' ? '第' : 'Day '}${i + 1}${language === 'zh' ? '天' : ''}`,
           stage: 'production',
           createdAt: recordDate.toISOString(),
           updatedAt: recordDate.toISOString()
@@ -245,15 +276,15 @@ const updateAllocationTargets = (
 };
 
 // 主要的測試數據生成函數
-export const generateAllTestData = () => {
-  const projects = generateTestProjects();
+export const generateAllTestData = (language: Languages = 'zh') => {
+  const projects = generateTestProjects(language);
   const activeProjectIds = projects.filter(p => p.status === 'active').map(p => p.id);
   
   // 生成營運記錄並正確設定分攤目標
-  const rawOperationalRecords = generateTestOperationalRecords();
+  const rawOperationalRecords = generateTestOperationalRecords(language);
   const operationalRecords = updateAllocationTargets(rawOperationalRecords, activeProjectIds);
   
-  const projectRecords = generateTestProjectRecords(projects.map(p => p.id));
+  const projectRecords = generateTestProjectRecords(projects.map(p => p.id), language);
   
   console.log('測試數據生成完成:');
   console.log(`- 專案數量: ${projects.length}`);

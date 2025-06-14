@@ -1,5 +1,4 @@
 import React, { useState, useRef } from 'react';
-import { useTranslation } from '@/hooks/useTranslation';
 import { 
   View, 
   Text, 
@@ -77,35 +76,35 @@ export default function NewProjectScreen() {
     let isValid = true;
     
     if (!name.trim()) {
-      setNameError(t('validation.required').replace('{field}', t('projects.name')));
+      setNameError(t('projects.name') + t('common.required'));
       isValid = false;
     } else {
       setNameError('');
     }
     
     if (!description.trim()) {
-      setDescriptionError(t('validation.required').replace('{field}', t('projects.description')));
+      setDescriptionError(t('projects.description') + t('common.required'));
       isValid = false;
     } else {
       setDescriptionError('');
     }
     
     if (!location.trim()) {
-      setLocationError(t('validation.required').replace('{field}', t('projects.location')));
+      setLocationError(t('projects.location') + t('common.required'));
       isValid = false;
     } else {
       setLocationError('');
     }
     
     if (!startDate) {
-      setStartDateError(t('validation.required').replace('{field}', t('projects.start.date')));
+      setStartDateError(t('projects.start.date') + t('common.required'));
       isValid = false;
     } else {
       setStartDateError('');
     }
     
     if (enableCarbonBudget && !totalCarbonBudget.trim()) {
-      setCarbonBudgetError(t('validation.required').replace('{field}', t('projects.carbon.budget.total')));
+      setCarbonBudgetError(t('projects.carbon.budget.total') + t('common.required'));
       isValid = false;
     } else {
       setCarbonBudgetError('');

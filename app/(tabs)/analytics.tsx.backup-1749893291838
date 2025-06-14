@@ -1,5 +1,4 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { useTranslation } from '@/hooks/useTranslation';
 import { View, Text, StyleSheet, SafeAreaView, ScrollView, Pressable, Dimensions, TouchableOpacity, Alert, ActivityIndicator, Platform, Share } from 'react-native';
 import { useThemeStore } from '@/store/themeStore';
 import { useProjectStore } from '@/store/projectStore';
@@ -89,11 +88,9 @@ export default function AnalyticsScreen() {
   // 計算專案摘要數據
   const projectSummaries = useMemo(() => {
     const summaries: { [key: string]: ProjectEmissionSummary } = {};
-    if (projects && projects.length > 0) {
-      projects.forEach(project => {
-        summaries[project.id] = calculateProjectEmissions(project.id);
-      });
-    }
+    projects.forEach(project => {
+      summaries[project.id] = calculateProjectEmissions(project.id);
+    });
     return summaries;
   }, [projects, calculateProjectEmissions]);
 
@@ -120,8 +117,8 @@ export default function AnalyticsScreen() {
     return {
       totalEmissions,
       totalRecords,
-      averageEmissions: (projects && projects.length > 0) ? totalEmissions / projects.length : 0,
-      activeProjects: projects ? projects.filter(p => p.status === 'active').length : 0
+      averageEmissions: projects.length > 0 ? totalEmissions / projects.length : 0,
+      activeProjects: projects.filter(p => p.status === 'active').length
     };
   }, [projects, calculateProjectEmissions, nonProjectEmissionRecords, allocationRecords]);
 
@@ -503,7 +500,7 @@ export default function AnalyticsScreen() {
       {/* 專案統計 */}
       <View style={[styles.projectCard, { backgroundColor: theme.card }]}>
         <Text style={[styles.sectionTitle, { color: theme.text }]}>{t('analytics.project.performance')}</Text>
-        {(projects && projects.length > 0) ? (
+        {projects.length > 0 ? (
           <View style={styles.projectList}>
             {projects.map((project) => {
               const projectSummary = calculateProjectEmissions(project.id);
@@ -646,7 +643,7 @@ export default function AnalyticsScreen() {
         {/* 專案階段詳情 */}
         <View style={[styles.projectCard, { backgroundColor: theme.card }]}>
           <Text style={[styles.sectionTitle, { color: theme.text }]}>各專案階段明細</Text>
-          {(projects && projects.length > 0) ? (
+          {projects.length > 0 ? (
             <View style={styles.projectList}>
               {projects.map((project) => {
                 const projectSummary = calculateProjectEmissions(project.id);
@@ -884,7 +881,7 @@ export default function AnalyticsScreen() {
     try {
       if (isGeneratingReport) return;
       
-      if (!projects || projects.length === 0) {
+      if (projects.length === 0) {
         Alert.alert('無法生成報告', '您需要至少創建一個專案才能生成報告');
         return;
       }
@@ -893,11 +890,11 @@ export default function AnalyticsScreen() {
       const { organization } = useProfileStore.getState();
       
       // 根據選擇的專案過濾數據
-          const filteredProjects = (selectedProjects && selectedProjects.length > 0)
-      ? (projects || []).filter(p => selectedProjects.includes(p.id))
-      : (projects || []);
-
-    const filteredSummaries = (selectedProjects && selectedProjects.length > 0)
+      const filteredProjects = selectedProjects.length > 0 
+        ? projects.filter(p => selectedProjects.includes(p.id))
+        : projects;
+      
+      const filteredSummaries = selectedProjects.length > 0
         ? Object.fromEntries(
             Object.entries(projectSummaries).filter(([projectId]) => 
               selectedProjects.includes(projectId)
@@ -948,7 +945,7 @@ export default function AnalyticsScreen() {
               </View>
             </View>
             <Text style={[styles.statValue, { color: theme.text }]}>
-              {projects ? projects.length : 0}
+              {projects.length}
             </Text>
             <Text style={[styles.statLabel, { color: theme.secondaryText }]}>
               可分析專案
@@ -983,7 +980,7 @@ export default function AnalyticsScreen() {
               styles.selectAllButton,
               { 
                 borderColor: theme.border,
-                                  backgroundColor: (selectedProjects && selectedProjects.length === 0) ? theme.primary + '10' : 'transparent'
+                backgroundColor: selectedProjects.length === 0 ? theme.primary + '10' : 'transparent'
               }
             ]}
             onPress={() => setSelectedProjects([])}
@@ -991,10 +988,10 @@ export default function AnalyticsScreen() {
             <Text style={[
               styles.selectAllText,
               { 
-                                  color: (selectedProjects && selectedProjects.length === 0) ? theme.primary : theme.text
+                color: selectedProjects.length === 0 ? theme.primary : theme.text
               }
             ]}>
-                              {(selectedProjects && selectedProjects.length === 0) ? '✓ ' : ''}全部專案 ({projects ? projects.length : 0})
+              {selectedProjects.length === 0 ? '✓ ' : ''}全部專案 ({projects.length})
             </Text>
           </Pressable>
           
@@ -1163,9 +1160,9 @@ export default function AnalyticsScreen() {
           )}
           <Text style={styles.generateButtonText}>
             {isGeneratingReport ? '生成中...' : 
-                           (selectedProjects && selectedProjects.length > 0)
-              ? `生成報告 (${selectedProjects.length}個專案)`
-              : `生成報告 (全部${projects ? projects.length : 0}個專案)`}
+             selectedProjects.length > 0 
+               ? `生成報告 (${selectedProjects.length}個專案)`
+               : `生成報告 (全部${projects.length}個專案)`}
           </Text>
         </Pressable>
         

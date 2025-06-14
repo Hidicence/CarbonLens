@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from '@/hooks/useTranslation';
 import { View, Text, StyleSheet } from 'react-native';
 import { ProjectStatus } from '@/types/project';
 
@@ -8,6 +9,7 @@ interface StatusBadgeProps {
 }
 
 export default function StatusBadge({ status, size = 'small' }: StatusBadgeProps) {
+  const { t } = useTranslation();
   const getStatusColor = (status: ProjectStatus): string => {
     switch(status) {
       case 'planning':
@@ -26,15 +28,15 @@ export default function StatusBadge({ status, size = 'small' }: StatusBadgeProps
   const getStatusLabel = (status: ProjectStatus): string => {
     switch(status) {
       case 'planning':
-        return '規劃中';
+        return t('status.planning');
       case 'active':
-        return '進行中';
+        return t('status.active');
       case 'completed':
-        return '已完成';
+        return t('status.completed');
       case 'on-hold':
-        return '暫停中';
+        return t('status.on-hold');
       default:
-        return '未知狀態';
+        return t('status.unknown');
     }
   };
   
@@ -42,7 +44,7 @@ export default function StatusBadge({ status, size = 'small' }: StatusBadgeProps
   const label = getStatusLabel(status);
   
   // 如果標籤為空，不渲染任何內容
-  if (!label || label === '未知狀態') {
+  if (!label || label === t('status.unknown')) {
     return null;
   }
   

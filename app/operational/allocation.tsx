@@ -32,6 +32,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { useProjectStore } from '@/store/projectStore';
 import { useThemeStore } from '@/store/themeStore';
+import { useTranslation } from '@/hooks/useTranslation';
 import Colors from '@/constants/colors';
 import Header from '@/components/Header';
 import { formatEmissions } from '@/utils/helpers';
@@ -40,6 +41,7 @@ import { OPERATIONAL_CATEGORIES } from '@/mocks/projects';
 
 export default function AllocationManagementScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
   const { 
     projects, 
     nonProjectEmissionRecords, 
@@ -110,12 +112,12 @@ export default function AllocationManagementScreen() {
   // 處理單個記錄分攤
   const handleAllocateRecord = async (record: NonProjectEmissionRecord) => {
     if (activeProjects.length === 0) {
-      Alert.alert('錯誤', '沒有可用的專案進行分攤');
+      Alert.alert(t('common.error'), t('allocation.no.projects.error'));
       return;
     }
     
     if (selectedMethod === 'budget' && budgetStats.totalBudget === 0) {
-      Alert.alert('錯誤', '沒有設定預算的專案，無法進行預算分攤');
+      Alert.alert(t('common.error'), t('allocation.no.budget.error'));
       return;
     }
 
@@ -130,9 +132,9 @@ export default function AllocationManagementScreen() {
 
       await applyAllocation(record.id!, allocationRule);
       
-      Alert.alert('分攤成功', `記錄已成功以${getMethodTitle(selectedMethod)}方式分攤到相關專案`);
+      Alert.alert(t('allocation.success'), t('allocation.success.message').replace('{method}', getMethodTitle(selectedMethod)));
     } catch (error) {
-      Alert.alert('分攤失敗', '分攤過程中發生錯誤，請重試');
+      Alert.alert(t('allocation.failed'), t('allocation.failed.message'));
       console.error('Allocation error:', error);
     } finally {
       setAllocatingRecordId(null);
@@ -142,7 +144,7 @@ export default function AllocationManagementScreen() {
   // 批量分攤所有未分攤記錄
   const allocateAllRecords = () => {
     if (unallocatedRecords.length === 0) {
-      Alert.alert('提示', '沒有需要分攤的記錄');
+      Alert.alert(t('common.notice'), t('allocation.no.records'));
       return;
     }
     
@@ -152,12 +154,12 @@ export default function AllocationManagementScreen() {
     }
     
     Alert.alert(
-      '批量分攤確認',
-      `將使用${getMethodTitle(selectedMethod)}方式分攤 ${unallocatedRecords.length} 筆記錄到所有進行中的專案`,
+      t('allocation.batch.confirm'),
+      t('allocation.batch.confirm.message').replace('{method}', getMethodTitle(selectedMethod)).replace('{count}', unallocatedRecords.length.toString()),
       [
-        { text: '取消', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         {
-          text: '確定',
+          text: t('common.confirm'),
           onPress: async () => {
             try {
               const allocationRule = {
@@ -169,7 +171,7 @@ export default function AllocationManagementScreen() {
                 await applyAllocation(record.id!, allocationRule);
               }
               
-              Alert.alert('批量分攤成功', `已成功分攤 ${unallocatedRecords.length} 筆記錄`);
+              Alert.alert(t('allocation.batch.success'), t('allocation.batch.success.message').replace('{count}', unallocatedRecords.length.toString()));
             } catch (error) {
               Alert.alert('分攤失敗', '批量分攤過程中發生錯誤，請重試');
               console.error('Batch allocation error:', error);
@@ -183,11 +185,11 @@ export default function AllocationManagementScreen() {
   // 獲取分攤方式標題
   const getMethodTitle = (method: AllocationMethod) => {
     switch (method) {
-      case 'budget': return '預算分攤';
-      case 'equal': return '平均分攤';
-      case 'duration': return '持續時間分攤';
-      case 'custom': return '自訂分攤';
-      default: return '未知分攤方式';
+      case 'budget': return t('allocation.method.budget');
+      case 'equal': return t('allocation.method.equal');
+      case 'duration': return t('allocation.method.duration');
+      case 'custom': return t('allocation.method.custom');
+      default: return t('allocation.method.unknown');
     }
   };
 
@@ -590,7 +592,7 @@ export default function AllocationManagementScreen() {
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
       <Header 
-        title="分攤管理" 
+        title={t('allocation.title')} 
         showBackButton 
         rightComponent={
           <TouchableOpacity onPress={() => router.push('/operational/allocation-parameters')}>

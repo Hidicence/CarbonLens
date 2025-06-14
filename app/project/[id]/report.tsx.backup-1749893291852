@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useTranslation } from '@/hooks/useTranslation';
 import { 
   View, 
   Text, 
@@ -65,8 +64,6 @@ export default function ProjectReportScreen() {
   useEffect(() => {
     setIsLoading(true);
     const timer = setTimeout(() => {
-  const { t } = useTranslation();
-
       setIsLoading(false);
     }, 500);
     

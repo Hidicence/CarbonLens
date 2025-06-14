@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useTranslation } from '@/hooks/useTranslation';
 import { StyleSheet, Text, View, TouchableOpacity, Alert, ActivityIndicator, Platform, Dimensions } from 'react-native';
 import { X, Check, Camera as CameraIcon } from 'lucide-react-native';
 import Colors from '@/constants/colors';
@@ -34,7 +33,7 @@ const mockIdentifyEquipment = async (): Promise<{
 };
 
 const ARScanner: React.FC<ARScannerProps> = ({ onClose, onEquipmentDetected }) => {
-  const { t } = useTranslation();
+  const { t } = useLanguageStore();
   const { isDarkMode } = useThemeStore();
   const theme = isDarkMode ? Colors.dark : Colors.light;
   

@@ -13,6 +13,8 @@ import { useThemeStore } from '@/store/themeStore';
 import { formatEmissions } from '@/utils/helpers';
 import { LineChartAdapter } from '@/components/ChartAdapter';
 import { generateAllTestData } from '@/utils/testDataGenerator';
+import { useTranslation } from '@/hooks/useTranslation';
+import { useLanguageStore } from '@/store/languageStore';
 
 // 類型定義
 interface DateMap {
@@ -23,6 +25,8 @@ const screenWidth = Dimensions.get('window').width;
 
 export default function ProjectsScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
+  const { language } = useLanguageStore();
   const { 
     projects, 
     projectEmissionRecords, 
@@ -181,7 +185,7 @@ export default function ProjectsScreen() {
     try {
       console.log('開始添加測試數據...');
       
-      const testData = generateAllTestData();
+      const testData = generateAllTestData(language);
       
       // 添加測試專案
       testData.projects.forEach(project => {
@@ -279,8 +283,8 @@ export default function ProjectsScreen() {
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
       <PageTitle 
-        title="CarbonLens" 
-        subtitle="影視碳足跡管理平台" 
+        title={t('home.title')} 
+        subtitle={t('home.subtitle')} 
         centered
       />
 
@@ -289,10 +293,10 @@ export default function ProjectsScreen() {
         <View style={styles.testDataHeader}>
           <View style={styles.testDataInfo}>
             <Text style={[styles.testDataTitle, { color: theme.text }]}>
-              🧪 Beta版本測試工具
+              {t('home.beta.title')}
             </Text>
             <Text style={[styles.testDataSubtitle, { color: theme.secondaryText }]}>
-              數據管理與測試
+              {t('home.beta.subtitle')}
             </Text>
           </View>
         </View>
@@ -312,7 +316,7 @@ export default function ProjectsScreen() {
             onPress={handleAddTestData}
           >
             <Wrench size={16} color="white" />
-            <Text style={styles.testDataButtonText}>添加測試數據</Text>
+            <Text style={styles.testDataButtonText}>{t('home.beta.add.test.data')}</Text>
           </TouchableOpacity>
           
           <TouchableOpacity 
@@ -329,14 +333,17 @@ export default function ProjectsScreen() {
             onPress={handleClearAllData}
           >
             <X size={16} color="white" />
-            <Text style={styles.testDataButtonText}>清除所有數據</Text>
+            <Text style={styles.testDataButtonText}>{t('home.beta.clear.all.data')}</Text>
           </TouchableOpacity>
         </View>
         
         <Text style={[styles.testDataDescription, { color: theme.secondaryText }]}>
           {projects.length === 0 && nonProjectEmissionRecords.length === 0 
-            ? '添加測試數據：自動創建3個專案及90天營運記錄，並正確設定分攤關係'
-            : `當前有 ${projects.length} 個專案、${nonProjectEmissionRecords.length} 筆營運記錄、${projectEmissionRecords.length} 筆專案記錄`
+            ? t('home.beta.description.empty')
+            : t('home.beta.description.has.data')
+                .replace('{projectCount}', projects.length.toString())
+                .replace('{operationalCount}', nonProjectEmissionRecords.length.toString())
+                .replace('{projectRecordCount}', projectEmissionRecords.length.toString())
           }
         </Text>
       </View>
@@ -350,7 +357,7 @@ export default function ProjectsScreen() {
           <View style={styles.compactHeaderLeft}>
             <BarChart3 size={18} color={theme.primary} />
             <Text style={[styles.compactCardTitle, { color: theme.text }]}>
-              碳排放總覽
+              {t('home.emissions.overview')}
             </Text>
           </View>
           <ChevronRight size={16} color={theme.secondaryText} />
@@ -362,7 +369,7 @@ export default function ProjectsScreen() {
               {formatEmissions(totalEmissions)}
             </Text>
             <Text style={[styles.compactStatLabel, { color: theme.secondaryText }]}>
-              累計總量
+              {t('home.emissions.total')}
             </Text>
           </View>
           
@@ -373,7 +380,7 @@ export default function ProjectsScreen() {
               {activeProjectsCount}
             </Text>
             <Text style={[styles.compactStatLabel, { color: theme.secondaryText }]}>
-              進行中專案
+              {t('home.projects.active')}
             </Text>
           </View>
           
@@ -401,7 +408,7 @@ export default function ProjectsScreen() {
               </Text>
             </View>
             <Text style={[styles.compactStatLabel, { color: theme.secondaryText }]}>
-              30天趨勢
+              {t('home.trend.30days')}
             </Text>
           </View>
         </View>
@@ -416,10 +423,10 @@ export default function ProjectsScreen() {
             </View>
             <View style={styles.operationalTitleInfo}>
               <Text style={[styles.operationalTitle, { color: theme.text }]}>
-                日常營運管理
+                {t('home.operational.management')}
               </Text>
               <Text style={[styles.operationalSubtitle, { color: theme.secondaryText }]}>
-                營運排放記錄與分攤
+                {t('home.operational.subtitle')}
               </Text>
             </View>
           </View>
@@ -434,7 +441,7 @@ export default function ProjectsScreen() {
             }]}
             onPress={() => router.push('/operational')}
           >
-            <Text style={styles.operationalMainButtonText}>管理中心</Text>
+            <Text style={styles.operationalMainButtonText}>{t('home.operational.center')}</Text>
             <ChevronRight size={18} color="white" />
           </TouchableOpacity>
         </View>
@@ -448,7 +455,7 @@ export default function ProjectsScreen() {
                   {formatEmissions(nonProjectEmissionRecords.reduce((sum, r) => sum + r.amount, 0))}
                 </Text>
                 <Text style={[styles.operationalStatLabel, { color: theme.secondaryText }]}>
-                  總營運排放
+                  {t('home.operational.total.emissions')}
                 </Text>
               </View>
               <View style={styles.operationalStatDivider} />
@@ -457,7 +464,7 @@ export default function ProjectsScreen() {
                   {nonProjectEmissionRecords.filter(r => r.isAllocated).length}/{nonProjectEmissionRecords.length}
                 </Text>
                 <Text style={[styles.operationalStatLabel, { color: theme.secondaryText }]}>
-                  已分攤記錄
+                  {t('home.operational.allocated.records')}
                 </Text>
               </View>
               <View style={styles.operationalStatDivider} />
@@ -466,7 +473,7 @@ export default function ProjectsScreen() {
                   {projects.filter(p => p.status === 'active').length}
                 </Text>
                 <Text style={[styles.operationalStatLabel, { color: theme.secondaryText }]}>
-                  活躍專案
+                  {t('home.operational.active.projects')}
                 </Text>
               </View>
             </View>
@@ -478,7 +485,7 @@ export default function ProjectsScreen() {
           <AIAssistantButton
             variant="primary"
             size="medium"
-            title="AI助手"
+            title={t('home.operational.ai.assistant')}
             onPress={() => router.push('/operational/ai-assistant')}
             style={styles.operationalQuickAction}
           />
@@ -489,7 +496,7 @@ export default function ProjectsScreen() {
           >
             <Plus size={18} color={theme.primary} />
             <Text style={[styles.operationalQuickActionText, { color: theme.primary }]}>
-              新增記錄
+              {t('home.operational.add.record')}
             </Text>
           </TouchableOpacity>
           
@@ -499,7 +506,7 @@ export default function ProjectsScreen() {
           >
             <Settings size={18} color={theme.primary} />
             <Text style={[styles.operationalQuickActionText, { color: theme.primary }]}>
-              分攤設定
+              {t('home.operational.allocation.settings')}
             </Text>
           </TouchableOpacity>
           
@@ -509,7 +516,7 @@ export default function ProjectsScreen() {
           >
             <BarChart3 size={18} color={theme.primary} />
             <Text style={[styles.operationalQuickActionText, { color: theme.primary }]}>
-              分析報表
+              {t('home.operational.reports')}
             </Text>
           </TouchableOpacity>
         </View>
@@ -520,12 +527,12 @@ export default function ProjectsScreen() {
             <View style={styles.indicatorLeft}>
               <View style={[styles.activeIndicatorDot, { backgroundColor: '#10B981' }]} />
               <Text style={[styles.activeProjectsText, { color: theme.text }]}>
-                {projects.filter(p => p.status === 'active').length} 個活躍專案正在分攤營運排放
+                {t('home.operational.active.indicator').replace('{count}', projects.filter(p => p.status === 'active').length.toString())}
               </Text>
             </View>
             <TouchableOpacity onPress={() => router.push('/operational/allocation')}>
               <Text style={[styles.manageAllocationText, { color: theme.primary }]}>
-                管理分攤
+                {t('home.operational.manage.allocation')}
               </Text>
             </TouchableOpacity>
           </View>
@@ -541,7 +548,7 @@ export default function ProjectsScreen() {
             <TextInput
               ref={searchInputRef}
               style={[styles.searchInput, { color: theme.text }]}
-              placeholder="搜索項目..."
+              placeholder={t('home.search.placeholder')}
               placeholderTextColor={theme.secondaryText}
               value={searchQuery}
               onChangeText={setSearchQuery}
@@ -559,7 +566,7 @@ export default function ProjectsScreen() {
               onPress={activateSearch}
             >
               <Search size={20} color={theme.primary} />
-              <Text style={[styles.projectActionText, { color: theme.primary }]}>搜索項目</Text>
+              <Text style={[styles.projectActionText, { color: theme.primary }]}>{t('home.search.projects')}</Text>
             </TouchableOpacity>
             
             <TouchableOpacity 
@@ -567,7 +574,7 @@ export default function ProjectsScreen() {
               onPress={handleAddProject}
             >
               <Plus size={20} color="white" />
-              <Text style={styles.addProjectButtonText}>新增項目</Text>
+              <Text style={styles.addProjectButtonText}>{t('home.add.project')}</Text>
             </TouchableOpacity>
           </>
         )}
@@ -578,15 +585,15 @@ export default function ProjectsScreen() {
         searchQuery ? (
           <View style={styles.noResultsContainer}>
             <Text style={[styles.noResultsText, { color: theme.secondaryText }]}>
-              沒有找到符合條件的項目
+              {t('home.no.search.results')}
             </Text>
           </View>
         ) : (
           <EmptyState
             icon={<FolderPlus size={48} color={theme.secondaryText} />}
-            title="還沒有項目"
-            description="點擊下方按鈕創建您的第一個影視項目"
-            actionLabel="創建第一個項目"
+            title={t('home.no.projects')}
+            description={t('home.no.projects.description')}
+            actionLabel={t('home.create.first.project')}
             onAction={handleAddProject}
           />
         )

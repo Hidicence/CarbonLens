@@ -1,5 +1,4 @@
 import React, { useState, useRef } from 'react';
-import { useTranslation } from '@/hooks/useTranslation';
 import { 
   View, 
   Text, 
@@ -130,8 +129,6 @@ export default function EquipmentDatabaseScreen() {
   
   // 處理類別選擇
   const handleCategorySelect = (categoryId: string) => {
-  const { t } = useTranslation();
-
     setSelectedCategory(categoryId);
     setSelectedEquipment(null);
   };

@@ -7,6 +7,10 @@ export interface UserProfile {
   email: string;
   avatar?: string;
   role?: string;
+  phone?: string;
+  company?: string;
+  position?: string;
+  location?: string;
   language: 'zh-TW' | 'en-US';
   units: 'metric' | 'imperial';
   notificationsEnabled: boolean;

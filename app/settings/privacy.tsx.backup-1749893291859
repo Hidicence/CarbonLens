@@ -1,5 +1,4 @@
 import React from 'react';
-import { useTranslation } from '@/hooks/useTranslation';
 import { 
   View, 
   Text, 
@@ -34,8 +33,6 @@ export default function PrivacyScreen() {
   const theme = isDarkMode ? Colors.dark : Colors.light;
 
   const handleOpenLink = (url: string) => {
-  const { t } = useTranslation();
-
     // For demo URLs, show an alert instead of trying to open them
     if (url.includes('carbonlens.example.com') || url.includes('example.com')) {
       Alert.alert(

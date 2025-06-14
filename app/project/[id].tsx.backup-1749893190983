@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { useTranslation } from '@/hooks/useTranslation';
 import { 
   View, 
   Text, 
@@ -89,8 +88,6 @@ export default function ProjectDetailScreen() {
     const keyboardDidShowListener = Keyboard.addListener(
       'keyboardDidShow',
       () => {
-  const { t } = useTranslation();
-
         setKeyboardVisible(true);
       }
     );
@@ -592,9 +589,9 @@ export default function ProjectDetailScreen() {
               <Truck size={24} color={Colors.dark.primary} />
                     </View>
             <View style={styles.quickActionContent}>
-              <Text style={[styles.quickActionTitle, { color: Colors.dark.text }]}>{t('projects.equipment') || '專案器材'}</Text>
+              <Text style={[styles.quickActionTitle, { color: Colors.dark.text }]}>專案器材</Text>
               <Text style={[styles.quickActionDesc, { color: Colors.dark.secondaryText }]}>
-                {t('projects.equipment.subtitle') || '登記專案使用器材總重量'}
+                登記專案使用器材總重量
               </Text>
               </View>
             <ArrowUpRight size={20} color={Colors.dark.secondaryText} />
@@ -607,9 +604,9 @@ export default function ProjectDetailScreen() {
                 <Users size={24} color={Colors.dark.success} />
             </View>
               <View style={styles.quickActionContent}>
-                <Text style={[styles.quickActionTitle, { color: Colors.dark.text }]}>{t('projects.shooting.records') || '拍攝日記錄'}</Text>
+                <Text style={[styles.quickActionTitle, { color: Colors.dark.text }]}>拍攝日記錄</Text>
                 <Text style={[styles.quickActionDesc, { color: Colors.dark.secondaryText }]}>
-                  {t('projects.shooting.records.subtitle') || '按工作組別記錄拍攝活動'}
+                  按工作組別記錄拍攝活動
                 </Text>
           </View>
         </View>
@@ -622,7 +619,7 @@ export default function ProjectDetailScreen() {
                 <View style={styles.crewButtonIconContainer}>
                   {getCrewIcon('director', 18, '#FF6B6B')}
                 </View>
-                <Text style={[styles.crewButtonText, { color: '#FF6B6B' }]}>{t('crew.director') || '導演組'}</Text>
+                <Text style={[styles.crewButtonText, { color: '#FF6B6B' }]}>導演組</Text>
               </Pressable>
               
               <Pressable 
@@ -632,7 +629,7 @@ export default function ProjectDetailScreen() {
                 <View style={styles.crewButtonIconContainer}>
                   {getCrewIcon('camera', 18, '#4ECDC4')}
                 </View>
-                <Text style={[styles.crewButtonText, { color: '#4ECDC4' }]}>{t('crew.camera') || '攝影組'}</Text>
+                <Text style={[styles.crewButtonText, { color: '#4ECDC4' }]}>攝影組</Text>
               </Pressable>
               
                 <Pressable 
@@ -642,7 +639,7 @@ export default function ProjectDetailScreen() {
                 <View style={styles.crewButtonIconContainer}>
                   {getCrewIcon('lighting', 18, '#FFE66D')}
                 </View>
-                <Text style={[styles.crewButtonText, { color: '#FFE66D' }]}>{t('crew.lighting') || '燈光組'}</Text>
+                <Text style={[styles.crewButtonText, { color: '#FFE66D' }]}>燈光組</Text>
               </Pressable>
               
               <Pressable 
@@ -652,7 +649,7 @@ export default function ProjectDetailScreen() {
                 <View style={styles.crewButtonIconContainer}>
                   {getCrewIcon('sound', 18, '#A8E6CF')}
                       </View>
-                <Text style={[styles.crewButtonText, { color: '#A8E6CF' }]}>{t('crew.sound') || '收音組'}</Text>
+                <Text style={[styles.crewButtonText, { color: '#A8E6CF' }]}>收音組</Text>
               </Pressable>
               
               <Pressable 
@@ -662,7 +659,7 @@ export default function ProjectDetailScreen() {
                 <View style={styles.crewButtonIconContainer}>
                   {getCrewIcon('makeup', 18, '#FFB3BA')}
                       </View>
-                <Text style={[styles.crewButtonText, { color: '#FFB3BA' }]}>{t('crew.makeup') || '梳化組'}</Text>
+                <Text style={[styles.crewButtonText, { color: '#FFB3BA' }]}>梳化組</Text>
               </Pressable>
                   
                   <Pressable 
@@ -672,7 +669,7 @@ export default function ProjectDetailScreen() {
                 <View style={styles.crewButtonIconContainer}>
                   {getCrewIcon('production', 18, '#D4E6B7')}
                 </View>
-                <Text style={[styles.crewButtonText, { color: '#D4E6B7' }]}>{t('crew.production') || '製片組'}</Text>
+                <Text style={[styles.crewButtonText, { color: '#D4E6B7' }]}>製片組</Text>
                   </Pressable>
             </View>
           </View>
@@ -745,7 +742,7 @@ export default function ProjectDetailScreen() {
             <AlertCircle size={16} color={Colors.dark.secondary} />
           </View>
           <Text style={styles.tipText}>
-            {t('tips.title')}: t('analytics.stage.analysis')
+            {t('tips.title')}: {t('analytics.stage.analysis')}
           </Text>
         </View>
         

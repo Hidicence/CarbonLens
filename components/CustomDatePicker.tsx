@@ -108,7 +108,7 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
     const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
     const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
     
-    const days = [];
+    const days: Array<{ day: number; isCurrentMonth: boolean; isSelected?: boolean; isDisabled?: boolean }> = [];
     
     // Add empty spaces for days before the first day of the month
     for (let i = 0; i < firstDayOfMonth; i++) {

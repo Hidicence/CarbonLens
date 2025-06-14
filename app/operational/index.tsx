@@ -31,9 +31,11 @@ import {
 } from 'lucide-react-native';
 import { useProjectStore } from '@/store/projectStore';
 import { useThemeStore } from '@/store/themeStore';
+import { useTranslation } from '@/hooks/useTranslation';
 import Colors from '@/constants/colors';
 import Header from '@/components/Header';
 import { formatEmissions, formatCurrency } from '@/utils/helpers';
+import { getTranslatedCategoryName, getTranslatedSourceName } from '@/utils/translations';
 import { NonProjectEmissionRecord } from '@/types/project';
 
 const screenWidth = Dimensions.get('window').width;
@@ -48,6 +50,7 @@ interface CategoryStats {
 
 export default function OperationalScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
   const { 
     nonProjectEmissionRecords, 
     projects
@@ -57,34 +60,24 @@ export default function OperationalScreen() {
   
   const [selectedPeriod, setSelectedPeriod] = useState<'7d' | '30d' | '90d'>('30d');
 
-  // 模擬的類別和來源映射
-  const categoryMap: Record<string, string> = {
-    'electricity': '辦公室用電',
-    'water': '辦公室用水', 
-    'paper': '辦公用紙',
-    'transport': '員工通勤',
-    'waste': '辦公廢料',
-    'heating': '辦公室暖氣'
-  };
-
-  const sourceMap: Record<string, string> = {
-    'office-electricity': '辦公室電力',
-    'office-water': '辦公室用水',
-    'office-paper': '辦公用紙',
-    'staff-commute': '員工通勤',
-    'office-waste': '辦公廢料',
-    'office-heating': '辦公室暖氣'
-  };
-
   // 獲取類別名稱
   const getCategoryName = (categoryId: string) => {
-    return categoryMap[categoryId] || categoryId || '未分類';
+    try {
+      return getTranslatedCategoryName(categoryId, t);
+    } catch (error) {
+      // 回退到未分類
+      return t('operational.category.uncategorized');
+    }
   };
 
   // 獲取來源名稱
   const getSourceName = (sourceId?: string) => {
-    if (!sourceId) return '未指定來源';
-    return sourceMap[sourceId] || sourceId;
+    if (!sourceId) return t('operational.source.unspecified');
+    try {
+      return getTranslatedSourceName(sourceId, t);
+    } catch (error) {
+      return sourceId;
+    }
   };
 
   // 獲取指定時間範圍的記錄
@@ -187,9 +180,9 @@ export default function OperationalScreen() {
   const renderPageHeader = () => (
     <View style={styles.pageHeader}>
       <View style={styles.headerContent}>
-        <Text style={[styles.pageTitle, { color: theme.text }]}>日常營運管理</Text>
+        <Text style={[styles.pageTitle, { color: theme.text }]}>{t('operational.title')}</Text>
         <Text style={[styles.pageSubtitle, { color: theme.secondaryText }]}>
-          追蹤並管理日常營運碳排放數據
+          {t('operational.subtitle')}
         </Text>
       </View>
       <View style={[styles.headerIconContainer, { backgroundColor: theme.primary + '20' }]}>
@@ -203,7 +196,7 @@ export default function OperationalScreen() {
     <View style={styles.statsContainer}>
       <View style={[styles.statsCard, { backgroundColor: theme.card }]}>
         <View style={styles.statsHeader}>
-          <Text style={[styles.statsTitle, { color: theme.text }]}>排放統計概覽</Text>
+          <Text style={[styles.statsTitle, { color: theme.text }]}>{t('operational.stats.overview')}</Text>
           <View style={[styles.periodSelector, { backgroundColor: theme.background }]}>
             {(['7d', '30d', '90d'] as const).map(period => (
               <TouchableOpacity
@@ -220,7 +213,7 @@ export default function OperationalScreen() {
                   styles.periodButtonText,
                   { color: selectedPeriod === period ? 'white' : theme.secondaryText }
                 ]}>
-                  {period === '7d' ? '7天' : period === '30d' ? '30天' : '90天'}
+                  {period === '7d' ? t('operational.period.7days') : period === '30d' ? t('operational.period.30days') : t('operational.period.90days')}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -236,7 +229,7 @@ export default function OperationalScreen() {
               {formatEmissions(totalEmissions)}
             </Text>
             <Text style={[styles.statLabel, { color: theme.secondaryText }]}>
-              總排放量
+              {t('operational.total.emissions')}
             </Text>
           </View>
           
@@ -248,7 +241,7 @@ export default function OperationalScreen() {
               {totalCost.toFixed(0)}
             </Text>
             <Text style={[styles.statLabel, { color: theme.secondaryText }]}>
-              記錄數量
+              {t('operational.record.count')}
             </Text>
           </View>
           
@@ -270,7 +263,7 @@ export default function OperationalScreen() {
               {trend === 0 ? '0%' : `${Math.abs(trend).toFixed(1)}%`}
             </Text>
             <Text style={[styles.statLabel, { color: theme.secondaryText }]}>
-              趨勢變化
+              {t('operational.trend.change')}
             </Text>
           </View>
         </View>
@@ -282,7 +275,7 @@ export default function OperationalScreen() {
   const renderCategoryStats = () => (
     <View style={[styles.categoryCard, { backgroundColor: theme.card }]}>
       <View style={styles.cardHeader}>
-        <Text style={[styles.cardTitle, { color: theme.text }]}>分類排放統計</Text>
+        <Text style={[styles.cardTitle, { color: theme.text }]}>{t('operational.category.stats')}</Text>
         <TouchableOpacity style={styles.moreButton}>
           <ChevronRight size={20} color={theme.secondaryText} />
         </TouchableOpacity>
@@ -292,7 +285,7 @@ export default function OperationalScreen() {
         <View style={styles.emptyCategoryState}>
           <PieChart size={48} color={theme.secondaryText} />
           <Text style={[styles.emptyStateText, { color: theme.secondaryText }]}>
-            暫無分類數據
+            {t('operational.no.category.data')}
           </Text>
         </View>
       ) : (
@@ -308,7 +301,7 @@ export default function OperationalScreen() {
                     {stat.category}
                   </Text>
                   <Text style={[styles.categoryCount, { color: theme.secondaryText }]}>
-                    {stat.recordCount} 筆記錄
+                    {stat.recordCount}{t('operational.record.count.suffix')}
                   </Text>
                 </View>
               </View>
@@ -331,7 +324,7 @@ export default function OperationalScreen() {
           {categoryStats.length > 4 && (
             <TouchableOpacity style={styles.viewMoreButton}>
               <Text style={[styles.viewMoreText, { color: theme.primary }]}>
-                查看全部 {categoryStats.length} 個分類
+                {t('operational.view.all.categories').replace('{count}', categoryStats.length.toString())}
               </Text>
             </TouchableOpacity>
           )}
@@ -344,12 +337,12 @@ export default function OperationalScreen() {
   const renderRecentRecords = () => (
     <View style={[styles.recentCard, { backgroundColor: theme.card }]}>
       <View style={styles.cardHeader}>
-        <Text style={[styles.cardTitle, { color: theme.text }]}>最近記錄</Text>
+        <Text style={[styles.cardTitle, { color: theme.text }]}>{t('operational.recent.records')}</Text>
         <TouchableOpacity 
           style={styles.viewAllButton}
           onPress={() => router.push('/operational/records')}
         >
-          <Text style={[styles.viewAllText, { color: theme.primary }]}>查看全部</Text>
+          <Text style={[styles.viewAllText, { color: theme.primary }]}>{t('operational.view.all')}</Text>
           <ArrowUpRight size={16} color={theme.primary} />
         </TouchableOpacity>
       </View>
@@ -358,17 +351,17 @@ export default function OperationalScreen() {
         <View style={styles.emptyRecordState}>
           <Clock size={48} color={theme.secondaryText} />
           <Text style={[styles.emptyStateTitle, { color: theme.text }]}>
-            還沒有營運記錄
+            {t('operational.no.records')}
           </Text>
           <Text style={[styles.emptyStateText, { color: theme.secondaryText }]}>
-            開始記錄您的日常營運碳排放數據
+            {t('operational.no.records.subtitle')}
           </Text>
           <TouchableOpacity 
             style={[styles.addFirstRecordButton, { backgroundColor: theme.primary }]}
             onPress={() => router.push('/operational/add-record')}
           >
             <Plus size={16} color="white" />
-            <Text style={styles.addFirstRecordText}>新增第一筆記錄</Text>
+            <Text style={styles.addFirstRecordText}>{t('operational.add.first.record')}</Text>
           </TouchableOpacity>
         </View>
       ) : (
@@ -415,7 +408,7 @@ export default function OperationalScreen() {
   // 渲染快捷操作
   const renderQuickActions = () => (
     <View style={styles.quickActionsContainer}>
-      <Text style={[styles.quickActionsTitle, { color: theme.text }]}>快捷操作</Text>
+      <Text style={[styles.quickActionsTitle, { color: theme.text }]}>{t('operational.quick.actions')}</Text>
       <View style={styles.quickActionsGrid}>
         <TouchableOpacity
           style={[styles.primaryActionButton, { backgroundColor: theme.primary }]}
@@ -424,8 +417,8 @@ export default function OperationalScreen() {
           <View style={styles.actionButtonContent}>
             <Plus size={24} color="white" />
             <View style={styles.actionButtonText}>
-              <Text style={styles.actionButtonTitle}>新增記錄</Text>
-              <Text style={styles.actionButtonSubtitle}>記錄營運排放</Text>
+              <Text style={styles.actionButtonTitle}>{t('operational.action.add.record')}</Text>
+              <Text style={styles.actionButtonSubtitle}>{t('operational.action.add.record.subtitle')}</Text>
             </View>
           </View>
         </TouchableOpacity>
@@ -437,8 +430,8 @@ export default function OperationalScreen() {
           <View style={styles.actionButtonContent}>
             <PieChart size={24} color={theme.primary} />
             <View style={styles.actionButtonText}>
-              <Text style={[styles.actionButtonTitle, { color: theme.text }]}>分攤設定</Text>
-              <Text style={[styles.actionButtonSubtitle, { color: theme.secondaryText }]}>配置分攤規則</Text>
+              <Text style={[styles.actionButtonTitle, { color: theme.text }]}>{t('operational.action.allocation.settings')}</Text>
+              <Text style={[styles.actionButtonSubtitle, { color: theme.secondaryText }]}>{t('operational.action.allocation.settings.subtitle')}</Text>
             </View>
           </View>
         </TouchableOpacity>
@@ -450,8 +443,8 @@ export default function OperationalScreen() {
           <View style={styles.actionButtonContent}>
             <BarChart3 size={24} color={theme.primary} />
             <View style={styles.actionButtonText}>
-              <Text style={[styles.actionButtonTitle, { color: theme.text }]}>報表分析</Text>
-              <Text style={[styles.actionButtonSubtitle, { color: theme.secondaryText }]}>查看詳細分析</Text>
+              <Text style={[styles.actionButtonTitle, { color: theme.text }]}>{t('operational.action.view.reports')}</Text>
+              <Text style={[styles.actionButtonSubtitle, { color: theme.secondaryText }]}>{t('operational.action.view.reports.subtitle')}</Text>
             </View>
           </View>
         </TouchableOpacity>
@@ -466,7 +459,7 @@ export default function OperationalScreen() {
         backgroundColor={theme.background} 
       />
       <Header 
-        title="日常營運" 
+        title={t('operational.title')} 
         showBackButton={true}
       />
       

@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from '@/hooks/useTranslation';
 import { 
   View, 
   Text, 
@@ -35,6 +36,7 @@ export default function CollaboratorPermissionsModal({
   collaboratorName,
   isLoading = false
 }: CollaboratorPermissionsModalProps) {
+  const { t } = useTranslation();
   const { isDarkMode } = useThemeStore();
   const theme = isDarkMode ? Colors.dark : Colors.light;
   
@@ -49,6 +51,8 @@ export default function CollaboratorPermissionsModal({
   
   // 切換單個權限
   const togglePermission = (key: keyof CollaboratorPermissions) => {
+  const { t } = useTranslation();
+
     setTempPermissions(prev => ({
       ...prev,
       [key]: !prev[key]
@@ -59,13 +63,13 @@ export default function CollaboratorPermissionsModal({
   const getPermissionGroupTitle = (group: string): string => {
     switch (group) {
       case 'project':
-        return '專案權限';
+        return t('permissions.project');
       case 'records':
-        return '排放記錄權限';
+        return t('permissions.emissions');
       case 'data':
-        return '數據與報告權限';
+        return t('permissions.data.reports');
       default:
-        return '其他權限';
+        return t('permissions.other');
     }
   };
   
@@ -213,14 +217,14 @@ export default function CollaboratorPermissionsModal({
           
           <View style={styles.actions}>
             <Button
-              title="取消"
+              title={t('common.cancel')}
               onPress={onClose}
               variant="outline"
               size="medium"
               style={{ flex: 1, marginRight: 8 }}
             />
             <Button
-              title="保存"
+              title={t('common.save')}
               onPress={handleSave}
               variant="primary"
               size="medium"
