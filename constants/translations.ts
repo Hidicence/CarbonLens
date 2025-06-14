@@ -660,6 +660,16 @@ const translations: TranslationSet = {
     // 最後遺漏的翻譯鍵
     'add.record.basic.info': '基本資訊',
     'add.record.guide.button': '使用指南',
+
+    // AI 分析相關遺漏翻譯鍵
+    'add.record.ai.confidence': '可信度',
+    'add.record.ai.extracted.data': '提取數據',
+    'add.record.ai.unknown': '未知',
+    'add.record.ai.quantity.label': '數量',
+    'add.record.ai.amount.label': '金額',
+    'add.record.ai.auto.fill': '自動填入',
+    'add.record.ai.view.details': '查看詳情',
+    'add.record.ai.process.later': '稍後處理',
   },
   en: {
     // Common
@@ -1312,6 +1322,16 @@ const translations: TranslationSet = {
     // Final missing translation keys
     'add.record.basic.info': 'Basic Information',
     'add.record.guide.button': 'User Guide',
+
+    // AI analysis related missing translations
+    'add.record.ai.confidence': 'Confidence',
+    'add.record.ai.extracted.data': 'Extracted Data',
+    'add.record.ai.unknown': 'Unknown',
+    'add.record.ai.quantity.label': 'Quantity',
+    'add.record.ai.amount.label': 'Amount',
+    'add.record.ai.auto.fill': 'Auto Fill',
+    'add.record.ai.view.details': 'View Details',
+    'add.record.ai.process.later': 'Process Later',
   }
 };
 
