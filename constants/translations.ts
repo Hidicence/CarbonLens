@@ -656,6 +656,10 @@ const translations: TranslationSet = {
     'add.record.notes.placeholder': '添加額外備註或說明（選填）',
     'add.record.cancel': '取消',
     'add.record.save.record': '儲存記錄',
+
+    // 最後遺漏的翻譯鍵
+    'add.record.basic.info': '基本資訊',
+    'add.record.guide.button': '使用指南',
   },
   en: {
     // Common
@@ -1304,6 +1308,10 @@ const translations: TranslationSet = {
     'add.record.notes.placeholder': 'Add additional notes or comments (optional)',
     'add.record.cancel': 'Cancel',
     'add.record.save.record': 'Save Record',
+
+    // Final missing translation keys
+    'add.record.basic.info': 'Basic Information',
+    'add.record.guide.button': 'User Guide',
   }
 };
 
