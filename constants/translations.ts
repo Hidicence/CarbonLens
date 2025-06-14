@@ -116,6 +116,23 @@ const translations: TranslationSet = {
     'home.quick.view.analytics': '檢視分析',
     'home.recent.records': '最近記錄',
     'home.no.recent.records': '無最近記錄',
+    'home.operational.management': '營運管理',
+    'home.operational.subtitle': '管理日常營運碳排放',
+    'home.operational.center': '進入營運中心',
+    'home.operational.total.emissions': '總排放量',
+    'home.operational.allocated.records': '分攤記錄',
+    'home.operational.active.projects': '進行中專案',
+    'home.operational.ai.assistant': 'AI 助手',
+    'home.operational.add.record': '新增記錄',
+    'home.operational.allocation.settings': '分攤設定',
+    'home.operational.reports': '報告',
+    'home.operational.active.indicator': '目前有 {count} 個進行中專案',
+    'home.operational.manage.allocation': '管理分攤設定',
+    'home.search.projects': '搜尋專案',
+    'home.add.project': '新增專案',
+    'home.no.search.results': '無搜尋結果',
+    'home.no.projects': '尚無專案',
+    'home.no.projects.description': '建立您的第一個專案以開始追蹤排放',
     
     // Operational Management
     'operational.title': '營運管理',
@@ -152,6 +169,7 @@ const translations: TranslationSet = {
     'add.record.form.notes.placeholder': '輸入任何備註或詳細資訊...',
     'add.record.success': '記錄新增成功',
     'add.record.error': '記錄新增失敗',
+    'add.record.progress.label': '記錄進度',
     
     // Allocation Page
     'allocation.title': '分攤設定',
@@ -508,6 +526,23 @@ const translations: TranslationSet = {
     'home.quick.view.analytics': 'View Analytics',
     'home.recent.records': 'Recent Records',
     'home.no.recent.records': 'No recent records',
+    'home.operational.management': 'Operational Management',
+    'home.operational.subtitle': 'Manage daily operational emissions',
+    'home.operational.center': 'Enter Operations Center',
+    'home.operational.total.emissions': 'Total Emissions',
+    'home.operational.allocated.records': 'Allocated Records',
+    'home.operational.active.projects': 'Active Projects',
+    'home.operational.ai.assistant': 'AI Assistant',
+    'home.operational.add.record': 'Add Record',
+    'home.operational.allocation.settings': 'Allocation Settings',
+    'home.operational.reports': 'Reports',
+    'home.operational.active.indicator': 'Currently {count} active projects',
+    'home.operational.manage.allocation': 'Manage Allocation Settings',
+    'home.search.projects': 'Search Projects',
+    'home.add.project': 'Add Project',
+    'home.no.search.results': 'No search results',
+    'home.no.projects': 'No projects yet',
+    'home.no.projects.description': 'Create your first project to start tracking emissions',
     
     // Operational Management
     'operational.title': 'Operational Management',
@@ -544,6 +579,7 @@ const translations: TranslationSet = {
     'add.record.form.notes.placeholder': 'Enter any notes or details...',
     'add.record.success': 'Record added successfully',
     'add.record.error': 'Failed to add record',
+    'add.record.progress.label': 'Record Progress',
     
     // Allocation Page
     'allocation.title': 'Allocation Settings',
