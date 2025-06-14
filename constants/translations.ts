@@ -651,6 +651,11 @@ const translations: TranslationSet = {
     'add.record.help.quantity.example.1': '• 用電量：輸入度數（kWh）',
     'add.record.help.quantity.example.2': '• 燃油：輸入公升數（L）',
     'add.record.help.quantity.example.3': '• 差旅：輸入公里數（km）',
+    'add.record.source': '排放源',
+    'add.record.notes': '備註',
+    'add.record.notes.placeholder': '添加額外備註或說明（選填）',
+    'add.record.cancel': '取消',
+    'add.record.save.record': '儲存記錄',
   },
   en: {
     // Common
@@ -1294,6 +1299,11 @@ const translations: TranslationSet = {
     'add.record.help.quantity.example.1': '• Electricity: Enter kWh',
     'add.record.help.quantity.example.2': '• Fuel: Enter liters (L)',
     'add.record.help.quantity.example.3': '• Travel: Enter kilometers (km)',
+    'add.record.source': 'Emission Source',
+    'add.record.notes': 'Notes',
+    'add.record.notes.placeholder': 'Add additional notes or comments (optional)',
+    'add.record.cancel': 'Cancel',
+    'add.record.save.record': 'Save Record',
   }
 };
 
