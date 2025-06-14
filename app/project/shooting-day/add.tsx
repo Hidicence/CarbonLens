@@ -115,6 +115,29 @@ export default function AddShootingDayRecord() {
   const { t } = useLanguageStore();
   const theme = isDarkMode ? Colors.dark : Colors.light;
 
+  // 獲取翻譯過的活動類別
+  const getTranslatedCategories = () => {
+    return EMISSION_CATEGORIES.map(category => ({
+      ...category,
+      name: t(`activity.${category.key}`) || category.name,
+      unit: getTranslatedUnit(category.unit),
+    }));
+  };
+
+  // 獲取翻譯過的單位
+  const getTranslatedUnit = (unit: string) => {
+    switch (unit) {
+      case 'km': return t('unit.km') || 'km';
+      case 'kWh': return t('unit.kwh') || 'kWh';
+      case 'L': return t('unit.l') || 'L';
+      case '人次': return t('unit.person.time') || '人次';
+      case '房晚': return t('unit.room.night') || '房晚';
+      case 'kg': return t('unit.kg') || 'kg';
+      case 'kg CO₂e': return t('unit.kg.co2e.simple') || 'kg CO₂e';
+      default: return unit;
+    }
+  };
+
   const [shootingDate, setShootingDate] = useState(new Date());
   const [location, setLocation] = useState('');
   const [sceneNumber, setSceneNumber] = useState('');
@@ -128,7 +151,8 @@ export default function AddShootingDayRecord() {
 
 
   const selectedCrewOption = CREW_OPTIONS.find(c => c.key === selectedCrew);
-  const selectedCategoryOption = EMISSION_CATEGORIES.find(c => c.key === selectedCategory);
+  const translatedCategories = getTranslatedCategories();
+  const selectedCategoryOption = translatedCategories.find(c => c.key === selectedCategory);
 
   // 獲取項目器材總重量
   const getProjectEquipmentWeight = (): number => {
@@ -334,7 +358,7 @@ export default function AddShootingDayRecord() {
           </Text>
           
           <View style={styles.categoryGrid}>
-            {EMISSION_CATEGORIES.map((category) => (
+            {translatedCategories.map((category) => (
               <Pressable
                 key={category.key}
                 style={[
@@ -367,7 +391,7 @@ export default function AddShootingDayRecord() {
                   ({category.unit})
                 </Text>
                 <Text style={[styles.categoryFactor, { color: theme.secondaryText }]}>
-                  係數：{category.factor} kg CO₂e/{category.unit}
+                  {t('emission.factor') || '係數'}：{category.factor} kg CO₂e/{category.unit}
                 </Text>
               </Pressable>
             ))}
@@ -377,13 +401,13 @@ export default function AddShootingDayRecord() {
           {selectedCategoryOption && (
             <View style={[styles.factorInfo, { backgroundColor: theme.background, borderColor: theme.border }]}>
               <Text style={[styles.factorTitle, { color: theme.text }]}>
-                排放係數資訊
+                {t('emission.factor.info.title') || '排放係數資訊'}
               </Text>
               <Text style={[styles.factorDescription, { color: theme.secondaryText }]}>
                 {selectedCategoryOption.description}
               </Text>
               <Text style={[styles.factorSource, { color: theme.secondaryText }]}>
-                數據來源：{selectedCategoryOption.source}
+                {t('emission.factor.data.source') || '數據來源'}：{selectedCategoryOption.source}
               </Text>
             </View>
           )}
