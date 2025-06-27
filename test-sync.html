@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CarbonLens 數據同步測試</title>
+    <style>
+        body {
+            font-family: 'Microsoft JhengHei', Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #0f172a;
+            color: #e2e8f0;
+        }
+        .container {
+            background: #1e293b;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+            border: 1px solid #334155;
+        }
+        h1, h2 {
+            color: #10b981;
+            margin-top: 0;
+        }
+        .test-section {
+            margin-bottom: 30px;
+        }
+        button {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+        }
+        button:hover {
+            background: #059669;
+        }
+        button:disabled {
+            background: #6b7280;
+            cursor: not-allowed;
+        }
+        .result {
+            background: #374151;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 10px 0;
+            border-left: 4px solid #10b981;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .error {
+            border-left-color: #ef4444;
+            background: #451a1a;
+        }
+        .success {
+            border-left-color: #10b981;
+            background: #064e3b;
+        }
+        .info {
+            border-left-color: #3b82f6;
+            background: #1e3a8a;
+        }
+        .status {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .status.success { background: #10b981; color: white; }
+        .status.error { background: #ef4444; color: white; }
+        .status.pending { background: #f59e0b; color: white; }
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        @media (max-width: 768px) {
+            .grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔄 CarbonLens 數據同步測試工具</h1>
+        <p>這個工具可以幫助您測試APP和Web之間的數據同步功能</p>
+    </div>
+
+    <div class="grid">
+        <div class="container">
+            <h2>🔧 API 連接測試</h2>
+            <div class="test-section">
+                <button onclick="testAPIConnection()">測試API連接</button>
+                <button onclick="testCreateProject()">創建測試專案</button>
+                <button onclick="testGetProjects()">獲取專案列表</button>
+                <button onclick="testCreateEmission()">創建排放記錄</button>
+                <button onclick="testOperationalEmission()">創建營運記錄</button>
+            </div>
+            <div id="apiResult" class="result" style="display: none;"></div>
+        </div>
+
+        <div class="container">
+            <h2>📊 數據同步狀態</h2>
+            <div class="test-section">
+                <p><strong>後端服務:</strong> <span id="backendStatus" class="status pending">檢查中...</span></p>
+                <p><strong>Web前端:</strong> <span id="frontendStatus" class="status pending">檢查中...</span></p>
+                <p><strong>數據庫:</strong> <span id="databaseStatus" class="status pending">檢查中...</span></p>
+                <button onclick="checkAllServices()">檢查所有服務</button>
+                <button onclick="clearResults()">清除結果</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <h2>📋 測試步驟指南</h2>
+        <div class="grid">
+            <div>
+                <h3>1. Web端測試</h3>
+                <ol>
+                    <li>訪問 <a href="http://localhost:3000" target="_blank" style="color: #10b981;">http://localhost:3000</a></li>
+                    <li>創建新專案</li>
+                    <li>添加排放記錄</li>
+                    <li>檢查數據是否保存</li>
+                </ol>
+            </div>
+            <div>
+                <h3>2. APP端測試</h3>
+                <ol>
+                    <li>打開CarbonLens APP</li>
+                    <li>檢查同步狀態</li>
+                    <li>驗證Web端數據是否同步</li>
+                    <li>在APP中創建新數據</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <h2>🔍 實時同步監控</h2>
+        <div id="syncMonitor" class="result">
+            <div>等待同步數據...</div>
+        </div>
+        <button onclick="startSyncMonitoring()">開始監控</button>
+        <button onclick="stopSyncMonitoring()">停止監控</button>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3001/api';
+        let monitoringInterval = null;
+        let testProjectId = null;
+
+        // 顯示結果
+        function showResult(elementId, content, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.innerHTML = content;
+            element.className = `result ${type}`;
+            element.style.display = 'block';
+        }
+
+        // 更新狀態
+        function updateStatus(elementId, status, text) {
+            const element = document.getElementById(elementId);
+            element.className = `status ${status}`;
+            element.textContent = text;
+        }
+
+        // 測試API連接
+        async function testAPIConnection() {
+            try {
+                showResult('apiResult', '正在測試API連接...', 'info');
+                const response = await fetch(`${API_BASE}/projects`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    showResult('apiResult', 
+                        `✅ API連接成功！\n狀態碼: ${response.status}\n專案數量: ${data.length}`, 
+                        'success'
+                    );
+                    updateStatus('backendStatus', 'success', '正常運行');
+                } else {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+            } catch (error) {
+                showResult('apiResult', `❌ API連接失敗: ${error.message}`, 'error');
+                updateStatus('backendStatus', 'error', '連接失敗');
+            }
+        }
+
+        // 創建測試專案
+        async function testCreateProject() {
+            try {
+                showResult('apiResult', '正在創建測試專案...', 'info');
+                
+                const projectData = {
+                    name: `測試同步專案 ${new Date().toLocaleString()}`,
+                    description: '用於測試數據同步的專案',
+                    status: 'active',
+                    startDate: new Date().toISOString().split('T')[0],
+                    location: '測試地點'
+                };
+
+                const response = await fetch(`${API_BASE}/projects`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(projectData)
+                });
+
+                if (response.ok) {
+                    const project = await response.json();
+                    testProjectId = project.id;
+                    showResult('apiResult', 
+                        `✅ 專案創建成功！\n專案ID: ${project.id}\n專案名稱: ${project.name}`, 
+                        'success'
+                    );
+                } else {
+                    const error = await response.text();
+                    throw new Error(error);
+                }
+            } catch (error) {
+                showResult('apiResult', `❌ 專案創建失敗: ${error.message}`, 'error');
+            }
+        }
+
+        // 獲取專案列表
+        async function testGetProjects() {
+            try {
+                showResult('apiResult', '正在獲取專案列表...', 'info');
+                
+                const response = await fetch(`${API_BASE}/projects`);
+                const projects = await response.json();
+                
+                let result = `✅ 獲取專案列表成功！\n總共 ${projects.length} 個專案:\n\n`;
+                projects.forEach((project, index) => {
+                    result += `${index + 1}. ${project.name} (${project.status})\n`;
+                    result += `   ID: ${project.id}\n`;
+                    result += `   描述: ${project.description || '無'}\n\n`;
+                });
+                
+                showResult('apiResult', result, 'success');
+            } catch (error) {
+                showResult('apiResult', `❌ 獲取專案列表失敗: ${error.message}`, 'error');
+            }
+        }
+
+        // 創建排放記錄
+        async function testCreateEmission() {
+            if (!testProjectId) {
+                showResult('apiResult', '⚠️ 請先創建測試專案', 'error');
+                return;
+            }
+
+            try {
+                showResult('apiResult', '正在創建排放記錄...', 'info');
+                
+                const emissionData = {
+                    projectId: testProjectId,
+                    description: `測試排放記錄 ${new Date().toLocaleString()}`,
+                    category: 'transport',
+                    stage: 'production',
+                    amount: Math.round(Math.random() * 100 * 100) / 100,
+                    date: new Date().toISOString().split('T')[0],
+                    location: '測試地點'
+                };
+
+                const response = await fetch(`${API_BASE}/emissions`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(emissionData)
+                });
+
+                if (response.ok) {
+                    const emission = await response.json();
+                    showResult('apiResult', 
+                        `✅ 排放記錄創建成功！\n記錄ID: ${emission.id}\n排放量: ${emission.amount} kg CO2e\n類別: ${emission.category}`, 
+                        'success'
+                    );
+                } else {
+                    const error = await response.text();
+                    throw new Error(error);
+                }
+            } catch (error) {
+                showResult('apiResult', `❌ 排放記錄創建失敗: ${error.message}`, 'error');
+            }
+        }
+
+        // 創建營運排放記錄
+        async function testOperationalEmission() {
+            try {
+                showResult('apiResult', '正在創建營運排放記錄...', 'info');
+                
+                const emissionData = {
+                    description: `測試營運記錄 ${new Date().toLocaleString()}`,
+                    category: 'electricity',
+                    amount: Math.round(Math.random() * 50 * 100) / 100,
+                    date: new Date().toISOString().split('T')[0]
+                };
+
+                const response = await fetch(`${API_BASE}/emissions/operational`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(emissionData)
+                });
+
+                if (response.ok) {
+                    const emission = await response.json();
+                    showResult('apiResult', 
+                        `✅ 營運排放記錄創建成功！\n記錄ID: ${emission.id}\n排放量: ${emission.amount} kg CO2e\n類別: ${emission.category}`, 
+                        'success'
+                    );
+                } else {
+                    const error = await response.text();
+                    throw new Error(error);
+                }
+            } catch (error) {
+                showResult('apiResult', `❌ 營運排放記錄創建失敗: ${error.message}`, 'error');
+            }
+        }
+
+        // 檢查所有服務
+        async function checkAllServices() {
+            // 檢查後端
+            try {
+                const response = await fetch(`${API_BASE}/projects`);
+                updateStatus('backendStatus', response.ok ? 'success' : 'error', 
+                    response.ok ? '正常運行' : '服務異常');
+            } catch (error) {
+                updateStatus('backendStatus', 'error', '連接失敗');
+            }
+
+            // 檢查前端
+            try {
+                const response = await fetch('http://localhost:3000');
+                updateStatus('frontendStatus', response.ok ? 'success' : 'error', 
+                    response.ok ? '正常運行' : '服務異常');
+            } catch (error) {
+                updateStatus('frontendStatus', 'error', '連接失敗');
+            }
+
+            // 檢查數據庫（通過API）
+            try {
+                const response = await fetch(`${API_BASE}/projects`);
+                updateStatus('databaseStatus', response.ok ? 'success' : 'error', 
+                    response.ok ? '連接正常' : '連接異常');
+            } catch (error) {
+                updateStatus('databaseStatus', 'error', '連接失敗');
+            }
+        }
+
+        // 開始同步監控
+        function startSyncMonitoring() {
+            if (monitoringInterval) return;
+            
+            const monitor = document.getElementById('syncMonitor');
+            let count = 0;
+            
+            monitoringInterval = setInterval(async () => {
+                try {
+                    const response = await fetch(`${API_BASE}/projects`);
+                    const projects = await response.json();
+                    
+                    count++;
+                    const timestamp = new Date().toLocaleTimeString();
+                    const status = response.ok ? '✅' : '❌';
+                    
+                    monitor.innerHTML = `
+                        <div>監控次數: ${count}</div>
+                        <div>最後檢查: ${timestamp}</div>
+                        <div>狀態: ${status} ${response.ok ? '正常' : '異常'}</div>
+                        <div>專案數量: ${projects.length}</div>
+                        <div>API響應時間: ${response.headers.get('x-response-time') || 'N/A'}</div>
+                    `;
+                } catch (error) {
+                    monitor.innerHTML = `<div>❌ 監控錯誤: ${error.message}</div>`;
+                }
+            }, 5000);
+        }
+
+        // 停止同步監控
+        function stopSyncMonitoring() {
+            if (monitoringInterval) {
+                clearInterval(monitoringInterval);
+                monitoringInterval = null;
+                document.getElementById('syncMonitor').innerHTML = '<div>監控已停止</div>';
+            }
+        }
+
+        // 清除結果
+        function clearResults() {
+            document.getElementById('apiResult').style.display = 'none';
+            document.getElementById('syncMonitor').innerHTML = '<div>等待同步數據...</div>';
+        }
+
+        // 頁面加載時自動檢查服務
+        window.addEventListener('load', () => {
+            setTimeout(checkAllServices, 1000);
+        });
+    </script>
+</body>
+</html> 

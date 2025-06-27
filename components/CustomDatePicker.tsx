@@ -300,8 +300,10 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
   );
 };
 
-const { width } = Dimensions.get('window');
-const DAY_BUTTON_SIZE = (width - 40) / 7;
+// 移到組件內部使用 hook
+
+// 使用默認值創建樣式
+const DAY_BUTTON_SIZE = 40; // 默認值，會在組件內部重新計算
 
 const styles = StyleSheet.create({
   modalOverlay: {

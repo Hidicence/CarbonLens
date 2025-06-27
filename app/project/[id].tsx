@@ -201,7 +201,7 @@ export default function ProjectDetailScreen() {
     );
   }
 
-  const formatDate = (dateString: string | undefined) => {
+  const formatDate = (dateString: string) => {
     if (!dateString) return '';
     const date = new Date(dateString);
     return `${date.getFullYear()}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}`;
@@ -687,7 +687,7 @@ export default function ProjectDetailScreen() {
                 <Pressable 
                 key={record.id} 
                   style={[styles.recordItem, { backgroundColor: Colors.dark.card }]}
-                onPress={() => handleViewRecord(record.id)}
+                onPress={() => record.id && handleViewRecord(record.id)}
                 >
                   <View style={styles.recordHeader}>
                     <Text style={[styles.recordTitle, { color: Colors.dark.text }]}>

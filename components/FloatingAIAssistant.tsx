@@ -5,17 +5,15 @@ import {
   StyleSheet,
   TouchableOpacity,
   Animated,
-  Dimensions,
   Platform,
 } from 'react-native';
 import { GestureHandlerRootView, PanGestureHandler, State } from 'react-native-gesture-handler';
 import { MessageSquare, X, Minimize2, Maximize2 } from 'lucide-react-native';
 import { useProjectStore } from '@/store/projectStore';
 import { useThemeStore } from '@/store/themeStore';
+import { Dimensions } from 'react-native';
 import AIAssistant from '@/components/AIAssistant';
 import Colors from '@/constants/colors';
-
-const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 interface FloatingAIAssistantProps {
   visible: boolean;
@@ -31,6 +29,7 @@ export default function FloatingAIAssistant({
   const { projects } = useProjectStore();
   const { isDarkMode } = useThemeStore();
   const theme = isDarkMode ? Colors.dark : Colors.light;
+  const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
   
   const [isExpanded, setIsExpanded] = useState(false);
   const [selectedProject, setSelectedProject] = useState<string | null>(null);

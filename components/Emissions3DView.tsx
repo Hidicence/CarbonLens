@@ -1,10 +1,11 @@
 import React from 'react';
 import { View, StyleSheet, Dimensions, Text, Platform } from 'react-native';
+import { useDimensions } from '@/hooks/useDimensions';
 import Colors from '@/constants/colors';
 import { useThemeStore } from '@/store/themeStore';
 import { useTranslation } from 'react-i18next';
 
-const { width } = Dimensions.get('window');
+// const { width } = Dimensions.get('window'); // 移到組件內部
 
 // 備用顯示組件（在不支持3D的平台或出錯時使用）
 const Fallback = ({ message }) => {

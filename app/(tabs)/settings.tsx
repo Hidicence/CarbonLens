@@ -1,5 +1,5 @@
 import React from 'react';
-import { useTranslation } from '@/hooks/useTranslation';
+import { useTranslation, useDimensions } from '@/hooks/useTranslation';
 import { View, Text, StyleSheet, ScrollView, SafeAreaView, Pressable, Switch, Alert, Image, Platform, Dimensions } from 'react-native';
 import { useRouter } from 'expo-router';
 import { 
@@ -34,7 +34,7 @@ import { resetOnboarding } from '@/utils/onboardingManager';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLanguageStore } from '@/store/languageStore';
 
-const { width } = Dimensions.get('window');
+// const { width } = Dimensions.get('window'); // 移到組件內部
 
 export default function SettingsScreen() {
   const router = useRouter();

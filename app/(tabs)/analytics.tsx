@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from '@/hooks/useTranslation';
-import { View, Text, StyleSheet, SafeAreaView, ScrollView, Pressable, Dimensions, TouchableOpacity, Alert, ActivityIndicator, Platform, Share } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, ScrollView, Pressable, TouchableOpacity, Alert, ActivityIndicator, Platform, Share, Dimensions } from 'react-native';
 import { useThemeStore } from '@/store/themeStore';
 import { useProjectStore } from '@/store/projectStore';
 import { useLanguageStore } from '@/store/languageStore';
@@ -35,7 +35,7 @@ import { useRouter } from 'expo-router';
 import { generateCarbonFootprintReport, setReportGeneratingCallback, shareReport, ReportOptions } from '@/utils/reportGenerator';
 import { ProjectEmissionSummary } from '@/types/project';
 
-const screenWidth = Dimensions.get('window').width;
+// 移到組件內部使用 hook
 
 // Tab 選項類型
 type AnalysisType = 'overview' | 'projects' | 'stages' | 'intensity' | 'reports';
@@ -66,6 +66,7 @@ export default function AnalyticsScreen() {
   } = useProjectStore();
   const { t } = useLanguageStore();
   const theme = isDarkMode ? Colors.dark : Colors.light;
+  const { width: screenWidth } = Dimensions.get('window');
 
   const [selectedTab, setSelectedTab] = useState<AnalysisType>('overview');
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
@@ -933,6 +934,76 @@ export default function AnalyticsScreen() {
     }));
   };
 
+  const handleGenerateGovernmentReport = async () => {
+    try {
+      if (isGeneratingReport) return;
+      
+      if (!projects || projects.length === 0) {
+        Alert.alert('無專案數據', '目前沒有可用的專案數據，請先新增專案記錄。');
+        return;
+      }
+
+      setIsGeneratingReport(true);
+      const { organization } = useProfileStore.getState();
+      
+      // 準備組織資訊
+      const organizationInfo = {
+        name: organization?.name || '影視製作公司',
+        businessNumber: organization?.businessNumber || '12345678',
+        representative: organization?.representative || '負責人姓名',
+        employeeCount: organization?.employeeCount || 50,
+        address: organization?.address || '台北市信義區信義路五段7號',
+        contactName: organization?.contactName || '環境管理專員',
+        phone: organization?.phone || '02-1234-5678',
+        email: organization?.email || 'sustainability@company.com'
+      };
+
+      // 根據選擇的專案過濾數據
+      const filteredProjects = (selectedProjects && selectedProjects.length > 0)
+        ? (projects || []).filter(p => selectedProjects.includes(p.id))
+        : (projects || []);
+
+      const filteredSummaries = (selectedProjects && selectedProjects.length > 0)
+        ? Object.fromEntries(
+            Object.entries(projectSummaries).filter(([projectId]) => 
+              selectedProjects.includes(projectId)
+            )
+          )
+        : projectSummaries;
+
+      // 動態導入政府報告生成函數
+      const { generateAndDownloadGovernmentReport } = await import('@/utils/reportGenerator');
+      
+      // 生成政府標準報告
+      const reportPath = await generateAndDownloadGovernmentReport(
+        filteredProjects,
+        filteredSummaries,
+        organizationInfo,
+        new Date().getFullYear().toString()
+      );
+      
+      Alert.alert(
+        '🏛️ 政府標準報告生成成功',
+        '已生成符合環保署113年版標準的溫室氣體盤查報告書，包含完整的組織邊界設定、排放源識別、數據品質管理等11個章節，可用於政府申報和第三方查證。',
+        [
+          { text: '查看報告', onPress: () => console.log('查看報告:', reportPath) },
+          { text: '分享報告', onPress: () => shareReport(reportPath, `政府標準盤查報告書_${organizationInfo.name}`) },
+          { text: '確定', style: 'cancel' }
+        ]
+      );
+    } catch (error) {
+      console.error('政府標準報告生成失敗:', error);
+      Alert.alert(
+        '報告生成失敗',
+        '政府標準報告生成失敗，請檢查網路連線並重試。錯誤信息：' + (error instanceof Error ? error.message : String(error))
+      );
+    } finally {
+      setIsGeneratingReport(false);
+    }
+  };
+
+
+
   // 渲染報告管理頁面
   const renderReportManagement = () => (
     <View style={styles.contentContainer}>
@@ -1146,6 +1217,7 @@ export default function AnalyticsScreen() {
 
       {/* 生成報告按鈕 */}
       <View style={styles.generateButtonContainer}>
+        {/* 國際標準報告 */}
         <Pressable
           style={[
             styles.generateButton,
@@ -1167,9 +1239,35 @@ export default function AnalyticsScreen() {
           </Text>
         </Pressable>
         
+        {/* 政府標準報告 */}
+        <Pressable
+          style={[
+            styles.generateButton,
+            styles.governmentReportButton,
+            { backgroundColor: isGeneratingReport ? theme.border : '#059669' }
+          ]}
+          onPress={handleGenerateGovernmentReport}
+          disabled={isGeneratingReport}
+        >
+          {isGeneratingReport ? (
+            <ActivityIndicator size="small" color="white" />
+          ) : (
+            <FileText size={20} color="white" />
+          )}
+          <Text style={styles.generateButtonText}>
+            {isGeneratingReport ? '生成中...' : '生成政府標準盤查報告書'}
+          </Text>
+        </Pressable>
+        
         <Text style={[styles.generateButtonDescription, { color: theme.secondaryText }]}>
           {t('analytics.reports.generate.description')}
         </Text>
+        
+        <Text style={[styles.generateButtonDescription, { color: '#059669', fontWeight: '600', marginTop: 8 }]}>
+          🏛️ 符合環保署113年版標準 • ISO 14064-1:2018 • 第三方查證準備
+        </Text>
+
+
       </View>
     </View>
   );
@@ -1630,6 +1728,9 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     gap: 8,
   },
+  governmentReportButton: {
+    marginTop: 12,
+  },
   generateButtonText: {
     fontSize: 16,
     fontWeight: '600',
@@ -1673,5 +1774,12 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  
+
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 8,
   },
 }); 

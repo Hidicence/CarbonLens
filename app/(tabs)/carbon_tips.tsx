@@ -1,14 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, SafeAreaView, TouchableOpacity, Image, Dimensions, TextInput, Modal, Alert, Linking, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, SafeAreaView, TouchableOpacity, Image, TextInput, Modal, Alert, Linking, Platform } from 'react-native';
 import { Lightbulb, Car, Laptop, Utensils, Hotel, Trash, Fuel, Droplet, Wind, Zap, Search, TreeDeciduous, Calculator, X, ArrowRight, Check, MapPin, Navigation, Building, Phone, ShoppingBag, Leaf, Recycle, Coffee, Sun, Salad, Activity, BarChart3, TrendingDown, Target, Info } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Colors from '@/constants/colors';
 import { useThemeStore } from '@/store/themeStore';
+import { useDimensions } from '@/hooks/useDimensions';
 import PageTitle from '@/components/PageTitle';
 import Button from '@/components/Button';
-
-const { width } = Dimensions.get('window');
-const cardWidth = width - 40;
 
 // 碳抵消提供商數據
 const CARBON_OFFSET_PROVIDERS = [
@@ -301,6 +299,8 @@ const PLANT_BASED_CATERING = [
 export default function CarbonTipsScreen() {
   const { isDarkMode } = useThemeStore();
   const theme = isDarkMode ? Colors.dark : Colors.light;
+  const { width } = useDimensions();
+  const cardWidth = width - 40;
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   
   // 碳抵消計算器狀態
