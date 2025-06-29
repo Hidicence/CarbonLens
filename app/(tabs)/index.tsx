@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { View, Text, StyleSheet, FlatList, SafeAreaView, Pressable, TextInput, Dimensions, Platform, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, FlatList, SafeAreaView, Pressable, TextInput, Dimensions, Platform, TouchableOpacity, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Plus, Search, FolderPlus, X, BarChart3, TrendingDown, TrendingUp, ChevronRight, Building, Settings, Wrench } from 'lucide-react-native';
 import { useProjectStore } from '@/store/projectStore';
@@ -282,13 +282,18 @@ export default function ProjectsScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
-      <PageTitle 
-        title={t('home.title')} 
-        subtitle={t('home.subtitle')} 
-        centered
-      />
+      <ScrollView 
+        style={{ flex: 1 }}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 20 }}
+      >
+        <PageTitle 
+          title={t('home.title')} 
+          subtitle={t('home.subtitle')} 
+          centered
+        />
 
-      {/* 測試數據管理 - Beta版本功能 */}
+        {/* 測試數據管理 - Beta版本功能 */}
       <View style={[styles.testDataContainer, { backgroundColor: theme.card }]}>
         <View style={styles.testDataHeader}>
           <View style={styles.testDataInfo}>
@@ -499,26 +504,6 @@ export default function ProjectsScreen() {
               {t('home.operational.add.record')}
             </Text>
           </TouchableOpacity>
-          
-          <TouchableOpacity 
-            style={[styles.operationalQuickAction, { backgroundColor: theme.background, borderWidth: 1, borderColor: theme.border }]}
-            onPress={() => router.push('/operational/allocation')}
-          >
-            <Settings size={18} color={theme.primary} />
-            <Text style={[styles.operationalQuickActionText, { color: theme.primary }]}>
-              {t('home.operational.allocation.settings')}
-            </Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity 
-            style={[styles.operationalQuickAction, { backgroundColor: theme.background, borderWidth: 1, borderColor: theme.border }]}
-            onPress={() => router.push('/operational/reports')}
-          >
-            <BarChart3 size={18} color={theme.primary} />
-            <Text style={[styles.operationalQuickActionText, { color: theme.primary }]}>
-              {t('home.operational.reports')}
-            </Text>
-          </TouchableOpacity>
         </View>
 
         {/* 活躍專案指示器 */}
@@ -580,35 +565,34 @@ export default function ProjectsScreen() {
         )}
       </View>
 
-      {/* 項目列表 */}
-      {filteredProjects.length === 0 && (
-        searchQuery ? (
-          <View style={styles.noResultsContainer}>
-            <Text style={[styles.noResultsText, { color: theme.secondaryText }]}>
-              {t('home.no.search.results')}
-            </Text>
-          </View>
-        ) : (
-          <EmptyState
-            icon={<FolderPlus size={48} color={theme.secondaryText} />}
-            title={t('home.no.projects')}
-            description={t('home.no.projects.description')}
-            actionLabel={t('home.create.first.project')}
-            onAction={handleAddProject}
-          />
-        )
-      )}
+        {/* 項目列表 */}
+        {filteredProjects.length === 0 && (
+          searchQuery ? (
+            <View style={styles.noResultsContainer}>
+              <Text style={[styles.noResultsText, { color: theme.secondaryText }]}>
+                {t('home.no.search.results')}
+              </Text>
+            </View>
+          ) : (
+            <EmptyState
+              icon={<FolderPlus size={48} color={theme.secondaryText} />}
+              title={t('home.no.projects')}
+              description={t('home.no.projects.description')}
+              actionLabel={t('home.create.first.project')}
+              onAction={handleAddProject}
+            />
+          )
+        )}
 
-      {/* 添加項目列表展示 */}
-      {filteredProjects.length > 0 && (
-        <FlatList
-          data={filteredProjects}
-          renderItem={({ item }) => <ProjectCard project={item} />}
-          keyExtractor={item => item.id}
-          contentContainerStyle={styles.projectList}
-          showsVerticalScrollIndicator={false}
-        />
-      )}
+        {/* 添加項目列表展示 */}
+        {filteredProjects.length > 0 && (
+          <View style={styles.projectList}>
+            {filteredProjects.map(project => (
+              <ProjectCard key={project.id} project={project} />
+            ))}
+          </View>
+        )}
+      </ScrollView>
     </SafeAreaView>
   );
 }
