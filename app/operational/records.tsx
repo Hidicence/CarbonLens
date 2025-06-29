@@ -180,7 +180,7 @@ export default function RecordsScreen() {
           style: 'destructive',
           onPress: async () => {
             console.log('清除所有數據...');
-            clearAllData();
+            await clearAllData();
             
             // 同時清除 AsyncStorage 中的持久化數據
             try {

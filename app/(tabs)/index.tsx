@@ -220,10 +220,10 @@ export default function ProjectsScreen() {
   };
 
   // 清除所有數據的處理函數
-  const handleClearAllData = () => {
+  const handleClearAllData = async () => {
     try {
       console.log('開始清除所有數據...');
-      clearAllData();
+      await clearAllData();
       console.log('所有數據已清除！');
       
       // 可以選擇顯示成功提示

@@ -1,7 +1,10 @@
 import { initializeApp } from 'firebase/app';
-import { initializeAuth, indexedDBLocalPersistence, browserLocalPersistence } from 'firebase/auth';
+import { initializeAuth, getAuth } from 'firebase/auth';
+import ReactNativeAsyncStorage from '@react-native-async-storage/async-storage';
 // React Native persistence handled by browserLocalPersistence
 import { getAnalytics, isSupported } from 'firebase/analytics';
+import { getFirestore, enableNetwork, disableNetwork } from 'firebase/firestore';
+import { getStorage } from 'firebase/storage';
 import { Platform } from 'react-native';
 
 // Firebase配置信息
@@ -19,11 +22,26 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 
 // 獲取Firebase身份驗證實例
-const auth = initializeAuth(app, {
-  persistence: Platform.OS === 'web' 
-    ? indexedDBLocalPersistence 
-    : browserLocalPersistence
-});
+let auth;
+if (Platform.OS === 'web') {
+  auth = getAuth(app);
+} else {
+  // 對於 React Native，首先嘗試 initializeAuth
+  try {
+    auth = initializeAuth(app);
+    console.log('Firebase Auth initialized successfully');
+  } catch (error) {
+    // 如果已經初始化，使用 getAuth
+    console.log('Auth already initialized, using getAuth');
+    auth = getAuth(app);
+  }
+}
+
+// 初始化Firestore數據庫
+const db = getFirestore(app);
+
+// 初始化Cloud Storage（用於文件存儲）
+const storage = getStorage(app);
 
 // 初始化Firebase Analytics (僅在支持的環境中)
 const initializeAnalytics = async () => {
@@ -40,5 +58,10 @@ const initializeAnalytics = async () => {
 
 const analyticsPromise = initializeAnalytics();
 
-export { auth, analyticsPromise };
+// 離線/在線模式控制
+export const enableOfflineMode = () => disableNetwork(db);
+export const enableOnlineMode = () => enableNetwork(db);
+
+// 導出所有Firebase服務
+export { auth, db, storage, analyticsPromise };
 export default app;

@@ -1,69 +1,49 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* CarbonLens 現代化儀表板色彩變量 */
-:root {
-  /* 主要品牌色 */
-  --primary-green: #10B981;
-  --primary-green-dark: #059669;
-  --primary-green-light: #34D399;
-  
-  /* 漸變背景色 */
-  --bg-gradient-start: #1a1b3a;
-  --bg-gradient-mid: #2d1b69;
-  --bg-gradient-end: #1e293b;
-  
-  /* 卡片和組件色 */
-  --card-bg: rgba(30, 41, 59, 0.8);
-  --card-bg-alt: rgba(51, 65, 85, 0.6);
-  --card-border: rgba(148, 163, 184, 0.1);
-  
-  /* 數據可視化色彩 */
-  --chart-purple: #a855f7;
-  --chart-pink: #ec4899;
-  --chart-cyan: #06b6d4;
-  --chart-blue: #3b82f6;
-  --chart-orange: #f97316;
-  --chart-yellow: #eab308;
-  
-  /* 文字色彩 */
-  --text-primary: #f8fafc;
-  --text-secondary: #cbd5e1;
-  --text-muted: #94a3b8;
-  --text-accent: #64748b;
-
-  /* 主要顏色變量 - 基於參考圖 */
-  --primary-bg: #0f172a;
-  --secondary-bg: #1e293b;
-  --border-color: rgba(71, 85, 105, 0.3);
-  
-  /* 漸變色 */
-  --gradient-purple: linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%);
-  --gradient-pink: linear-gradient(135deg, #ec4899 0%, #f97316 100%);
-  --gradient-cyan: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
-  --gradient-blue: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-  --gradient-green: linear-gradient(135deg, #10b981 0%, #059669 100%);
-}
-
-/* 全局樣式 */
+/* 重置和基礎樣式 */
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
+/* APP端相同的色系變量 */
+:root {
+  --primary: #10B981;
+  --secondary: #059669;
+  --background: #0F172A;
+  --card: #1E293B;
+  --text: #F9FAFB;
+  --secondary-text: #9CA3AF;
+  --border: #334155;
+  --success: #10B981;
+  --warning: #F59E0B;
+  --error: #EF4444;
+  --info: #3B82F6;
+  --highlight: #064E3B;
+}
+
+html {
+  height: 100%;
+}
+
 body {
-  background: var(--primary-bg);
-  color: var(--text-primary);
+  background: var(--background);
+  color: var(--text);
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   min-height: 100vh;
   line-height: 1.6;
+  font-size: 14px;
+}
+
+#root {
+  min-height: 100vh;
 }
 
 /* 自定義滾動條 */
@@ -73,17 +53,72 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(30, 41, 59, 0.3);
+  background: rgba(51, 65, 85, 0.3);
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(135deg, #8b5cf6, #ec4899);
+  background: var(--primary);
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(135deg, #7c3aed, #db2777);
+  background: var(--secondary);
+}
+
+/* 通用動畫 */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes fadeIn {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+@keyframes slideUp {
+  0% { 
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% { 
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 通用工具類 */
+.fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.slide-up {
+  animation: slideUp 0.3s ease-out;
+}
+
+/* 移除所有Tailwind CSS相關樣式，避免衝突 */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+  .container {
+    padding: 0 16px;
+  }
+  
+  body {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 0 12px;
+  }
 }
 
 /* 現代化卡片樣式 */
@@ -402,23 +437,6 @@ body {
 
 .hover-lift:hover {
   transform: translateY(-2px);
-}
-
-/* 響應式設計 */
-@media (max-width: 768px) {
-  .dashboard-card {
-    margin: 0 16px;
-    border-radius: 12px;
-  }
-  
-  .stat-card {
-    padding: 16px;
-  }
-  
-  .btn-primary, .btn-secondary {
-    padding: 10px 16px;
-    font-size: 14px;
-  }
 }
 
 /* 表格樣式 */

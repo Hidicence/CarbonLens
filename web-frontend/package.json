@@ -12,26 +12,27 @@
     "lint": "eslint . --ext .ts,.tsx --report-unused-disable-directives --max-warnings 0"
   },
   "dependencies": {
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-router-dom": "^6.20.1",
+    "@headlessui/react": "^1.7.17",
     "@tanstack/react-query": "^5.8.4",
     "axios": "^1.6.2",
-    "recharts": "^2.8.0",
-    "date-fns": "^2.30.0",
-    "react-datepicker": "^4.24.0",
-    "react-select": "^5.8.0",
-    "lucide-react": "^0.294.0",
     "clsx": "^2.0.0",
-    "tailwind-merge": "^2.0.0",
-    "@headlessui/react": "^1.7.17",
+    "date-fns": "^2.30.0",
+    "firebase": "^11.9.1",
+    "framer-motion": "^10.16.5",
+    "lucide-react": "^0.294.0",
+    "react": "^18.2.0",
+    "react-datepicker": "^4.24.0",
+    "react-dom": "^18.2.0",
     "react-hot-toast": "^2.4.1",
-    "framer-motion": "^10.16.5"
+    "react-router-dom": "^6.20.1",
+    "react-select": "^5.8.0",
+    "recharts": "^2.8.0",
+    "tailwind-merge": "^2.0.0"
   },
   "devDependencies": {
     "@types/react": "^18.2.37",
-    "@types/react-dom": "^18.2.15",
     "@types/react-datepicker": "^4.19.4",
+    "@types/react-dom": "^18.2.15",
     "@typescript-eslint/eslint-plugin": "^6.10.0",
     "@typescript-eslint/parser": "^6.10.0",
     "@vitejs/plugin-react": "^4.1.1",
@@ -47,4 +48,4 @@
   "engines": {
     "node": ">=18.0.0"
   }
-} 
+}

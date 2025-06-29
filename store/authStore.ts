@@ -14,12 +14,16 @@ import {
   updateProfile,
   GoogleAuthProvider,
   signInWithPopup,
+  signInWithCredential,
   OAuthProvider,
   onAuthStateChanged,
   type UserCredential,
   type User as FirebaseUser,
   getAuth
 } from 'firebase/auth';
+
+// 導入 Google Sign-In 服務
+import { GoogleSignInService } from '@/services/googleSignInService';
 
 // 導入auth實例
 import { auth } from '@/utils/firebaseConfig';
@@ -35,7 +39,7 @@ interface AuthState {
   login: (email: string, password: string, rememberMe?: boolean) => Promise<boolean>;
   loginWithGoogle: () => Promise<boolean>;
   loginWithApple: () => Promise<boolean>;
-  logout: () => void;
+  logout: () => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<boolean>;
   resetPassword: (email: string) => Promise<boolean>;
   updateProfile: (updates: Partial<User>) => void;
@@ -131,20 +135,38 @@ export const useAuthStore = create<AuthState>()(
           return true;
         } catch (error: any) {
           console.error('登入錯誤:', error);
-          // 如果是訪客帳號且登入失敗，嘗試創建它
-          if (email === 'guest@example.com' && (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential')) {
-            console.log('訪客帳號不存在或密碼錯誤，嘗試創建新帳號...');
+          
+          // 如果是測試帳號或訪客帳號且登入失敗，嘗試創建它們
+          const isTestAccount = email === 'test@example.com' || email === 'guest@example.com';
+          const isCredentialError = error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential';
+          
+          if (isTestAccount && isCredentialError) {
+            console.log(`${email} 帳號不存在或密碼錯誤，嘗試創建新帳號...`);
             try {
               const auth = getAuth(firebaseApp);
-              await createUserWithEmailAndPassword(auth, email, password);
-              console.log('訪客帳號創建成功並登入');
+              const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+              
+              // 設置顯示名稱
+              const displayName = email === 'test@example.com' ? '測試用戶' : '訪客用戶';
+              await updateProfile(userCredential.user, {
+                displayName: displayName
+              });
+              
+              console.log(`${email} 帳號創建成功並登入`);
               return true;
             } catch (creationError: any) {
-              console.error('創建訪客帳號失敗:', creationError);
+              console.error(`創建 ${email} 帳號失敗:`, creationError);
+              
+              // 如果創建失敗，可能是帳號已存在但密碼錯誤
+              if (creationError.code === 'auth/email-already-in-use') {
+                set({ error: `${email} 帳號已存在，但密碼不正確`, isLoading: false });
+              } else {
               set({ error: creationError.message, isLoading: false });
+              }
               return false;
             }
           }
+          
           set({ error: error.message, isLoading: false });
           return false;
         }
@@ -154,42 +176,80 @@ export const useAuthStore = create<AuthState>()(
         set({ isLoading: true, error: null });
         
         try {
-          // 檢查當前環境是否支援 Google 登入
-          if (Platform.OS !== 'web') {
-            set({
-              isLoading: false,
-              error: '目前僅支援在網頁瀏覽器中使用 Google 登入'
-            });
-            return false;
+          if (Platform.OS === 'web') {
+            // Web 平台使用 Firebase popup
+            console.log('開始 Web Google 登入流程...');
+            
+            // 確保 auth 實例存在
+            if (!auth) {
+              throw new Error('Firebase Auth 實例未初始化');
           }
           
-          // 設置Google認證提供者
           const provider = new GoogleAuthProvider();
-          
-          // 添加額外的範圍權限（可選）
           provider.addScope('profile');
           provider.addScope('email');
-          
-          // 設置語言為繁體中文
           provider.setCustomParameters({
             'hl': 'zh-TW'
           });
           
+            console.log('正在執行 signInWithPopup...');
             const result = await signInWithPopup(auth, provider);
+            console.log('signInWithPopup 成功:', result);
+            
             const firebaseUser = result.user;
           
-          // 檢查用戶是否確實登入成功
           if (!firebaseUser) {
             throw new Error('Google 登入未返回用戶資訊');
           }
             
-            set({
-              isLoggedIn: true,
-              user: mapFirebaseUserToUser(firebaseUser),
-              isLoading: false
-            });
+            console.log('Web Google 登入成功:', firebaseUser.email);
             
+            // onAuthStateChanged 將會處理狀態更新
             return true;
+          } else {
+            // 原生 APP 平台使用 Google Sign-In SDK
+            console.log('開始原生 Google 登入流程...');
+            
+            try {
+              // 執行 Google 登入
+              const userInfo = await GoogleSignInService.signIn();
+              console.log('Google 登入成功，用戶資訊:', userInfo);
+              
+              if (!userInfo.data?.idToken) {
+                throw new Error('未獲取到 Google ID Token');
+              }
+              
+              // 獲取 Google 認證憑證
+              const googleCredential = GoogleAuthProvider.credential(
+                userInfo.data.idToken
+              );
+              
+              console.log('正在使用 Google 憑證登入 Firebase...');
+              
+              // 使用 Google 憑證登入 Firebase
+              const result = await signInWithCredential(auth, googleCredential);
+              const firebaseUser = result.user;
+              
+              if (!firebaseUser) {
+                throw new Error('Google 登入未返回用戶資訊');
+              }
+              
+              console.log('Firebase 登入成功:', firebaseUser.email);
+              
+              // onAuthStateChanged 將會處理狀態更新
+              return true;
+            } catch (nativeError: any) {
+              console.error('原生 Google 登入失敗:', nativeError);
+              
+              // 如果原生登入失敗，在開發環境下可以嘗試測試帳號登入
+              if (__DEV__) {
+                console.log('開發環境：嘗試使用測試帳號登入...');
+                return await get().login('test@example.com', 'password', false);
+              }
+              
+              throw nativeError;
+            }
+          }
         } catch (error: any) {
           console.error('Google login error:', error);
           
@@ -206,7 +266,22 @@ export const useAuthStore = create<AuthState>()(
             errorMessage = 'Google 登入功能尚未啟用，請聯繫管理員';
           } else if (error.code === 'auth/network-request-failed') {
             errorMessage = '網路連線失敗，請檢查網路設定';
+          } else if (error.code === 'auth/argument-error') {
+            errorMessage = 'Firebase 配置錯誤，請檢查設定';
+            console.error('Firebase argument error details:', error);
+          } else if (error.code === 'SIGN_IN_CANCELLED') {
+            errorMessage = '用戶取消了 Google 登入';
+          } else if (error.code === 'IN_PROGRESS') {
+            errorMessage = 'Google 登入正在進行中，請稍候';
+          } else if (error.code === 'PLAY_SERVICES_NOT_AVAILABLE') {
+            errorMessage = 'Google Play 服務不可用，請更新 Google Play 服務';
           }
+          
+          console.error('完整錯誤信息:', {
+            code: error.code,
+            message: error.message,
+            stack: error.stack
+          });
           
           set({
             isLoading: false,
@@ -259,40 +334,75 @@ export const useAuthStore = create<AuthState>()(
       },
       
       logout: async () => {
+        console.log('🚪 開始執行登出流程...');
+        
         try {
-          // 使用Firebase登出
-          await signOut(auth);
-          
-          // 這將由onAuthStateChanged處理，但我們也在這裡手動設置狀態以確保即時更新
-          set({
-            isLoggedIn: false,
-            user: null
-          });
-
-          // 在Web平台上，確保清理所有可能的會話信息
-          if (Platform.OS === 'web') {
+          // 1. 登出 Google Sign-In (如果已登入)
+          if (Platform.OS !== 'web') {
             try {
-              // 通過全局變量，讓應用知道這是登出操作
-              if (typeof window !== 'undefined') {
-                (window as any).isLoggedOut = true;
+              console.log('🔍 檢查 Google Sign-In 狀態...');
+              const isSignedIn = await GoogleSignInService.isSignedIn();
+              if (isSignedIn) {
+                console.log('🔐 登出 Google Sign-In...');
+                await GoogleSignInService.signOut();
+                console.log('✅ Google Sign-In 登出成功');
               }
-              console.log("Web platform - additional session cleanup");
             } catch (error) {
-              console.error("Web session cleanup error:", error);
+              console.log('⚠️ Google Sign-In 登出時發生錯誤:', error);
             }
           }
-        } catch (error) {
-          console.error('Logout error:', error);
-          // 即使登出失敗，我們也重置本地狀態
+          
+          // 2. 使用Firebase登出
+          console.log('🔥 執行 Firebase 登出...');
+          await signOut(auth);
+          console.log('✅ Firebase 登出成功');
+          
+          // 3. 立即更新本地狀態
+          console.log('🔄 更新本地認證狀態...');
           set({
             isLoggedIn: false,
-            user: null
+            user: null,
+            isLoading: false,
+            error: null
+          });
+          console.log('✅ 本地狀態已清除');
+
+          // 4. 清除本地儲存 (如果需要)
+          if (Platform.OS !== 'web') {
+            try {
+              const AsyncStorage = require('@react-native-async-storage/async-storage').default;
+              const keys = await AsyncStorage.getAllKeys();
+              const authKeys = keys.filter((key: string) => 
+                key.includes('auth') || 
+                key.includes('user') || 
+                key.includes('login')
+              );
+              
+              if (authKeys.length > 0) {
+                await AsyncStorage.multiRemove(authKeys);
+                console.log('✅ AsyncStorage 認證數據已清除');
+              }
+            } catch (error) {
+              console.log('⚠️ 清除 AsyncStorage 時發生錯誤:', error);
+            }
+          }
+
+          console.log('🎉 登出流程完成');
+          
+        } catch (error) {
+          console.error('❌ 登出過程中發生錯誤:', error);
+          
+          // 即使登出失敗，我們也要強制重置本地狀態
+          console.log('🔄 強制重置本地狀態...');
+          set({
+            isLoggedIn: false,
+            user: null,
+            isLoading: false,
+            error: null
           });
           
-          // 在Web平台上，即使Firebase登出失敗，也要確保用戶被登出
-          if (Platform.OS === 'web') {
-            console.log("Forcing logout on web despite Firebase error");
-          }
+          // 拋出錯誤，讓調用者知道登出過程中有問題
+          throw error;
         }
       },
       

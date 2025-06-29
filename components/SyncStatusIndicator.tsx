@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useSyncStore } from '@/store/syncStore';
-import { SyncStatus } from '@/services/syncManager';
+import { firebaseSync } from '@/services/firebaseDataSync';
+import { useAuthStore } from '@/store/authStore';
 import { getDynamicColors } from '@/constants/colors';
 
 interface SyncStatusIndicatorProps {
@@ -14,23 +14,15 @@ const SyncStatusIndicator: React.FC<SyncStatusIndicatorProps> = ({
   showDetails = false, 
   onPress 
 }) => {
-  const {
-    syncStatus,
-    lastSyncResult,
-    isSyncing,
-    syncProgress,
-    isConnectedToServer,
-    startSync,
-    getSyncStatus
-  } = useSyncStore();
-
-  const [syncStatusInfo, setSyncStatusInfo] = useState(getSyncStatus());
+  const { isLoggedIn } = useAuthStore();
+  const [syncStatus, setSyncStatus] = useState(firebaseSync.getSyncStatus());
+  const [isSyncing, setIsSyncing] = useState(false);
   const colors = getDynamicColors();
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setSyncStatusInfo(getSyncStatus());
-    }, 5000); // 每5秒更新一次
+      setSyncStatus(firebaseSync.getSyncStatus());
+    }, 5000); // 每5秒更新一次狀態
 
     return () => clearInterval(interval);
   }, []);
@@ -45,70 +37,67 @@ const SyncStatusIndicator: React.FC<SyncStatusIndicatorProps> = ({
       };
     }
 
-    switch (syncStatus) {
-      case SyncStatus.SUCCESS:
-        return { 
-          name: 'checkmark-circle' as const, 
-          color: '#10B981' 
-        };
-      case SyncStatus.ERROR:
-        return { 
-          name: 'warning' as const, 
-          color: '#EF4444' 
-        };
-      case SyncStatus.OFFLINE:
-        return { 
-          name: 'cloud-offline' as const, 
-          color: '#6B7280' 
-        };
-      default:
-        return { 
-          name: 'cloud' as const, 
-          color: '#6B7280' 
-        };
+    if (!isLoggedIn) {
+      return { 
+        name: 'person-outline' as const, 
+        color: '#6B7280' 
+      };
+    }
+
+    if (syncStatus.isOnline) {
+      return { 
+        name: 'checkmark-circle' as const, 
+        color: '#10B981' 
+      };
+    } else {
+      return { 
+        name: 'cloud-offline' as const, 
+        color: '#6B7280' 
+      };
     }
   };
 
   // 獲取狀態文字
   const getStatusText = () => {
     if (isSyncing) {
-      return `同步中... ${syncProgress}%`;
+      return '同步中...';
     }
 
-    switch (syncStatus) {
-      case SyncStatus.SUCCESS:
-        const lastSync = syncStatusInfo.lastSyncTime 
-          ? new Date(syncStatusInfo.lastSyncTime).toLocaleString('zh-TW', {
-              month: 'short',
-              day: 'numeric',
-              hour: 'numeric',
-              minute: '2-digit'
-            })
-          : '未知';
-        return `已同步 ${lastSync}`;
-      case SyncStatus.ERROR:
-        return lastSyncResult?.message || '同步失敗';
-      case SyncStatus.OFFLINE:
-        return '離線模式';
-      default:
-        return '等待同步';
+    if (!isLoggedIn) {
+      return '未登入';
+    }
+
+    if (syncStatus.isOnline) {
+      const lastSync = syncStatus.lastSyncTime 
+        ? new Date(syncStatus.lastSyncTime).toLocaleString('zh-TW', {
+            month: 'short',
+            day: 'numeric',
+            hour: 'numeric',
+            minute: '2-digit'
+          })
+        : '未知';
+      return `已同步 ${lastSync}`;
+    } else {
+      return '離線模式';
     }
   };
 
   // 手動觸發同步
   const handleManualSync = async () => {
+    if (!isLoggedIn) {
+      Alert.alert('請先登入', '需要登入才能同步數據到雲端');
+      return;
+    }
+
     try {
-      const result = await startSync(true);
-      
-      if (result.status === SyncStatus.SUCCESS) {
-        Alert.alert('同步成功', '數據已更新到最新版本');
-      } else if (result.status === SyncStatus.OFFLINE) {
-        Alert.alert('網絡連接失敗', '請檢查網絡設置後重試');
-      } else {
-        Alert.alert('同步失敗', result.message);
-      }
+      setIsSyncing(true);
+      await firebaseSync.startAutoSync();
+      Alert.alert('同步成功', '數據已同步到雲端');
     } catch (error) {
-      Alert.alert('同步錯誤', '無法執行同步操作');
+      console.error('手動同步失敗:', error);
+      Alert.alert('同步失敗', '無法同步數據，請稍後重試');
+    } finally {
+      setIsSyncing(false);
     }
   };
 
@@ -125,6 +114,7 @@ const SyncStatusIndicator: React.FC<SyncStatusIndicatorProps> = ({
           borderRadius: 20,
           backgroundColor: 'rgba(255, 255, 255, 0.1)',
         }}
+        disabled={isSyncing}
       >
         <Ionicons
           name={statusIcon.name}
@@ -176,7 +166,7 @@ const SyncStatusIndicator: React.FC<SyncStatusIndicatorProps> = ({
           width: 6,
           height: 6,
           borderRadius: 3,
-          backgroundColor: isConnectedToServer ? '#10B981' : '#EF4444',
+          backgroundColor: syncStatus.isOnline ? '#10B981' : '#EF4444',
           marginLeft: 8,
         }}
       />
@@ -184,177 +174,86 @@ const SyncStatusIndicator: React.FC<SyncStatusIndicatorProps> = ({
   );
 };
 
-// 同步狀態詳情組件
+// 簡化的同步狀態詳情組件
 export const SyncStatusDetail: React.FC = () => {
-  const {
-    syncStatus,
-    lastSyncResult,
-    isSyncing,
-    syncProgress,
-    isConnectedToServer,
-    syncConfig,
-    startSync,
-    updateSyncConfig,
-    getSyncStatus
-  } = useSyncStore();
-
-  const [syncStatusInfo, setSyncStatusInfo] = useState(getSyncStatus());
-  const colors = getDynamicColors();
+  const { isLoggedIn } = useAuthStore();
+  const [syncStatus, setSyncStatus] = useState(firebaseSync.getSyncStatus());
 
   useEffect(() => {
-    setSyncStatusInfo(getSyncStatus());
-  }, [lastSyncResult]);
+    const interval = setInterval(() => {
+      setSyncStatus(firebaseSync.getSyncStatus());
+    }, 1000);
 
-  const handleToggleAutoSync = async () => {
-    await updateSyncConfig({
-      autoSync: !syncConfig.autoSync
-    });
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleDownloadFromCloud = async () => {
+    try {
+      await firebaseSync.downloadFromCloud();
+      Alert.alert('下載成功', '雲端數據已下載到本地');
+    } catch (error) {
+      Alert.alert('下載失敗', '無法從雲端下載數據');
+    }
   };
 
-  const handleChangeSyncInterval = () => {
-    Alert.prompt(
-      '設定同步間隔',
-      '請輸入自動同步間隔（分鐘）',
-      [
-        { text: '取消', style: 'cancel' },
-        {
-          text: '確定',
-          onPress: async (value) => {
-            const interval = parseInt(value || '15');
-            if (interval > 0) {
-              await updateSyncConfig({ syncInterval: interval });
-            }
-          }
-        }
-      ],
-      'plain-text',
-      syncConfig.syncInterval.toString()
-    );
+  const handleToggleOfflineMode = async () => {
+    try {
+      if (syncStatus.isOnline) {
+        await firebaseSync.setOfflineMode();
+        Alert.alert('已切換到離線模式', '數據將暫停同步');
+      } else {
+        await firebaseSync.setOnlineMode();
+        Alert.alert('已切換到在線模式', '數據將自動同步');
+      }
+    } catch (error) {
+      Alert.alert('切換失敗', '無法切換同步模式');
+    }
   };
 
   return (
-    <View style={{ padding: 16, backgroundColor: '#1F2937', borderRadius: 12 }}>
-      <Text style={{ color: '#FFFFFF', fontSize: 16, fontWeight: 'bold', marginBottom: 12 }}>
+    <View style={{ padding: 16 }}>
+      <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 16 }}>
         數據同步狀態
       </Text>
-
-      {/* 當前狀態 */}
-      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
-        <Text style={{ color: '#9CA3AF', fontSize: 14 }}>狀態：</Text>
-        <SyncStatusIndicator showDetails={true} />
+      
+      <View style={{ marginBottom: 12 }}>
+        <Text>登入狀態: {isLoggedIn ? '已登入' : '未登入'}</Text>
+        <Text>同步狀態: {syncStatus.isOnline ? '在線' : '離線'}</Text>
+        <Text>用戶ID: {syncStatus.userId || '無'}</Text>
+        <Text>最後同步: {syncStatus.lastSyncTime ? new Date(syncStatus.lastSyncTime).toLocaleString() : '從未同步'}</Text>
       </View>
 
-      {/* 連接狀態 */}
-      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
-        <Text style={{ color: '#9CA3AF', fontSize: 14 }}>服務器連接：</Text>
-        <View
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            marginLeft: 8,
-          }}
-        >
-          <View
+      {isLoggedIn && (
+        <View style={{ gap: 8 }}>
+          <TouchableOpacity
+            onPress={handleDownloadFromCloud}
             style={{
-              width: 8,
-              height: 8,
-              borderRadius: 4,
-              backgroundColor: isConnectedToServer ? '#10B981' : '#EF4444',
-              marginRight: 4,
-            }}
-          />
-          <Text style={{ color: '#FFFFFF', fontSize: 14 }}>
-            {isConnectedToServer ? '已連接' : '未連接'}
-          </Text>
-        </View>
-      </View>
-
-      {/* 最後同步時間 */}
-      {syncStatusInfo.lastSyncTime && (
-        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
-          <Text style={{ color: '#9CA3AF', fontSize: 14 }}>最後同步：</Text>
-          <Text style={{ color: '#FFFFFF', fontSize: 14, marginLeft: 8 }}>
-            {new Date(syncStatusInfo.lastSyncTime).toLocaleString('zh-TW')}
-          </Text>
-        </View>
-      )}
-
-      {/* 同步進度 */}
-      {isSyncing && (
-        <View style={{ marginBottom: 8 }}>
-          <Text style={{ color: '#9CA3AF', fontSize: 14, marginBottom: 4 }}>
-            同步進度：{syncProgress}%
-          </Text>
-          <View
-            style={{
-              height: 4,
-              backgroundColor: '#374151',
-              borderRadius: 2,
-              overflow: 'hidden',
+              backgroundColor: '#3B82F6',
+              padding: 12,
+              borderRadius: 8,
+              alignItems: 'center',
             }}
           >
-                          <View
-                style={{
-                  height: '100%',
-                  width: `${syncProgress}%`,
-                  backgroundColor: colors.primary,
-                }}
-              />
-          </View>
+            <Text style={{ color: 'white', fontWeight: 'bold' }}>
+              從雲端下載數據
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={handleToggleOfflineMode}
+            style={{
+              backgroundColor: syncStatus.isOnline ? '#EF4444' : '#10B981',
+              padding: 12,
+              borderRadius: 8,
+              alignItems: 'center',
+            }}
+          >
+            <Text style={{ color: 'white', fontWeight: 'bold' }}>
+              {syncStatus.isOnline ? '切換到離線模式' : '切換到在線模式'}
+            </Text>
+          </TouchableOpacity>
         </View>
       )}
-
-      {/* 自動同步設置 */}
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 12 }}>
-        <TouchableOpacity
-          onPress={handleToggleAutoSync}
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            padding: 8,
-            backgroundColor: 'rgba(255, 255, 255, 0.05)',
-            borderRadius: 8,
-          }}
-        >
-          <Ionicons
-            name={syncConfig.autoSync ? 'checkbox' : 'square-outline'}
-            size={20}
-            color={syncConfig.autoSync ? colors.primary : '#9CA3AF'}
-            style={{ marginRight: 8 }}
-          />
-          <Text style={{ color: '#FFFFFF', fontSize: 14 }}>自動同步</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          onPress={handleChangeSyncInterval}
-          style={{
-            padding: 8,
-            backgroundColor: 'rgba(255, 255, 255, 0.05)',
-            borderRadius: 8,
-          }}
-        >
-          <Text style={{ color: '#FFFFFF', fontSize: 14 }}>
-            間隔：{syncConfig.syncInterval}分鐘
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* 手動同步按鈕 */}
-      <TouchableOpacity
-        onPress={() => startSync(true)}
-        disabled={isSyncing}
-        style={{
-          backgroundColor: isSyncing ? '#6B7280' : colors.primary,
-          padding: 12,
-          borderRadius: 8,
-          alignItems: 'center',
-          marginTop: 12,
-        }}
-      >
-        <Text style={{ color: '#FFFFFF', fontSize: 14, fontWeight: '600' }}>
-          {isSyncing ? '同步中...' : '立即同步'}
-        </Text>
-      </TouchableOpacity>
     </View>
   );
 };

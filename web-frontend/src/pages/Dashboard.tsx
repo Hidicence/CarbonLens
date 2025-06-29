@@ -1,431 +1,979 @@
-import React, { useState, useMemo, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { 
   TrendingUp, TrendingDown, Activity, Target, Zap, Leaf, 
   Calendar, ArrowUpRight, ArrowDownRight, BarChart3, PieChart, 
   Users, Clock, CheckCircle, AlertTriangle, Building, Film, 
-  Factory, TreePine, Lightbulb
+  Factory, TreePine, Lightbulb, Plus, FileText, Settings,
+  Clapperboard, Crosshair, Sprout, BarChart2
 } from 'lucide-react'
 import { 
   LineChart, Line, AreaChart, Area, BarChart, Bar, 
   PieChart as RechartsPieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend 
 } from 'recharts'
-import { getStatisticsOverview, getProjectsRanking } from '../services/api'
+import { firebaseService } from '../services/firebaseService'
+import type { Project, ProjectEmissionRecord, NonProjectEmissionRecord } from '../../../types/project'
+
+interface DashboardStats {
+  totalProjects: number;
+  activeProjects: number;
+  totalEmissions: number;
+  monthlyEmissions: number;
+  recentProjects: any[];
+  emissionTrend: any[];
+}
 
 const Dashboard: React.FC = () => {
-  const [searchQuery, setSearchQuery] = useState('')
-  const [isSearchActive, setIsSearchActive] = useState(false)
-  const [statistics, setStatistics] = useState<any>(null)
-  const [projectRanking, setProjectRanking] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
+  const [stats, setStats] = useState<DashboardStats>({
+    totalProjects: 0,
+    activeProjects: 0,
+    totalEmissions: 0,
+    monthlyEmissions: 0,
+    recentProjects: [],
+    emissionTrend: [],
+  });
+  const [loading, setLoading] = useState(true);
 
-  // 載入統計數據
+  // 專業圖標組件
+  const ClapperboardIcon = ({ size = 20, color = 'currentColor' }) => (
+    <Clapperboard size={size} color={color} />
+  );
+
+  const CrosshairIcon = ({ size = 20, color = 'currentColor' }) => (
+    <Crosshair size={size} color={color} />
+  );
+
+  const SproutIcon = ({ size = 20, color = 'currentColor' }) => (
+    <Sprout size={size} color={color} />
+  );
+
+  const BarChart2Icon = ({ size = 20, color = 'currentColor' }) => (
+    <BarChart2 size={size} color={color} />
+  );
+
+  const PlusIcon = ({ size = 20, color = 'currentColor' }) => (
+    <Plus size={size} color={color} />
+  );
+
+  const FileTextIcon = ({ size = 20, color = 'currentColor' }) => (
+    <FileText size={size} color={color} />
+  );
+
+  const SettingsIcon = ({ size = 20, color = 'currentColor' }) => (
+    <Settings size={size} color={color} />
+  );
+
+  const ArrowRightIcon = ({ size = 16, color = 'currentColor' }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M5 12h14"/>
+      <path d="m12 5 7 7-7 7"/>
+    </svg>
+  );
+
+  // 精緻的色系定義
+  const colors = {
+    primary: '#10B981',
+    primaryLight: '#34D399',
+    primaryDark: '#059669',
+    secondary: '#064E3B',
+    background: '#0F172A',
+    backgroundLight: '#1E293B',
+    card: '#1E293B',
+    cardHover: '#334155',
+    text: '#F9FAFB',
+    textSecondary: '#9CA3AF',
+    textMuted: '#6B7280',
+    border: '#334155',
+    borderLight: '#475569',
+    success: '#10B981',
+    error: '#EF4444',
+    warning: '#F59E0B',
+    accent: '#8B5CF6',
+    info: '#3B82F6',
+  };
+
+  const styles = {
+    container: {
+      maxWidth: '1200px',
+      margin: '0 auto',
+    },
+    header: {
+      marginBottom: '32px',
+    },
+    title: {
+      fontSize: '32px',
+      fontWeight: '700',
+      color: colors.text,
+      marginBottom: '8px',
+      letterSpacing: '-0.5px',
+    },
+    subtitle: {
+      fontSize: '16px',
+      color: colors.textSecondary,
+      lineHeight: '24px',
+    },
+    statsGrid: {
+      display: 'grid',
+      gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+      gap: '24px',
+      marginBottom: '32px',
+    },
+    statCard: {
+      backgroundColor: colors.card,
+      borderRadius: '16px',
+      padding: '24px',
+      border: `1px solid ${colors.border}`,
+      boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+      transition: 'all 0.3s ease',
+    },
+    statCardHover: {
+      transform: 'translateY(-2px)',
+      boxShadow: '0 8px 25px rgba(0, 0, 0, 0.15)',
+    },
+    statHeader: {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: '16px',
+    },
+    statIcon: {
+      width: '48px',
+      height: '48px',
+      borderRadius: '12px',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      fontSize: '24px',
+    },
+    statTitle: {
+      fontSize: '14px',
+      fontWeight: '500',
+      color: colors.textSecondary,
+      textTransform: 'uppercase' as const,
+      letterSpacing: '0.5px',
+    },
+    statValue: {
+      fontSize: '28px',
+      fontWeight: '700',
+      color: colors.text,
+      marginBottom: '4px',
+    },
+    statUnit: {
+      fontSize: '14px',
+      color: colors.textSecondary,
+      fontWeight: '500',
+    },
+    statTrend: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '4px',
+      fontSize: '12px',
+      fontWeight: '500',
+      marginTop: '8px',
+    },
+    contentGrid: {
+      display: 'grid',
+      gridTemplateColumns: '2fr 1fr',
+      gap: '24px',
+      marginBottom: '32px',
+    },
+    section: {
+      backgroundColor: colors.card,
+      borderRadius: '16px',
+      padding: '24px',
+      border: `1px solid ${colors.border}`,
+      boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+    },
+    sectionTitle: {
+      fontSize: '20px',
+      fontWeight: '600',
+      color: colors.text,
+      marginBottom: '16px',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '12px',
+    },
+    projectList: {
+      display: 'flex',
+      flexDirection: 'column' as const,
+      gap: '12px',
+    },
+    projectItem: {
+      padding: '16px',
+      backgroundColor: colors.background,
+      borderRadius: '12px',
+      border: `1px solid ${colors.border}`,
+      transition: 'all 0.3s ease',
+      cursor: 'pointer',
+    },
+    projectItemHover: {
+      borderColor: colors.primary,
+      backgroundColor: `${colors.primary}05`,
+    },
+    projectHeader: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'flex-start',
+      marginBottom: '8px',
+    },
+    projectName: {
+      fontSize: '16px',
+      fontWeight: '600',
+      color: colors.text,
+      marginBottom: '4px',
+    },
+    projectType: {
+      fontSize: '12px',
+      color: colors.textSecondary,
+      textTransform: 'uppercase' as const,
+      letterSpacing: '0.5px',
+    },
+    projectStatus: {
+      padding: '4px 8px',
+      borderRadius: '6px',
+      fontSize: '12px',
+      fontWeight: '500',
+      textTransform: 'uppercase' as const,
+      letterSpacing: '0.5px',
+    },
+    projectEmissions: {
+      fontSize: '14px',
+      color: colors.textSecondary,
+    },
+    emissionValue: {
+      fontWeight: '600',
+      color: colors.text,
+    },
+    quickActions: {
+      display: 'flex',
+      flexDirection: 'column' as const,
+      gap: '12px',
+    },
+    actionButton: {
+      padding: '16px',
+      backgroundColor: colors.background,
+      border: `1px solid ${colors.border}`,
+      borderRadius: '12px',
+      color: colors.text,
+      fontSize: '14px',
+      fontWeight: '500',
+      cursor: 'pointer',
+      transition: 'all 0.3s ease',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '12px',
+    },
+    actionButtonPrimary: {
+      background: `linear-gradient(135deg, ${colors.primary}, ${colors.secondary})`,
+      borderColor: colors.primary,
+      color: 'white',
+    },
+    loadingContainer: {
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      height: '200px',
+      color: colors.textSecondary,
+    },
+    emptyState: {
+      textAlign: 'center' as const,
+      padding: '40px',
+      color: colors.textSecondary,
+    },
+    emptyStateIcon: {
+      fontSize: '48px',
+      marginBottom: '16px',
+    },
+    emptyStateTitle: {
+      fontSize: '18px',
+      fontWeight: '600',
+      color: colors.text,
+      marginBottom: '8px',
+    },
+    emptyStateText: {
+      fontSize: '14px',
+      lineHeight: '20px',
+    },
+  }
+
   useEffect(() => {
-    const loadDashboardData = async () => {
-      try {
-        setLoading(true)
-        const [statsData, rankingData] = await Promise.all([
-          getStatisticsOverview(),
-          getProjectsRanking({ period: '30', limit: '5' })
-        ])
-        setStatistics(statsData)
-        setProjectRanking(rankingData.ranking || [])
-      } catch (error) {
-        console.error('載入儀表板數據失敗:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    loadDashboardData()
-  }, [])
-
-  // 計算核心 KPI
-  const kpiData = useMemo(() => {
-    if (!statistics) return []
-
-    const totalProjects = statistics.projects?.total || 0
-    const totalEmissions = statistics.emissions?.total || 0
-    const activeProjects = statistics.projects?.byStatus?.find((s: any) => s.status === 'active')?.count || 0
-    const completedProjects = statistics.projects?.byStatus?.find((s: any) => s.status === 'completed')?.count || 0
-
-    // 計算平均專案排放量
-    const avgEmissionPerProject = totalProjects > 0 ? (totalEmissions / totalProjects) : 0
+    setLoading(true);
     
-    // 計算完成率
-    const completionRate = totalProjects > 0 ? ((completedProjects / totalProjects) * 100) : 0
-
-    return [
-      {
-        title: "專案排放總量",
-        value: totalEmissions.toFixed(1),
-        unit: "kg CO₂e",
-        change: "-8.2%", // 這裡可以後續從API計算實際變化
-        trend: "down",
-        gradient: "from-green-500 to-emerald-600",
-        icon: TreePine,
-        description: "本月總碳排放量"
-      },
-      {
-        title: "營運排放總量", 
-        value: "1,234.5", // 後續從營運排放API獲取
-        unit: "kg CO₂e",
-        change: "+12.3%",
-        trend: "up",
-        gradient: "from-orange-500 to-red-600",
-        icon: Factory,
-        description: "日常營運碳排放"
-      },
-      {
-        title: "活躍專案數",
-        value: activeProjects.toString(),
-        unit: "個專案",
-        change: "+2",
-        trend: "up", 
-        gradient: "from-blue-500 to-purple-600",
-        icon: Film,
-        description: "進行中的影視專案"
-      },
-      {
-        title: "專案完成率",
-        value: completionRate.toFixed(1),
-        unit: "%",
-        change: "+5.2%",
-        trend: "up",
-        gradient: "from-emerald-500 to-teal-600", 
-        icon: Target,
-        description: "專案執行效率"
-      },
-      {
-        title: "平均專案排放",
-        value: avgEmissionPerProject.toFixed(1),
-        unit: "kg CO₂e",
-        change: "-15.8%",
-        trend: "down",
-        gradient: "from-purple-500 to-pink-600",
-        icon: Activity,
-        description: "每個專案平均排放量"
-      },
-      {
-        title: "碳效率指標",
-        value: "2.4",
-        unit: "g/NT$",
-        change: "-3.1%", 
-        trend: "down",
-        gradient: "from-yellow-500 to-orange-600",
-        icon: Lightbulb,
-        description: "每元預算的碳排放量"
-      }
-    ]
-  }, [statistics])
-
-  // 月度排放趨勢數據
-  const monthlyTrendData = useMemo(() => {
-    if (!statistics?.emissions?.monthly) return []
+    // 設置實時監聽
+    const unsubscribeProjects = firebaseService.subscribeToProjects((projectsData) => {
+      console.log('📡 Dashboard 接收到專案數據更新:', projectsData.length, '個專案');
+      updateDashboardStats(projectsData, []);
+    });
     
-    return statistics.emissions.monthly.map((item: any) => ({
-      month: item.month,
-      專案排放: item.emissions || 0,
-      營運排放: Math.random() * 200 + 100, // 模擬數據，後續從API獲取
-      總排放: (item.emissions || 0) + (Math.random() * 200 + 100)
+    const unsubscribeEmissions = firebaseService.subscribeToEmissionRecords((emissionsData) => {
+      console.log('📡 Dashboard 接收到排放記錄更新:', emissionsData.length, '條記錄');
+      // 重新獲取專案數據並更新統計
+      firebaseService.getProjects().then(projectsData => {
+        updateDashboardStats(projectsData, emissionsData);
+      });
+    });
+
+    // 清理函數
+    return () => {
+      console.log('🔌 Dashboard 取消實時監聽');
+      unsubscribeProjects();
+      unsubscribeEmissions();
+    };
+  }, []);
+
+  // 更新儀表板統計數據的函數
+  const updateDashboardStats = (projects: Project[], emissions: ProjectEmissionRecord[]) => {
+    const activeProjects = projects.filter(p => p.status === 'active').length;
+    const totalEmissions = emissions.reduce((sum, record) => sum + (record.amount || 0), 0);
+    
+    // 計算本月排放量
+    const currentMonth = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
+    const monthlyEmissions = emissions.filter(record => {
+      const recordDate = new Date(record.date);
+      return recordDate.getMonth() === currentMonth && recordDate.getFullYear() === currentYear;
+    }).reduce((sum, record) => sum + (record.amount || 0), 0);
+
+    // 生成趨勢數據
+    const trendData = generateTrendData(emissions);
+
+    setStats({
+      totalProjects: projects.length,
+      activeProjects,
+      totalEmissions,
+      monthlyEmissions,
+      recentProjects: projects.slice(0, 5),
+      emissionTrend: trendData,
+    });
+    
+    setLoading(false);
+  };
+
+  const generateTrendData = (emissions: any[]) => {
+    // 簡化的趨勢數據生成
+    const months = ['1月', '2月', '3月', '4月', '5月', '6月']
+    return months.map((month, index) => ({
+      month,
+      value: Math.random() * 1000 + 500,
     }))
-  }, [statistics])
-
-  // 階段排放分布
-  const stageDistribution = useMemo(() => {
-    if (!statistics?.emissions?.byStage) return []
-    
-    const stageNames = {
-      'pre-production': '前期製作',
-      'production': '製作期',
-      'post-production': '後期製作'
-    }
-    
-    return statistics.emissions.byStage.map((item: any) => ({
-      name: stageNames[item.stage as keyof typeof stageNames] || item.stage,
-      value: item.total || 0,
-      count: item.count || 0
-    }))
-  }, [statistics])
-
-  // 類別排放分布
-  const categoryDistribution = useMemo(() => {
-    if (!statistics?.emissions?.byCategory) return []
-    
-    return statistics.emissions.byCategory.slice(0, 6).map((item: any, index: number) => ({
-      name: item.name,
-      value: item.total || 0,
-      count: item.count || 0,
-      color: item.color || `hsl(${index * 60}, 70%, 50%)`
-    }))
-  }, [statistics])
-
-  const activateSearch = () => {
-    setIsSearchActive(true)
   }
 
-  const clearSearch = () => {
-    setSearchQuery('')
-    setIsSearchActive(false)
-  }
+  const StatCard = ({ 
+    title, 
+    value, 
+    unit, 
+    icon, 
+    trend, 
+    color = colors.primary,
+    description 
+  }: {
+    title: string;
+    value: number | string;
+    unit?: string;
+    icon: React.ReactNode;
+    trend?: number;
+    color?: string;
+    description?: string;
+  }) => (
+    <div style={{
+      background: `linear-gradient(135deg, ${colors.card}, ${colors.cardHover}20)`,
+      borderRadius: '20px',
+      padding: '32px',
+      border: `1px solid ${colors.border}`,
+      position: 'relative',
+      overflow: 'hidden',
+      transition: 'all 0.3s ease',
+      cursor: 'pointer',
+    }}
+    onMouseEnter={(e) => {
+      e.currentTarget.style.transform = 'translateY(-4px)'
+      e.currentTarget.style.boxShadow = `0 20px 40px rgba(0,0,0,0.3)`
+    }}
+    onMouseLeave={(e) => {
+      e.currentTarget.style.transform = 'translateY(0)'
+      e.currentTarget.style.boxShadow = 'none'
+    }}>
+      {/* 背景裝飾 */}
+      <div style={{
+        position: 'absolute',
+        top: 0,
+        right: 0,
+        width: '100px',
+        height: '100px',
+        background: `${color}10`,
+        borderRadius: '50%',
+        transform: 'translate(30px, -30px)',
+        filter: 'blur(20px)',
+      }}></div>
+      
+      {/* 頂部光效 */}
+      <div style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        height: '2px',
+        background: `linear-gradient(90deg, transparent, ${color}, transparent)`,
+      }}></div>
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active':
-        return 'bg-green-100 text-green-800'
-      case 'completed':
-        return 'bg-blue-100 text-blue-800'
-      case 'planning':
-        return 'bg-yellow-100 text-yellow-800'
-      case 'on-hold':
-        return 'bg-gray-100 text-gray-800'
-      default:
-        return 'bg-gray-100 text-gray-800'
-    }
-  }
+      <div style={{ position: 'relative', zIndex: 1 }}>
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'flex-start',
+          marginBottom: '20px',
+        }}>
+          <div style={{
+            width: '60px',
+            height: '60px',
+            borderRadius: '16px',
+            background: `linear-gradient(135deg, ${color}20, ${color}10)`,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '28px',
+            border: `1px solid ${color}30`,
+          }}>
+            {icon}
+          </div>
+          
+          {trend && (
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              padding: '6px 12px',
+              borderRadius: '20px',
+              background: trend > 0 ? `${colors.success}20` : `${colors.error}20`,
+              color: trend > 0 ? colors.success : colors.error,
+              fontSize: '12px',
+              fontWeight: '600',
+            }}>
+              <span>{trend > 0 ? '↗' : '↘'}</span>
+              {Math.abs(trend)}%
+            </div>
+          )}
+        </div>
 
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'active':
-        return '進行中'
-      case 'completed':
-        return '已完成'
-      case 'planning':
-        return '規劃中'
-      case 'on-hold':
-        return '暫停'
-      default:
-        return status
-    }
-  }
+        <div style={{
+          fontSize: '36px',
+          fontWeight: '800',
+          color: colors.text,
+          marginBottom: '8px',
+          lineHeight: 1,
+        }}>
+          {typeof value === 'number' ? value.toLocaleString() : value}
+          {unit && <span style={{ fontSize: '18px', color: colors.textMuted, marginLeft: '4px' }}>{unit}</span>}
+        </div>
+
+        <div style={{
+          fontSize: '16px',
+          fontWeight: '600',
+          color: colors.textSecondary,
+          marginBottom: description ? '8px' : '0',
+        }}>
+          {title}
+        </div>
+
+        {description && (
+          <div style={{
+            fontSize: '14px',
+            color: colors.textMuted,
+            lineHeight: '20px',
+          }}>
+            {description}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  const QuickActionCard = ({ 
+    title, 
+    description, 
+    icon, 
+    color, 
+    onClick 
+  }: {
+    title: string;
+    description: string;
+    icon: React.ReactNode;
+    color: string;
+    onClick: () => void;
+  }) => (
+    <div 
+      style={{
+        background: colors.card,
+        borderRadius: '16px',
+        padding: '24px',
+        border: `1px solid ${colors.border}`,
+        cursor: 'pointer',
+        transition: 'all 0.3s ease',
+        position: 'relative',
+        overflow: 'hidden',
+      }}
+      onClick={onClick}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.borderColor = color;
+        e.currentTarget.style.transform = 'translateY(-2px)';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.borderColor = colors.border;
+        e.currentTarget.style.transform = 'translateY(0)';
+      }}
+    >
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '16px',
+      }}>
+        <div style={{
+          width: '48px',
+          height: '48px',
+          borderRadius: '12px',
+          background: `${color}20`,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: '24px',
+        }}>
+          {icon}
+        </div>
+        <div>
+          <div style={{
+            fontSize: '18px',
+            fontWeight: '600',
+            color: colors.text,
+            marginBottom: '4px',
+          }}>
+            {title}
+          </div>
+          <div style={{
+            fontSize: '14px',
+            color: colors.textSecondary,
+          }}>
+            {description}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const ProjectCard = ({ project }: { project: any }) => (
+    <div style={{
+      background: colors.card,
+      borderRadius: '16px',
+      padding: '20px',
+      border: `1px solid ${colors.border}`,
+      transition: 'all 0.3s ease',
+      cursor: 'pointer',
+    }}
+    onMouseEnter={(e) => {
+      e.currentTarget.style.backgroundColor = colors.cardHover;
+    }}
+    onMouseLeave={(e) => {
+      e.currentTarget.style.backgroundColor = colors.card;
+    }}>
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'flex-start',
+        marginBottom: '16px',
+      }}>
+        <div style={{
+          fontSize: '16px',
+          fontWeight: '600',
+          color: colors.text,
+        }}>
+          {project.name || '未命名專案'}
+        </div>
+        <div style={{
+          padding: '4px 12px',
+          borderRadius: '12px',
+          fontSize: '12px',
+          fontWeight: '600',
+          background: project.status === 'active' ? `${colors.success}20` : `${colors.textMuted}20`,
+          color: project.status === 'active' ? colors.success : colors.textMuted,
+        }}>
+          {project.status === 'active' ? '進行中' : '已完成'}
+        </div>
+      </div>
+
+      <div style={{
+        fontSize: '14px',
+        color: colors.textSecondary,
+        marginBottom: '12px',
+        lineHeight: '20px',
+      }}>
+        {project.description || '暫無描述'}
+      </div>
+
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        fontSize: '12px',
+        color: colors.textMuted,
+      }}>
+        <span>建立於 {new Date(project.createdAt).toLocaleDateString()}</span>
+                          <ArrowRightIcon size={16} />
+            </div>
+          </div>
+  );
 
   if (loading) {
     return (
-      <div className="p-6 space-y-6 bg-gray-900 min-h-screen">
-        <div className="animate-pulse">
-          <div className="h-8 bg-gray-700 rounded w-48 mb-6"></div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div key={i} className="h-32 bg-gray-800 rounded-lg border border-gray-700"></div>
-            ))}
-          </div>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="h-80 bg-gray-800 rounded-lg border border-gray-700"></div>
-            <div className="h-80 bg-gray-800 rounded-lg border border-gray-700"></div>
-          </div>
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: '400px',
+        flexDirection: 'column',
+        gap: '16px',
+      }}>
+        <div style={{
+          width: '48px',
+          height: '48px',
+          border: `3px solid ${colors.border}`,
+          borderTop: `3px solid ${colors.primary}`,
+          borderRadius: '50%',
+          animation: 'spin 1s linear infinite',
+        }}></div>
+        <div style={{
+          fontSize: '16px',
+          color: colors.textSecondary,
+        }}>
+          載入儀表板數據中...
         </div>
       </div>
-    )
+    );
   }
 
   return (
-    <div className="p-6 space-y-6 bg-gray-900 min-h-screen">
-      {/* 頁面標題 */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-white">碳足跡儀表板</h1>
-          <p className="text-gray-300 mt-1">影視製作碳排放監控與分析</p>
-        </div>
-        <div className="text-sm text-gray-400">
-          最後更新：{new Date().toLocaleString('zh-TW')}
-        </div>
-      </div>
-
-      {/* KPI 指標卡片 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {kpiData.map((kpi, index) => {
-          const Icon = kpi.icon
-          return (
-            <div key={index} className="bg-gray-800 rounded-xl shadow-lg border border-gray-700 overflow-hidden hover:shadow-xl hover:border-gray-600 transition-all duration-300">
-              <div className={`h-2 bg-gradient-to-r ${kpi.gradient}`}></div>
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className={`p-3 rounded-lg bg-gradient-to-r ${kpi.gradient} bg-opacity-20`}>
-                    <Icon className={`w-6 h-6 text-transparent bg-gradient-to-r ${kpi.gradient} bg-clip-text`} />
-                  </div>
-                  <div className={`flex items-center text-sm ${
-                    kpi.trend === 'up' ? 'text-red-400' : 'text-green-400'
-                  }`}>
-                    {kpi.trend === 'up' ? (
-                      <ArrowUpRight className="w-4 h-4 mr-1" />
-                    ) : (
-                      <ArrowDownRight className="w-4 h-4 mr-1" />
-                    )}
-                    {kpi.change}
-                  </div>
-                </div>
-                <div className="space-y-1">
-                  <h3 className="text-sm font-medium text-gray-300">{kpi.title}</h3>
-                  <div className="flex items-baseline space-x-2">
-                    <span className="text-2xl font-bold text-white">{kpi.value}</span>
-                    <span className="text-sm text-gray-400">{kpi.unit}</span>
-                  </div>
-                  <p className="text-xs text-gray-500">{kpi.description}</p>
-                </div>
-              </div>
-            </div>
-          )
-        })}
-      </div>
-
-      {/* 圖表區域 */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* 月度排放趨勢 */}
-        <div className="bg-gray-800 rounded-xl shadow-lg border border-gray-700 p-6">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h3 className="text-lg font-semibold text-white">排放趨勢分析</h3>
-              <p className="text-sm text-gray-300">最近12個月的碳排放變化</p>
-            </div>
-            <TrendingUp className="w-5 h-5 text-blue-400" />
-          </div>
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={monthlyTrendData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                <XAxis dataKey="month" stroke="#9ca3af" fontSize={12} />
-                <YAxis stroke="#9ca3af" fontSize={12} />
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: '#1f2937', 
-                    border: '1px solid #374151',
-                    borderRadius: '8px',
-                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.3)',
-                    color: '#f9fafb'
-                  }}
-                />
-                <Legend />
-                <Line 
-                  type="monotone" 
-                  dataKey="專案排放" 
-                  stroke="#3b82f6" 
-                  strokeWidth={2}
-                  dot={{ fill: '#3b82f6', strokeWidth: 2, r: 4 }}
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="營運排放" 
-                  stroke="#f59e0b" 
-                  strokeWidth={2}
-                  dot={{ fill: '#f59e0b', strokeWidth: 2, r: 4 }}
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="總排放" 
-                  stroke="#10b981" 
-                  strokeWidth={3}
-                  dot={{ fill: '#10b981', strokeWidth: 2, r: 5 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* 階段排放分布 */}
-        <div className="bg-gray-800 rounded-xl shadow-lg border border-gray-700 p-6">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h3 className="text-lg font-semibold text-white">製作階段分析</h3>
-              <p className="text-sm text-gray-300">各製作階段的排放分布</p>
-            </div>
-            <PieChart className="w-5 h-5 text-purple-400" />
-          </div>
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <RechartsPieChart>
-                <Pie
-                  data={stageDistribution}
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value"
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(1)}%`}
-                >
-                  {stageDistribution.map((entry: any, index: number) => (
-                    <Cell key={`cell-${index}`} fill={`hsl(${index * 120}, 70%, 60%)`} />
-                  ))}
-                </Pie>
-                <Tooltip 
-                  formatter={(value: any) => [`${value} kg CO₂e`, '排放量']}
-                  contentStyle={{ 
-                    backgroundColor: '#1f2937', 
-                    border: '1px solid #374151',
-                    borderRadius: '8px',
-                    color: '#f9fafb'
-                  }}
-                />
-              </RechartsPieChart>
-            </ResponsiveContainer>
-          </div>
+    <div style={{
+      maxWidth: '1400px',
+      margin: '0 auto',
+      padding: '0',
+    }}>
+      {/* 歡迎區域 */}
+      <div style={{
+        background: `linear-gradient(135deg, ${colors.primary}15, ${colors.accent}10)`,
+        borderRadius: '24px',
+        padding: '40px',
+        marginBottom: '40px',
+        border: `1px solid ${colors.primary}20`,
+        position: 'relative',
+        overflow: 'hidden',
+      }}>
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          right: 0,
+          width: '200px',
+          height: '200px',
+          background: `${colors.primary}10`,
+          borderRadius: '50%',
+          transform: 'translate(50px, -50px)',
+          filter: 'blur(40px)',
+        }}></div>
+        
+        <div style={{ position: 'relative', zIndex: 1 }}>
+          <h2 style={{
+            fontSize: '32px',
+            fontWeight: '800',
+            color: colors.text,
+            marginBottom: '12px',
+          }}>
+            歡迎回到 CarbonLens
+          </h2>
+          <p style={{
+            fontSize: '18px',
+            color: colors.textSecondary,
+            lineHeight: '28px',
+            maxWidth: '600px',
+          }}>
+            這裡是您的碳足跡管理中心。追蹤專案進度、分析排放數據，讓影視製作更加環保。
+          </p>
         </div>
       </div>
 
-      {/* 底部統計區域 */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* 排放類別分析 */}
-        <div className="bg-gray-800 rounded-xl shadow-lg border border-gray-700 p-6">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h3 className="text-lg font-semibold text-white">排放類別分析</h3>
-              <p className="text-sm text-gray-300">主要排放來源統計</p>
-            </div>
-            <BarChart3 className="w-5 h-5 text-green-400" />
-          </div>
-          <div className="space-y-4">
-            {categoryDistribution.map((category: any, index: number) => (
-              <div key={index} className="flex items-center justify-between p-3 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors">
-                <div className="flex items-center space-x-3">
-                  <div 
-                    className="w-4 h-4 rounded-full"
-                    style={{ backgroundColor: category.color }}
-                  ></div>
-                  <span className="text-sm font-medium text-gray-200">{category.name}</span>
-                </div>
-                <div className="flex items-center space-x-2 text-sm text-gray-300">
-                  <span>{category.value.toFixed(1)} kg</span>
-                  <span className="text-gray-500">({category.count} 筆)</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+      {/* 統計卡片 */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+        gap: '24px',
+        marginBottom: '40px',
+      }}>
+        <StatCard
+          title="總專案數"
+          value={stats.totalProjects}
+          icon={<ClapperboardIcon size={28} color={colors.primary} />}
+          color={colors.primary}
+          trend={12}
+          description="累計管理的影視專案"
+        />
+        <StatCard
+          title="進行中專案"
+          value={stats.activeProjects}
+          icon={<CrosshairIcon size={28} color={colors.info} />}
+          color={colors.info}
+          trend={-5}
+          description="正在進行的活躍專案"
+        />
+        <StatCard
+          title="總碳排放"
+          value={stats.totalEmissions.toFixed(1)}
+          unit="tCO₂e"
+          icon={<SproutIcon size={28} color={colors.warning} />}
+          color={colors.warning}
+          trend={8}
+          description="累計碳排放量"
+        />
+        <StatCard
+          title="本月排放"
+          value={stats.monthlyEmissions.toFixed(1)}
+          unit="tCO₂e"
+          icon={<BarChart2Icon size={28} color={colors.accent} />}
+          color={colors.accent}
+          trend={-15}
+          description="當月新增排放量"
+        />
+      </div>
 
-        {/* 專案排行榜 */}
-        <div className="bg-gray-800 rounded-xl shadow-lg border border-gray-700 p-6">
-          <div className="flex items-center justify-between mb-6">
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: '2fr 1fr',
+        gap: '32px',
+        marginBottom: '40px',
+      }}>
+        {/* 趨勢圖表 */}
+        <div style={{
+          background: colors.card,
+          borderRadius: '20px',
+          padding: '32px',
+          border: `1px solid ${colors.border}`,
+        }}>
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '32px',
+          }}>
             <div>
-              <h3 className="text-lg font-semibold text-white">專案排放排行</h3>
-              <p className="text-sm text-gray-300">近30天排放量最高的專案</p>
+              <h3 style={{
+                fontSize: '24px',
+                fontWeight: '700',
+                color: colors.text,
+                marginBottom: '8px',
+              }}>
+                排放趨勢
+              </h3>
+              <p style={{
+                fontSize: '14px',
+                color: colors.textSecondary,
+              }}>
+                過去6個月的碳排放變化
+              </p>
             </div>
-            <Film className="w-5 h-5 text-blue-400" />
+            <div style={{
+              padding: '8px 16px',
+              background: `${colors.primary}20`,
+              borderRadius: '12px',
+              fontSize: '12px',
+              fontWeight: '600',
+              color: colors.primary,
+            }}>
+              月度數據
+            </div>
           </div>
-          <div className="space-y-4">
-            {projectRanking.map((project, index) => (
-              <div key={project.id} className="flex items-center justify-between p-3 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors">
-                <div className="flex items-center space-x-3">
-                  <div className="flex items-center justify-center w-6 h-6 rounded-full bg-gray-600 text-xs font-semibold text-gray-200">
-                    {index + 1}
-                  </div>
-                  <div>
-                    <div className="text-sm font-medium text-gray-200">{project.name}</div>
-                    <div className="text-xs text-gray-400">{project.record_count} 筆記錄</div>
-                  </div>
-                </div>
-                <div className="text-sm font-semibold text-white">
-                  {project.total_emissions?.toFixed(1) || '0.0'} kg
+
+          {/* 簡化的圖表 */}
+          <div style={{
+            height: '200px',
+            display: 'flex',
+            alignItems: 'end',
+            justifyContent: 'space-between',
+            gap: '16px',
+            padding: '20px 0',
+          }}>
+            {stats.emissionTrend.map((item, index) => (
+              <div key={index} style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '12px',
+                flex: 1,
+              }}>
+                <div style={{
+                  height: `${(item.value / 1500) * 150}px`,
+                  width: '100%',
+                  maxWidth: '40px',
+                  background: `linear-gradient(to top, ${colors.primary}, ${colors.primaryLight})`,
+                  borderRadius: '8px',
+                  transition: 'all 0.3s ease',
+                  cursor: 'pointer',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'scaleY(1.1)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'scaleY(1)';
+                }}></div>
+                <div style={{
+                  fontSize: '12px',
+                  color: colors.textMuted,
+                  fontWeight: '500',
+                }}>
+                  {item.month}
                 </div>
               </div>
             ))}
-            {projectRanking.length === 0 && (
-              <div className="text-center py-8 text-gray-400">
-                <Film className="w-12 h-12 mx-auto mb-3 text-gray-600" />
-                <p>暫無專案數據</p>
-              </div>
-            )}
           </div>
         </div>
+
+        {/* 快速操作 */}
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '16px',
+        }}>
+          <h3 style={{
+            fontSize: '20px',
+            fontWeight: '700',
+            color: colors.text,
+            marginBottom: '8px',
+          }}>
+            快速操作
+          </h3>
+          
+          <QuickActionCard
+            title="新建專案"
+            description="創建新的影視製作專案"
+            icon={<PlusIcon size={24} color={colors.primary} />}
+            color={colors.primary}
+            onClick={() => window.location.href = '/projects'}
+          />
+          
+          <QuickActionCard
+            title="記錄排放"
+            description="添加新的碳排放記錄"
+            icon={<FileTextIcon size={24} color={colors.success} />}
+            color={colors.success}
+            onClick={() => window.location.href = '/emissions'}
+          />
+          
+          <QuickActionCard
+            title="拍攝日記錄"
+            description="按工作組別記錄拍攝活動"
+            icon={<ClapperboardIcon size={24} color={colors.warning} />}
+            color={colors.warning}
+            onClick={() => window.location.href = '/shooting-days'}
+          />
+          
+          <QuickActionCard
+            title="查看報告"
+            description="生成碳足跡分析報告"
+            icon={<BarChart2Icon size={24} color={colors.info} />}
+            color={colors.info}
+            onClick={() => window.location.href = '/statistics'}
+          />
+          
+          <QuickActionCard
+            title="系統設定"
+            description="管理帳戶和偏好設定"
+            icon={<SettingsIcon size={24} color={colors.accent} />}
+            color={colors.accent}
+            onClick={() => window.location.href = '/settings'}
+          />
+        </div>
       </div>
+
+      {/* 最近專案 */}
+      <div style={{
+        background: colors.card,
+        borderRadius: '20px',
+        padding: '32px',
+        border: `1px solid ${colors.border}`,
+      }}>
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '24px',
+        }}>
+            <div>
+            <h3 style={{
+              fontSize: '24px',
+              fontWeight: '700',
+              color: colors.text,
+              marginBottom: '8px',
+            }}>
+              最近專案
+            </h3>
+            <p style={{
+              fontSize: '14px',
+              color: colors.textSecondary,
+            }}>
+              您最近創建或更新的專案
+            </p>
+          </div>
+          <button style={{
+            padding: '12px 24px',
+            background: `linear-gradient(135deg, ${colors.primary}, ${colors.primaryDark})`,
+            color: 'white',
+            border: 'none',
+            borderRadius: '12px',
+            fontSize: '14px',
+            fontWeight: '600',
+            cursor: 'pointer',
+            transition: 'all 0.3s ease',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'translateY(-2px)';
+            e.currentTarget.style.boxShadow = `0 8px 25px ${colors.primary}40`;
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = 'none';
+          }}
+          onClick={() => window.location.href = '/projects'}>
+            查看全部
+          </button>
+                  </div>
+
+        {stats.recentProjects.length > 0 ? (
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+            gap: '20px',
+          }}>
+            {stats.recentProjects.map((project, index) => (
+              <ProjectCard key={index} project={project} />
+            ))}
+          </div>
+        ) : (
+          <div style={{
+            textAlign: 'center',
+            padding: '60px 20px',
+            color: colors.textMuted,
+          }}>
+            <div style={{ fontSize: '48px', marginBottom: '16px' }}>📂</div>
+            <div style={{ fontSize: '18px', fontWeight: '600', marginBottom: '8px' }}>
+              還沒有專案
+            </div>
+            <div style={{ fontSize: '14px' }}>
+              創建您的第一個影視專案開始追蹤碳足跡
+              </div>
+          </div>
+        )}
+      </div>
+
+      <style>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   )
 }

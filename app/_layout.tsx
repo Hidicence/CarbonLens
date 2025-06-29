@@ -9,6 +9,8 @@ import { SplashScreen } from "expo-router";
 import { useProjectStore } from "@/store/projectStore";
 import { useAuthStore } from "@/store/authStore";
 import { isFirstLaunch, isOnboardingCompleted, setupOnboarding } from "@/utils/onboardingManager";
+import { firebaseSync } from "@/services/firebaseDataSync"; // 導入同步服務
+import { GoogleSignInService } from "@/services/googleSignInService"; // 導入 Google Sign-In 服務
 import '@/utils/i18n'; // 導入i18n配置
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
@@ -30,6 +32,16 @@ function RootLayoutNav() {
     const unsubscribe = initAuthListener();
     return () => unsubscribe();
   }, [initAuthListener]);
+
+  // 初始化Firebase數據同步服務和Google Sign-In
+  useEffect(() => {
+    console.log('🚀 正在啟動Firebase數據同步服務...');
+    // firebaseSync 會自動監聽用戶登入狀態並開始同步
+    // 這裡不需要額外的代碼，服務會自動運行
+    
+    // 初始化 Google Sign-In 配置
+    GoogleSignInService.configure();
+  }, []);
 
   // 檢查是否為首次啟動
   useEffect(() => {
@@ -62,10 +74,7 @@ function RootLayoutNav() {
     return <Redirect href="/onboarding" />;
   }
   
-  // 登入狀態的判斷交給 (tabs) layout 或其他頁面自行處理
-  // if (!isLoggedIn) {
-  //   return <Redirect href="/login" />;
-  // }
+  // 登入狀態的判斷交給 (tabs) layout 處理，這樣可以確保正確的導航
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
@@ -79,6 +88,9 @@ function RootLayoutNav() {
         <Stack.Screen name="login" />
         <Stack.Screen name="register" />
         <Stack.Screen name="forgot-password" />
+        <Stack.Screen name="direct-login" />
+        <Stack.Screen name="test-google-login" />
+        <Stack.Screen name="simple-login-test" />
         <Stack.Screen 
           name="modal" 
           options={{ 

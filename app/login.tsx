@@ -14,7 +14,7 @@ import {
   ActivityIndicator,
   Alert
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useThemeStore } from '@/store/themeStore';
 import { useAuthStore } from '@/store/authStore';
 import Colors from '@/constants/colors';
@@ -29,13 +29,14 @@ export default function LoginScreen() {
   console.log('LoginScreen 開始執行');
   
   const router = useRouter();
-  console.log('router 已初始化');
+  const params = useLocalSearchParams();
+  console.log('router 已初始化, params:', params);
   
   const { isDarkMode } = useThemeStore();
   console.log('themeStore 已載入, isDarkMode:', isDarkMode);
   
-  const { login, loginWithGoogle, isLoading, error, clearError, isLoggedIn } = useAuthStore();
-  console.log('authStore 已載入, isLoading:', isLoading);
+  const { login, loginWithGoogle, logout, isLoading, error, clearError, isLoggedIn } = useAuthStore();
+  console.log('authStore 已載入, isLoading:', isLoading, 'isLoggedIn:', isLoggedIn);
   
   const theme = isDarkMode ? Colors.dark : Colors.light;
   console.log('theme 已計算:', theme.background);
@@ -45,22 +46,77 @@ export default function LoginScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [debugInfo, setDebugInfo] = useState('');
+  const [hasProcessedParams, setHasProcessedParams] = useState(false);
+  const [showLogoutDialog, setShowLogoutDialog] = useState(false);
 
-  // 當登入狀態變為 true 時，自動導航
+  // 處理 URL 參數的強制登出（只執行一次）
   useEffect(() => {
-    if (isLoggedIn) {
-      console.log('登入狀態為 true，導航到 (tabs)');
-      router.replace('/(tabs)');
+    if (!hasProcessedParams && (params.logout === 'true' || params.force === 'true')) {
+      console.log('檢測到強制登出參數，執行登出...');
+      setHasProcessedParams(true);
+      
+      const executeLogout = async () => {
+        try {
+          await logout();
+          console.log('URL 參數強制登出完成');
+        } catch (error) {
+          console.error('URL 參數強制登出失敗:', error);
+        }
+      };
+      
+      executeLogout();
     }
-  }, [isLoggedIn]);
+  }, [params.logout, params.force, hasProcessedParams, logout]);
 
-  // 清除錯誤當組件掛載時
+  // 檢查是否需要顯示登出對話框（只檢查一次）
   useEffect(() => {
-    console.log('LoginScreen 掛載');
+    if (!hasProcessedParams && isLoggedIn && !params.logout && !params.force) {
+      console.log('用戶已登入但訪問登入頁面，顯示選項對話框...');
+      setShowLogoutDialog(true);
+      setHasProcessedParams(true);
+    }
+  }, [isLoggedIn, hasProcessedParams, params.logout, params.force]);
+
+  // 顯示登出選項對話框
+  useEffect(() => {
+    if (showLogoutDialog) {
+      Alert.alert(
+        '已登入',
+        '您目前已經登入，是否要登出並重新登入？',
+        [
+          {
+            text: '返回主頁',
+            onPress: () => {
+              setShowLogoutDialog(false);
+      router.replace('/(tabs)');
+            },
+            style: 'cancel'
+          },
+          {
+            text: '登出重新登入',
+            onPress: async () => {
+              setShowLogoutDialog(false);
+              console.log('用戶選擇登出重新登入');
+              try {
+                await logout();
+                console.log('手動登出完成');
+              } catch (error) {
+                console.error('手動登出失敗:', error);
+              }
+            }
+          }
+        ]
+      );
+    }
+  }, [showLogoutDialog, logout, router]);
+
+  // 清除錯誤（只執行一次）
+  useEffect(() => {
+    console.log('LoginScreen 掛載，清除錯誤');
     if (clearError) {
       clearError();
     }
-  }, [clearError]);
+  }, []);
 
   const handleLogin = async () => {
     console.log('登入按鈕被點擊');
@@ -70,18 +126,49 @@ export default function LoginScreen() {
       return;
     }
 
-    await login(email, password, rememberMe);
+    try {
+      const success = await login(email, password, rememberMe);
+      if (success) {
+        console.log('登入成功，導航到主頁面');
+        router.replace('/(tabs)');
+      }
+    } catch (error) {
+      console.error('登入失敗:', error);
+    }
   };
 
   const handleGoogleLogin = async () => {
     console.log('Google 登入按鈕被點擊');
-    await loginWithGoogle();
+    try {
+      const success = await loginWithGoogle();
+      if (success) {
+        console.log('Google 登入成功，導航到主頁面');
+        router.replace('/(tabs)');
+      }
+    } catch (error) {
+      console.error('Google 登入失敗:', error);
+    }
   };
 
   const handleGuestLogin = async () => {
     console.log('訪客登入被點擊');
-    await login('guest@example.com', 'guest123', false);
+    try {
+      const success = await login('guest@example.com', 'guest123', false);
+      if (success) {
+        console.log('訪客登入成功，導航到主頁面');
+        router.replace('/(tabs)');
+      }
+    } catch (error) {
+      console.error('訪客登入失敗:', error);
+    }
   };
+
+  // 如果用戶已登入且沒有強制登出參數，並且已經處理過參數，直接跳轉
+  if (isLoggedIn && hasProcessedParams && !params.logout && !params.force && !showLogoutDialog) {
+    console.log('用戶已登入，直接跳轉到主頁面');
+    router.replace('/(tabs)');
+    return null;
+  }
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
@@ -105,8 +192,6 @@ export default function LoginScreen() {
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
           />
-          
-
           
           {/* Logo 和標題區域 */}
           <View style={styles.headerContainer}>
@@ -132,7 +217,8 @@ export default function LoginScreen() {
               <Text style={[styles.testInfoText, { color: theme.text }]}>
                 電子郵件: test@example.com{'\n'}
                 密碼: password{'\n'}
-                或點擊 "使用 Google 登入" 按鈕
+                或點擊 "使用 Google 登入" 按鈕{'\n'}
+                {Platform.OS !== 'web' ? '✅ APP 版支援 Google 登入' : '✅ Web 版支援 Google 登入'}
               </Text>
             </View>
 
@@ -207,7 +293,7 @@ export default function LoginScreen() {
 
             {/* 登入按鈕 */}
             <TouchableOpacity 
-              style={styles.loginButton} 
+              style={[styles.loginButton, { backgroundColor: theme.primary }]} 
               onPress={handleLogin}
               disabled={isLoading}
             >
@@ -231,22 +317,32 @@ export default function LoginScreen() {
             {/* 其他登入方式 */}
             <View style={styles.socialLoginContainer}>
               <TouchableOpacity 
-                style={[styles.socialButton, { backgroundColor: theme.background }]}
+                style={[styles.googleButton, { 
+                  backgroundColor: '#4285F4',
+                  borderColor: '#4285F4'
+                }]}
                 onPress={handleGoogleLogin}
                 disabled={isLoading}
               >
-                <Ionicons name="logo-google" size={24} color={theme.text} />
-                <Text style={[styles.socialButtonText, { color: theme.text }]}>使用 Google 登入</Text>
+                <Ionicons name="logo-google" size={24} color="white" />
+                <Text style={[styles.googleButtonText]}>使用 Google 登入</Text>
               </TouchableOpacity>
               <TouchableOpacity 
-                style={[styles.socialButton, { backgroundColor: '#333' }]}
+                style={[styles.socialButton, { backgroundColor: theme.background, borderColor: theme.border }]}
                 onPress={handleGuestLogin}
                 disabled={isLoading}
               >
-                <Ionicons name="person-circle-outline" size={24} color="white" />
-                <Text style={[styles.socialButtonText, { color: 'white' }]}>使用訪客模式</Text>
+                <Ionicons name="person-circle-outline" size={24} color={theme.text} />
+                <Text style={[styles.socialButtonText, { color: theme.text }]}>使用訪客模式</Text>
               </TouchableOpacity>
             </View>
+
+            {/* 錯誤顯示 */}
+            {error && (
+              <View style={[styles.errorContainer, { backgroundColor: '#FF3B30' + '20', borderColor: '#FF3B30' }]}>
+                <Text style={[styles.errorText, { color: '#FF3B30' }]}>{error}</Text>
+              </View>
+            )}
           </View>
 
           {/* 註冊提示 */}
@@ -398,20 +494,40 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   socialLoginContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: 'column',
+    alignItems: 'stretch',
   },
   socialButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 12,
+    justifyContent: 'center',
+    padding: 16,
     borderWidth: 1,
     borderRadius: 12,
   },
   socialButtonText: {
     fontSize: 16,
     fontWeight: '500',
+    marginLeft: 8,
+  },
+  googleButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 16,
+    borderWidth: 1,
+    borderRadius: 12,
+    marginBottom: 12,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  googleButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
     marginLeft: 8,
   },
   registerContainer: {
@@ -445,5 +561,15 @@ const styles = StyleSheet.create({
   forgotPassword: {
     fontSize: 14,
     fontWeight: '600',
+  },
+  errorContainer: {
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 12,
+    marginTop: 20,
+  },
+  errorText: {
+    fontSize: 12,
+    fontWeight: 'bold',
   },
 });

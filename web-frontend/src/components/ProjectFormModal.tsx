@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
-import { X, Calendar, MapPin, DollarSign, Building, FileText, Upload } from 'lucide-react'
+import { X, Calendar, MapPin, DollarSign, Building, FileText, Upload, Wifi, WifiOff, CheckCircle } from 'lucide-react'
 import { Project, projectApi } from '../services/api'
+import firebaseService from '../services/firebaseService'
 
 interface ProjectFormModalProps {
   isOpen: boolean
@@ -34,6 +35,7 @@ const ProjectFormModal: React.FC<ProjectFormModalProps> = ({
 
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [isLoading, setIsLoading] = useState(false)
+  const [syncStatus, setSyncStatus] = useState<'idle' | 'api' | 'firebase' | 'complete' | 'error'>('idle')
 
   useEffect(() => {
     if (project) {
@@ -107,40 +109,122 @@ const ProjectFormModal: React.FC<ProjectFormModalProps> = ({
     }
     
     setIsLoading(true)
+    setSyncStatus('api')
     
     try {
-      const projectData = {
+      // 清理數據，移除所有 undefined 值（Firebase 不支援）
+      const cleanData = (obj: any): any => {
+        if (obj === null || obj === undefined) return null
+        if (typeof obj !== 'object') return obj
+        
+        const cleaned: any = {}
+        for (const [key, value] of Object.entries(obj)) {
+          if (value !== undefined) {
+            cleaned[key] = typeof value === 'object' ? cleanData(value) : value
+          }
+        }
+        return Object.keys(cleaned).length > 0 ? cleaned : null
+      }
+
+      const projectData = cleanData({
         name: formData.name.trim(),
         description: formData.description.trim(),
         location: formData.location.trim(),
         status: formData.status,
         startDate: formData.startDate,
-        endDate: formData.endDate || undefined,
-        budget: formData.budget ? Number(formData.budget) : undefined,
-        category: formData.category || undefined,
-        carbonBudget: formData.enableCarbonBudget ? {
+        endDate: formData.endDate || null,
+        budget: formData.budget ? Number(formData.budget) : null,
+        category: formData.category || null,
+        carbonBudget: formData.enableCarbonBudget ? cleanData({
           total: Number(formData.carbonBudgetTotal),
-          stages: {
-            'pre-production': formData.carbonBudgetPreProduction ? Number(formData.carbonBudgetPreProduction) : undefined,
-            production: formData.carbonBudgetProduction ? Number(formData.carbonBudgetProduction) : undefined,
-            'post-production': formData.carbonBudgetPostProduction ? Number(formData.carbonBudgetPostProduction) : undefined
-          }
-        } : undefined
-      }
+          stages: cleanData({
+            'pre-production': formData.carbonBudgetPreProduction ? Number(formData.carbonBudgetPreProduction) : null,
+            production: formData.carbonBudgetProduction ? Number(formData.carbonBudgetProduction) : null,
+            'post-production': formData.carbonBudgetPostProduction ? Number(formData.carbonBudgetPostProduction) : null
+          })
+        }) : null
+      })
       
       let savedProject: Project
+      
+      // 嘗試使用後端 API，如果失敗則直接使用 Firebase
+      try {
+        if (project) {
+          // 更新現有專案
+          const updateData = {
+            ...projectData,
+            emissionSummary: project.emissionSummary // 保持現有的排放摘要
+          } as Partial<Project>
+          savedProject = await projectApi.updateProject(project.id, updateData)
+        } else {
+          // 創建新專案，添加必需的欄位
+          const createData = {
+            ...projectData,
+            emissionSummary: {
+              projectId: '',
+              directEmissions: 0,
+              allocatedEmissions: 0,
+              totalEmissions: 0,
+              directRecordCount: 0,
+              allocatedRecordCount: 0
+            }
+          }
+          savedProject = await projectApi.createProject(createData)
+        }
+        console.log('✅ 專案已保存到後端 API')
+        // 確保返回的專案有正確的 ID
+        if (!savedProject.id) {
+          console.error('⚠️ 後端返回的專案缺少 ID');
+        }
+      } catch (apiError) {
+        console.warn('⚠️ 後端 API 不可用，使用 Firebase 直接保存:', apiError)
+        setSyncStatus('firebase')
+        
+        // 如果後端不可用，直接使用 Firebase
+        if (project) {
+          await firebaseService.updateProject(project.id, projectData as any)
+          savedProject = { ...project, ...projectData }
+        } else {
+          const projectId = await firebaseService.createProject(projectData as any)
+          savedProject = {
+            id: projectId,
+            ...projectData,
+            createdAt: new Date().toISOString(),
+            emissionSummary: {
+              projectId: projectId,
+              directEmissions: 0,
+              allocatedEmissions: 0,
+              totalEmissions: 0,
+              directRecordCount: 0,
+              allocatedRecordCount: 0
+            }
+          }
+        }
+        console.log('✅ 專案已保存到 Firebase')
+      }
+      
+      // 確保數據同步到 Firebase（即使後端成功也要同步）
+      try {
+        setSyncStatus('firebase')
       if (project) {
-        savedProject = await projectApi.updateProject(project.id, projectData)
+          await firebaseService.updateProject(savedProject.id, projectData as any)
       } else {
-        savedProject = await projectApi.createProject(projectData)
+          await firebaseService.createProject(savedProject as any)
+        }
+        console.log('🔄 專案已同步到 Firebase')
+        setSyncStatus('complete')
+      } catch (syncError) {
+        console.warn('⚠️ Firebase 同步失敗，但專案已保存:', syncError)
       }
       
       onSave(savedProject)
     } catch (error) {
       console.error('儲存專案失敗:', error)
-      setErrors({ submit: '儲存專案失敗，請稍後再試' })
+      setSyncStatus('error')
+      setErrors({ submit: '儲存專案失敗，請檢查網路連接或稍後再試' })
     } finally {
       setIsLoading(false)
+      setTimeout(() => setSyncStatus('idle'), 2000)
     }
   }
 
@@ -158,9 +242,40 @@ const ProjectFormModal: React.FC<ProjectFormModalProps> = ({
       <div className="bg-slate-800 border border-slate-700 rounded-xl max-w-2xl w-full max-h-[90vh] overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-slate-700">
+          <div className="flex items-center gap-3">
           <h2 className="text-xl font-semibold text-white">
             {project ? '編輯專案' : '新建專案'}
           </h2>
+            {/* 同步狀態指示器 */}
+            {syncStatus !== 'idle' && (
+              <div className="flex items-center gap-2 text-sm">
+                {syncStatus === 'api' && (
+                  <>
+                    <Wifi className="w-4 h-4 text-blue-400 animate-pulse" />
+                    <span className="text-blue-400">連接後端...</span>
+                  </>
+                )}
+                {syncStatus === 'firebase' && (
+                  <>
+                    <WifiOff className="w-4 h-4 text-orange-400 animate-pulse" />
+                    <span className="text-orange-400">同步到雲端...</span>
+                  </>
+                )}
+                {syncStatus === 'complete' && (
+                  <>
+                    <CheckCircle className="w-4 h-4 text-green-400" />
+                    <span className="text-green-400">同步完成</span>
+                  </>
+                )}
+                {syncStatus === 'error' && (
+                  <>
+                    <X className="w-4 h-4 text-red-400" />
+                    <span className="text-red-400">同步失敗</span>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
           <button
             onClick={onClose}
             className="p-1 text-slate-400 hover:text-white transition-colors"
@@ -171,6 +286,19 @@ const ProjectFormModal: React.FC<ProjectFormModalProps> = ({
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+          {/* 同步提示 */}
+          <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4">
+            <div className="flex items-start gap-3">
+              <CheckCircle className="w-5 h-5 text-green-400 mt-0.5 flex-shrink-0" />
+              <div className="text-sm">
+                <p className="text-green-400 font-medium mb-1">雙軌同步保障</p>
+                <p className="text-green-300/80">
+                  專案將自動同步到 APP 端和 Firebase 雲端，確保數據在所有平台保持一致
+                </p>
+              </div>
+            </div>
+          </div>
+
           {/* Basic Information */}
           <div className="space-y-4">
             <h3 className="text-lg font-medium text-white mb-4">基本資訊</h3>
@@ -318,7 +446,7 @@ const ProjectFormModal: React.FC<ProjectFormModalProps> = ({
                 <input
                   type="checkbox"
                   checked={formData.enableCarbonBudget}
-                  onChange={(e) => handleInputChange('enableCarbonBudget', e.target.checked.toString())}
+                  onChange={(e) => setFormData(prev => ({ ...prev, enableCarbonBudget: e.target.checked }))}
                   className="w-4 h-4 text-green-600 bg-slate-900 border-slate-600 rounded focus:ring-green-500"
                 />
                 <span className="text-sm text-slate-300">啟用碳預算</span>

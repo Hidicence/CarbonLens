@@ -114,12 +114,16 @@ export default function NewProjectScreen() {
     return isValid;
   };
   
-  const handleCreateProject = () => {
+  const handleCreateProject = async () => {
     if (!validateForm()) return;
     
+    try {
     // Prepare carbon budget data if enabled
     const carbonBudget = enableCarbonBudget ? {
       total: parseFloat(totalCarbonBudget) || 0,
+      preProduction: parseFloat(preProductionBudget) || undefined,
+      production: parseFloat(productionBudget) || undefined,
+      postProduction: parseFloat(postProductionBudget) || undefined,
       stages: {
         'pre-production': parseFloat(preProductionBudget) || undefined,
         'production': parseFloat(productionBudget) || undefined,
@@ -127,7 +131,9 @@ export default function NewProjectScreen() {
       }
     } : undefined;
     
-    addProject({
+      console.log('🚀 開始創建專案並同步到 Firebase...');
+      
+      await addProject({
       name,
       description,
       location,
@@ -139,7 +145,12 @@ export default function NewProjectScreen() {
       carbonBudget,
     });
     
+      console.log('✅ 專案創建成功！');
     router.back();
+    } catch (error) {
+      console.error('❌ 創建專案失敗:', error);
+      // 可以在這裡添加錯誤提示
+    }
   };
   
   const handleCancel = () => {

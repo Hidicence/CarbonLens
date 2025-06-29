@@ -1,5 +1,5 @@
 import React from 'react';
-import { useTranslation, useDimensions } from '@/hooks/useTranslation';
+import { useTranslation } from '@/hooks/useTranslation';
 import { View, Text, StyleSheet, ScrollView, SafeAreaView, Pressable, Switch, Alert, Image, Platform, Dimensions } from 'react-native';
 import { useRouter } from 'expo-router';
 import { 
@@ -88,32 +88,21 @@ export default function SettingsScreen() {
         { text: t('common.cancel'), style: "cancel" },
         { 
           text: t('common.confirm'), 
-          onPress: () => {
-            console.log("Logging out...");
-            logout();
-            console.log("Navigating to login...");
+          onPress: async () => {
+            console.log("🚪 開始登出流程...");
             
-            if (Platform.OS === 'web') {
-              console.log("Web platform - forcing page reload");
-              try {
-                localStorage.clear();
-                sessionStorage.clear();
-                console.log("Storage cleared");
-              } catch (e) {
-                console.error("Failed to clear storage:", e);
-              }
+            try {
+              // 執行登出
+              await logout();
+              console.log("✅ 登出成功");
               
-              setTimeout(() => {
-                window.location.href = '/login?logout=true';
-                setTimeout(() => {
-                  console.log("Trying alternate navigation");
-                  window.location.replace('/login?logout=true');
-                }, 1000);
-              }, 500);
-            } else {
-              setTimeout(() => {
+              // 強制導航到登入頁面
+              console.log("🔄 導航到登入頁面...");
                 router.replace('/login');
-              }, 100);
+              
+            } catch (error) {
+              console.error("❌ 登出失敗:", error);
+              Alert.alert('錯誤', '登出失敗，請重試');
             }
           }
         }
@@ -222,34 +211,121 @@ export default function SettingsScreen() {
     </View>
   );
 
-  // 渲染個人資料卡片
+  // 渲染用戶資料卡片
   const renderProfileCard = () => (
-    <View style={[styles.profileCard, { backgroundColor: theme.card }]}>
-      <Pressable onPress={navigateToProfile} style={styles.profileContent}>
+    <View style={[
+      styles.profileCard, 
+      { 
+        backgroundColor: theme.card,
+        borderWidth: 1,
+        borderColor: theme.border + '20',
+      }
+    ]}>
+      <LinearGradient
+        colors={[theme.primary + '10', theme.primary + '05']}
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          height: '50%',
+          borderTopLeftRadius: 12,
+          borderTopRightRadius: 12,
+        }}
+      />
+             <Pressable 
+         style={({ pressed }) => [
+           styles.profileContent,
+           { opacity: pressed ? 0.8 : 1 }
+         ]}
+         onPress={navigateToProfile}
+       >
         <View style={styles.profileLeft}>
-          {profile.avatar ? (
+          {profile?.avatar ? (
             <Image source={{ uri: profile.avatar }} style={styles.avatar} />
           ) : (
-            <LinearGradient
-              colors={[theme.primary, theme.primary + 'CC']}
-              style={styles.avatarPlaceholder}
-            >
-              <Text style={styles.avatarText}>{profile.name.charAt(0)}</Text>
-            </LinearGradient>
+            <View style={[
+              styles.avatarPlaceholder, 
+              { 
+                backgroundColor: theme.primary,
+                borderWidth: 3,
+                borderColor: '#FFFFFF',
+                shadowColor: theme.primary,
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.3,
+                shadowRadius: 8,
+                elevation: 6,
+              }
+            ]}>
+              <Text style={styles.avatarText}>
+                {profile?.name?.charAt(0).toUpperCase() || profile?.email?.charAt(0).toUpperCase() || 'U'}
+              </Text>
+            </View>
           )}
           <View style={styles.profileInfo}>
-            <Text style={[styles.profileName, { color: theme.text }]}>{profile.name}</Text>
-            <Text style={[styles.profileEmail, { color: theme.secondaryText }]}>{profile.email}</Text>
+            <Text style={[
+              styles.profileName, 
+              { 
+                color: theme.text,
+                fontSize: 20,
+                fontWeight: '700',
+                marginBottom: 6,
+              }
+            ]}>
+              {profile?.name || t('settings.profile.defaultName')}
+            </Text>
+            <Text style={[
+              styles.profileEmail, 
+              { 
+                color: theme.secondaryText,
+                fontSize: 15,
+                fontWeight: '500',
+                marginBottom: 8,
+              }
+            ]}>
+              {profile?.email || t('settings.profile.defaultEmail')}
+            </Text>
             <View style={styles.profileBadgeContainer}>
-              <View style={[styles.profileBadge, { backgroundColor: theme.primary + '20' }]}>
-                <Text style={[styles.profileBadgeText, { color: theme.primary }]}>{profile.role}</Text>
+              <View style={[
+                styles.profileBadge, 
+                { 
+                  backgroundColor: theme.primary + '20',
+                  borderWidth: 1,
+                  borderColor: theme.primary + '40',
+                }
+              ]}>
+                <Text style={[
+                  styles.profileBadgeText, 
+                  { 
+                    color: theme.primary,
+                    fontWeight: '600',
+                  }
+                ]}>
+                  {profile?.role || t('settings.profile.defaultRole')}
+                </Text>
               </View>
-              <Text style={[styles.profileCompany, { color: theme.secondaryText }]}>{profile.role || t('auth.role.admin')}</Text>
+              <Text style={[
+                styles.profileCompany, 
+                { 
+                  color: theme.secondaryText,
+                  fontSize: 13,
+                  fontWeight: '500',
+                }
+              ]}>
+                {profile?.company || t('settings.profile.defaultCompany')}
+              </Text>
             </View>
           </View>
         </View>
-        <View style={[styles.chevronContainer, { backgroundColor: theme.background }]}>
-          <ChevronRight size={18} color={theme.secondaryText} />
+                 <View style={[
+           styles.chevronContainer, 
+           { 
+             backgroundColor: theme.primary + '15',
+             borderWidth: 1,
+             borderColor: theme.primary + '30',
+           }
+         ]}>
+           <ChevronRight size={20} color={theme.primary} />
         </View>
       </Pressable>
     </View>
@@ -265,18 +341,34 @@ export default function SettingsScreen() {
     isDangerous?: boolean;
   }>) => (
     <View style={styles.settingGroup}>
-      <Text style={[styles.groupTitle, { color: theme.primary }]}>{title}</Text>
-      <View style={[styles.groupCard, { backgroundColor: theme.card }]}>
+      <Text style={[styles.groupTitle, { color: theme.text }]}>{title}</Text>
+      <View style={[
+        styles.groupCard, 
+        { 
+          backgroundColor: theme.card,
+          borderWidth: 1,
+          borderColor: theme.border + '20',
+        }
+      ]}>
         {items.map((item, index) => (
           <Pressable
             key={index}
             style={({ pressed }) => [
               styles.settingItem,
               { 
-                borderBottomWidth: index < items.length - 1 ? 1 : 0,
-                borderBottomColor: theme.border + '40'
-              },
-              pressed && item.onPress && { backgroundColor: theme.highlight }
+                backgroundColor: pressed ? theme.primary + '10' : 'transparent',
+                borderBottomWidth: index === items.length - 1 ? 0 : 1,
+                borderBottomColor: theme.border + '30',
+                borderRadius: index === 0 ? 12 : index === items.length - 1 ? 12 : 0,
+                borderTopLeftRadius: index === 0 ? 12 : 0,
+                borderTopRightRadius: index === 0 ? 12 : 0,
+                borderBottomLeftRadius: index === items.length - 1 ? 12 : 0,
+                borderBottomRightRadius: index === items.length - 1 ? 12 : 0,
+                marginHorizontal: 2,
+                marginVertical: index === 0 ? 2 : index === items.length - 1 ? 2 : 0,
+                paddingVertical: 18,
+                paddingHorizontal: 18,
+              }
             ]}
             onPress={item.onPress}
             disabled={!item.onPress}
@@ -284,19 +376,38 @@ export default function SettingsScreen() {
             <View style={styles.settingItemLeft}>
               <View style={[
                 styles.settingIconContainer, 
-                { backgroundColor: item.isDangerous ? theme.error + '15' : theme.primary + '15' }
+                {
+                  backgroundColor: item.isDangerous 
+                    ? theme.error + '15' 
+                    : theme.primary + '15',
+                  borderWidth: 1,
+                  borderColor: item.isDangerous 
+                    ? theme.error + '30' 
+                    : theme.primary + '30',
+                }
               ]}>
                 {item.icon}
               </View>
               <View style={styles.settingTextContainer}>
                 <Text style={[
                   styles.settingItemTitle, 
-                  { color: item.isDangerous ? theme.error : theme.text }
-                ]}>
-                  {item.title}
-                </Text>
+                  { 
+                    color: item.isDangerous ? theme.error : theme.text,
+                    fontSize: 16,
+                    fontWeight: '600',
+                    marginBottom: 4,
+                  }
+                ]}>{item.title}</Text>
                 {item.subtitle && (
-                  <Text style={[styles.settingItemSubtitle, { color: theme.secondaryText }]}>
+                  <Text style={[
+                    styles.settingItemSubtitle, 
+                    { 
+                      color: theme.secondaryText,
+                      fontSize: 14,
+                      lineHeight: 20,
+                      fontWeight: '400',
+                    }
+                  ]}>
                     {item.subtitle}
                   </Text>
                 )}
@@ -508,13 +619,14 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   pageTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
+    fontSize: 28,
+    fontWeight: '800',
     marginBottom: 4,
   },
   pageSubtitle: {
-    fontSize: 14,
-    lineHeight: 20,
+    fontSize: 16,
+    fontWeight: '500',
+    lineHeight: 22,
   },
   headerIconContainer: {
     width: 48,
@@ -528,14 +640,14 @@ const styles = StyleSheet.create({
   },
   statsCard: {
     marginHorizontal: 20,
-    marginBottom: 20,
-    borderRadius: 12,
-    padding: 16,
+    marginBottom: 24,
+    borderRadius: 16,
+    padding: 20,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowRadius: 12,
+    elevation: 6,
   },
   statsHeader: {
     flexDirection: 'row',
@@ -548,52 +660,54 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   statsTitle: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 18,
+    fontWeight: '700',
     marginLeft: 8,
   },
   statsGrid: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    gap: 12,
   },
   statItem: {
     flex: 1,
     alignItems: 'center',
-    padding: 12,
-    borderRadius: 8,
-    marginHorizontal: 2,
+    padding: 16,
+    borderRadius: 12,
   },
   statIconContainer: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 8,
+    marginBottom: 12,
   },
   statValue: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 4,
+    fontSize: 20,
+    fontWeight: '800',
+    marginBottom: 6,
   },
   statLabel: {
     fontSize: 12,
     textAlign: 'center',
+    fontWeight: '600',
+    lineHeight: 16,
   },
   profileCard: {
     marginHorizontal: 20,
-    marginBottom: 20,
-    borderRadius: 12,
+    marginBottom: 24,
+    borderRadius: 16,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowRadius: 12,
+    elevation: 6,
+    overflow: 'hidden',
   },
   profileContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
+    padding: 20,
   },
   profileLeft: {
     flexDirection: 'row',
@@ -601,83 +715,88 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   avatar: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    borderWidth: 3,
+    borderColor: '#FFFFFF',
   },
   avatarPlaceholder: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
     alignItems: 'center',
     justifyContent: 'center',
   },
   avatarText: {
-    fontSize: 20,
-    fontWeight: 'bold',
+    fontSize: 24,
+    fontWeight: '800',
     color: 'white',
   },
   profileInfo: {
     flex: 1,
-    marginLeft: 12,
+    marginLeft: 16,
   },
   profileName: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 4,
+    fontSize: 20,
+    fontWeight: '700',
+    marginBottom: 6,
   },
   profileEmail: {
-    fontSize: 14,
-    marginBottom: 6,
+    fontSize: 15,
+    marginBottom: 8,
+    fontWeight: '500',
   },
   profileBadgeContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 8,
   },
   profileBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 4,
-    marginRight: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 8,
   },
   profileBadgeText: {
     fontSize: 12,
-    fontWeight: '500',
+    fontWeight: '600',
   },
   profileCompany: {
-    fontSize: 12,
+    fontSize: 13,
+    fontWeight: '500',
   },
   chevronContainer: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
   },
   settingGroup: {
-    marginBottom: 24,
+    marginBottom: 32,
   },
   groupTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 8,
+    fontSize: 18,
+    fontWeight: '700',
+    marginBottom: 12,
     paddingHorizontal: 20,
   },
   groupCard: {
     marginHorizontal: 20,
-    borderRadius: 12,
+    borderRadius: 16,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowRadius: 12,
+    elevation: 6,
+    overflow: 'hidden',
   },
   settingItem: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 16,
-    paddingHorizontal: 16,
+    paddingVertical: 18,
+    paddingHorizontal: 20,
   },
   settingItemLeft: {
     flexDirection: 'row',
@@ -685,24 +804,25 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   settingIconContainer: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
   },
   settingTextContainer: {
     flex: 1,
-    marginLeft: 12,
+    marginLeft: 16,
   },
   settingItemTitle: {
     fontSize: 16,
-    fontWeight: '500',
-    marginBottom: 2,
+    fontWeight: '600',
+    marginBottom: 4,
   },
   settingItemSubtitle: {
-    fontSize: 13,
-    lineHeight: 18,
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: '400',
   },
   settingItemRight: {
     flexDirection: 'row',
@@ -718,37 +838,38 @@ const styles = StyleSheet.create({
   },
   logoutSection: {
     marginHorizontal: 20,
-    marginBottom: 20,
+    marginBottom: 32,
   },
   logoutButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
-    borderRadius: 12,
+    padding: 20,
+    borderRadius: 16,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowRadius: 12,
+    elevation: 6,
   },
   logoutIconContainer: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
   },
   logoutTextContainer: {
     flex: 1,
-    marginLeft: 12,
+    marginLeft: 16,
   },
   logoutText: {
     fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 2,
+    fontWeight: '700',
+    marginBottom: 4,
   },
   logoutSubtext: {
-    fontSize: 13,
+    fontSize: 14,
+    fontWeight: '500',
   },
   footer: {
     alignItems: 'center',
@@ -757,11 +878,13 @@ const styles = StyleSheet.create({
   },
   versionText: {
     fontSize: 14,
-    fontWeight: '500',
-    marginBottom: 4,
+    fontWeight: '600',
+    marginBottom: 6,
   },
   copyrightText: {
     fontSize: 12,
     textAlign: 'center',
+    fontWeight: '500',
+    lineHeight: 18,
   },
 });

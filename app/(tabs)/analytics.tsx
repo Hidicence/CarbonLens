@@ -369,7 +369,13 @@ export default function AnalyticsScreen() {
                 styles.tab,
                 {
                   backgroundColor: isSelected ? theme.primary : 'transparent',
-                  borderColor: isSelected ? theme.primary : theme.border
+                  borderColor: isSelected ? theme.primary : theme.border,
+                  minWidth: 100, // 確保標籤有最小寬度
+                  shadowColor: isSelected ? theme.primary : 'transparent',
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: isSelected ? 0.3 : 0,
+                  shadowRadius: 4,
+                  elevation: isSelected ? 3 : 0,
                 }
               ]}
               onPress={() => setSelectedTab(tab.id)}
@@ -380,7 +386,10 @@ export default function AnalyticsScreen() {
               />
               <Text style={[
                 styles.tabText,
-                { color: isSelected ? '#FFFFFF' : theme.text }
+                { 
+                  color: isSelected ? '#FFFFFF' : theme.text,
+                  fontWeight: isSelected ? '600' : '500'
+                }
               ]}>
                 {t(tab.title)}
               </Text>
@@ -398,9 +407,23 @@ export default function AnalyticsScreen() {
     icon: any;
     color: string;
   }) => (
-    <View style={[styles.statCard, { backgroundColor: theme.card }]}>
+    <View style={[
+      styles.statCard, 
+      { 
+        backgroundColor: theme.card,
+        borderWidth: 1,
+        borderColor: theme.border + '30',
+      }
+    ]}>
       <View style={styles.statCardHeader}>
-        <View style={[styles.statIconContainer, { backgroundColor: color + '15' }]}>
+        <View style={[
+          styles.statIconContainer, 
+          { 
+            backgroundColor: color + '15',
+            borderWidth: 1,
+            borderColor: color + '30',
+          }
+        ]}>
           <Icon size={20} color={color} />
         </View>
         <View style={styles.statChange}>
@@ -416,8 +439,24 @@ export default function AnalyticsScreen() {
           </Text>
         </View>
       </View>
-      <Text style={[styles.statValue, { color: theme.text }]}>{value}</Text>
-      <Text style={[styles.statLabel, { color: theme.secondaryText }]}>{title}</Text>
+      <Text style={[
+        styles.statValue, 
+        { 
+          color: theme.text,
+          fontSize: 20,
+          fontWeight: '700',
+          marginBottom: 6,
+        }
+      ]}>{value}</Text>
+      <Text style={[
+        styles.statLabel, 
+        { 
+          color: theme.secondaryText,
+          fontSize: 13,
+          fontWeight: '500',
+          lineHeight: 16,
+        }
+      ]}>{title}</Text>
     </View>
   );
 
@@ -1345,117 +1384,117 @@ const styles = StyleSheet.create({
   tabContainer: {
     marginHorizontal: 20,
     marginVertical: 16,
-    borderRadius: 12,
-    elevation: 2,
+    borderRadius: 16,
+    elevation: 6,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowRadius: 12,
   },
   tabScrollContent: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    gap: 8,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    gap: 12,
   },
   tab: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 12,
     borderWidth: 1,
-    gap: 6,
+    gap: 8,
   },
   tabText: {
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: '600',
   },
   
   // 統計卡片
   statsGrid: {
     flexDirection: 'row',
-    gap: 12,
+    gap: 16,
   },
   statCard: {
     flex: 1,
-    borderRadius: 12,
-    padding: 16,
-    elevation: 2,
+    borderRadius: 16,
+    padding: 20,
+    elevation: 6,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowRadius: 12,
   },
   statCardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 16,
   },
   statIconContainer: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     justifyContent: 'center',
     alignItems: 'center',
   },
   statChange: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 2,
+    gap: 4,
   },
   statChangeText: {
-    fontSize: 11,
-    fontWeight: '600',
+    fontSize: 12,
+    fontWeight: '700',
   },
   statValue: {
-    fontSize: 18,
-    fontWeight: '700',
-    marginBottom: 4,
+    fontSize: 20,
+    fontWeight: '800',
+    marginBottom: 6,
   },
   statLabel: {
-    fontSize: 12,
-    fontWeight: '500',
+    fontSize: 13,
+    fontWeight: '600',
   },
   
   // 圖表卡片
   chartCard: {
-    borderRadius: 12,
-    padding: 16,
-    elevation: 2,
+    borderRadius: 16,
+    padding: 20,
+    elevation: 6,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowRadius: 12,
   },
   chartTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 16,
+    fontSize: 18,
+    fontWeight: '700',
+    marginBottom: 20,
   },
   chartStyle: {
-    borderRadius: 8,
+    borderRadius: 12,
   },
   
   // 洞察卡片
   insightCard: {
-    borderRadius: 12,
-    padding: 16,
-    elevation: 2,
+    borderRadius: 16,
+    padding: 20,
+    elevation: 6,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowRadius: 12,
   },
   insightTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 8,
+    fontSize: 18,
+    fontWeight: '700',
+    marginBottom: 12,
   },
   insightText: {
-    fontSize: 14,
-    lineHeight: 20,
-    fontWeight: '400',
+    fontSize: 15,
+    lineHeight: 22,
+    fontWeight: '500',
   },
   
   // 專案卡片

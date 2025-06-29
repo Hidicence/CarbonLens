@@ -14,6 +14,10 @@ const queryClient = new QueryClient({
   },
 })
 
+// 確保CSS已正確載入的調試信息
+console.log('✨ CarbonLens Web 正在啟動...');
+console.log('🔗 當前URL:', window.location.href);
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>

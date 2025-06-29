@@ -14,17 +14,23 @@ import FloatingAIAssistant from '@/components/FloatingAIAssistant';
 export default function TabLayout() {
   const { isDarkMode } = useThemeStore();
   const { t } = useLanguageStore();
-  const { isLoggedIn } = useAuthStore();
+  const { isLoggedIn, isAuthLoading } = useAuthStore();
   const { isVisible: isFloatingAIVisible, mode: aiMode, hideFloatingAI } = useFloatingAIStore();
   const theme = isDarkMode ? Colors.dark : Colors.light;
 
   useEffect(() => {
-    console.log("Tab layout - Auth state:", isLoggedIn ? "Logged in" : "Logged out");
-  }, [isLoggedIn]);
+    console.log("Tab layout - Auth state:", isLoggedIn ? "Logged in" : "Logged out", "Loading:", isAuthLoading);
+  }, [isLoggedIn, isAuthLoading]);
 
   useEffect(() => {
     console.log(`[Layout] 懸浮 AI 可見性狀態改變: ${isFloatingAIVisible}`);
   }, [isFloatingAIVisible]);
+
+  // 如果認證狀態還在載入中，顯示空白畫面
+  if (isAuthLoading) {
+    console.log("Tab layout - Auth is loading, showing blank screen");
+    return <View style={{ flex: 1, backgroundColor: theme.background }} />;
+  }
 
   // If not logged in, redirect to login
   if (!isLoggedIn) {
