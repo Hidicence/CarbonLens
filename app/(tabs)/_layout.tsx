@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { View } from 'react-native';
 import { Tabs } from 'expo-router';
@@ -13,10 +13,11 @@ import FloatingAIAssistant from '@/components/FloatingAIAssistant';
 
 export default function TabLayout() {
   const { isDarkMode } = useThemeStore();
-  const { t } = useLanguageStore();
+  const { t } = useTranslation();
   const { isLoggedIn, isAuthLoading } = useAuthStore();
   const { isVisible: isFloatingAIVisible, mode: aiMode, hideFloatingAI } = useFloatingAIStore();
   const theme = isDarkMode ? Colors.dark : Colors.light;
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     console.log("Tab layout - Auth state:", isLoggedIn ? "Logged in" : "Logged out", "Loading:", isAuthLoading);
@@ -25,6 +26,17 @@ export default function TabLayout() {
   useEffect(() => {
     console.log(`[Layout] 懸浮 AI 可見性狀態改變: ${isFloatingAIVisible}`);
   }, [isFloatingAIVisible]);
+
+  // 確保組件掛載後再允許重定向
+  useEffect(() => {
+    const timer = setTimeout(() => setMounted(true), 50);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // 如果組件還未掛載，顯示空白畫面
+  if (!mounted) {
+    return <View style={{ flex: 1, backgroundColor: theme.background }} />;
+  }
 
   // 如果認證狀態還在載入中，顯示空白畫面
   if (isAuthLoading) {

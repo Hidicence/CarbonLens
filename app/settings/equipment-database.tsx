@@ -333,7 +333,7 @@ export default function EquipmentDatabaseScreen() {
       {/* 結果統計 */}
       <View style={styles.resultsStats}>
         <Text style={[styles.resultsCount, { color: theme.secondaryText }]}>
-          {t('common.found')} {filteredEquipment.length} {t('common.items')}
+          {t('common.found')} {filteredEquipment.length.toString()} {t('common.items')}
         </Text>
       </View>
       
@@ -349,7 +349,7 @@ export default function EquipmentDatabaseScreen() {
                 {category.icon && <category.icon size={18} color={category.color} style={styles.categoryHeaderIcon} />}
                 <Text style={[styles.categoryHeaderTitle, { color: theme.text }]}>{category.name}</Text>
                 <Text style={[styles.categoryHeaderCount, { color: theme.secondaryText }]}>
-                  {category.data.length}項
+                  {category.data.length.toString()}項
                 </Text>
               </View>
               

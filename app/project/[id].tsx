@@ -486,7 +486,7 @@ export default function ProjectDetailScreen() {
           >
             <Users size={16} color={Colors.dark.primary} />
             <Text style={styles.collaboratorsButtonText}>
-                                {project.collaborators?.length || 0} {t('collaborators.count') || '位協作者'}
+                                {(project.collaborators?.length || 0).toString()} {t('collaborators.count') || '位協作者'}
             </Text>
           </Pressable>
         </View>

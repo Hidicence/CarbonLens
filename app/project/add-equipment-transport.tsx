@@ -319,7 +319,7 @@ export default function AddEquipmentTransportScreen() {
                             <Text style={[styles.categoryBadgeText, { 
                               color: selectedCategory === category.id ? theme.primary : 'white' 
                             }]}>
-                              {selectedCount}
+                              {selectedCount.toString()}
                             </Text>
                           </View>
                         )}
@@ -372,7 +372,7 @@ export default function AddEquipmentTransportScreen() {
                     </Text>
                           {isSelected && (
                             <Text style={[styles.equipmentCardSelected, { color: theme.primary }]}>
-                              已選 {isSelected.quantity} 件
+                              已選 {isSelected.quantity.toString()} 件
                             </Text>
                           )}
                         </View>

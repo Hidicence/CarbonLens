@@ -1,5 +1,4 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { useTranslation } from '@/hooks/useTranslation';
 import { View, Text, StyleSheet, SafeAreaView, ScrollView, Pressable, TouchableOpacity, Alert, ActivityIndicator, Platform, Share, Dimensions } from 'react-native';
 import { useThemeStore } from '@/store/themeStore';
 import { useProjectStore } from '@/store/projectStore';
@@ -1059,9 +1058,9 @@ export default function AnalyticsScreen() {
                 <FileText size={16} color="white" />
               </View>
             </View>
-            <Text style={[styles.statValue, { color: theme.text }]}>
-              {projects ? projects.length : 0}
-            </Text>
+                          <Text style={[styles.statValue, { color: theme.text }]}>
+                {projects ? projects.length.toString() : '0'}
+              </Text>
             <Text style={[styles.statLabel, { color: theme.secondaryText }]}>
               {t('analytics.common.available.projects')}
             </Text>
@@ -1106,7 +1105,7 @@ export default function AnalyticsScreen() {
                                   color: (selectedProjects && selectedProjects.length === 0) ? theme.primary : theme.text
               }
             ]}>
-                              {(selectedProjects && selectedProjects.length === 0) ? '✓ ' : ''}{t('analytics.common.all.projects')} ({projects ? projects.length : 0})
+                              {(selectedProjects && selectedProjects.length === 0) ? '✓ ' : ''}{t('analytics.common.all.projects')} ({projects ? projects.length.toString() : '0'})
             </Text>
           </Pressable>
           
@@ -1348,8 +1347,9 @@ export default function AnalyticsScreen() {
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
       <PageTitle 
-        title="數據分析" 
-        subtitle="碳排放分析與洞察" 
+        title={t('analytics.title')} 
+        subtitle={t('analytics.subtitle')} 
+        centered
       />
       
       {renderTabBar()}

@@ -10,6 +10,11 @@ module.exports = function (api) {
       ]
     ],
     plugins: [
+      // Babel runtime transform - 必須放在最前面
+      ['@babel/plugin-transform-runtime', {
+        helpers: true,
+        regenerator: true
+      }],
       // 處理 import.meta 語法
       '@babel/plugin-syntax-import-meta',
       // 模塊路徑解析

@@ -55,8 +55,6 @@ export default function ProjectRecordsScreen() {
   // Simulate loading delay
   useEffect(() => {
     const timer = setTimeout(() => {
-  const { t } = useTranslation();
-
       setIsLoading(false);
     }, 500);
     

@@ -51,8 +51,6 @@ export default function CollaboratorPermissionsModal({
   
   // 切換單個權限
   const togglePermission = (key: keyof CollaboratorPermissions) => {
-  const { t } = useTranslation();
-
     setTempPermissions(prev => ({
       ...prev,
       [key]: !prev[key]

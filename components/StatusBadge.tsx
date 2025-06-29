@@ -43,8 +43,8 @@ export default function StatusBadge({ status, size = 'small' }: StatusBadgeProps
   const color = getStatusColor(status);
   const label = getStatusLabel(status);
   
-  // 如果標籤為空，不渲染任何內容
-  if (!label || label === t('status.unknown')) {
+  // 確保標籤存在且不為空，避免渲染問題
+  if (!label || typeof label !== 'string' || label.trim() === '') {
     return null;
   }
   

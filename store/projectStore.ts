@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc, deleteDoc } from 'firebase/firestore';
 import { auth, db } from '@/utils/firebaseConfig';
 import { 
   Project, 
@@ -24,7 +24,7 @@ import {
 } from '@/types/project';
 import { generateId } from '@/utils/helpers';
 import { PROJECTS, EMISSION_RECORDS, SAMPLE_NON_PROJECT_EMISSION_RECORDS } from '@/mocks/projects';
-import { collection, getDocs, deleteDoc } from 'firebase/firestore';
+import { collection, getDocs } from 'firebase/firestore';
 
 interface ProjectState {
   projects: Project[];
@@ -48,14 +48,14 @@ interface ProjectState {
   reorderProjects: (projects: Project[]) => void;
   
   // 專案直接排放記錄管理
-  addProjectEmissionRecord: (record: Omit<ProjectEmissionRecord, 'id'>) => void;
+  addProjectEmissionRecord: (record: Omit<ProjectEmissionRecord, 'id'>) => Promise<void>;
   updateProjectEmissionRecord: (id: string, updates: Partial<ProjectEmissionRecord>) => void;
-  deleteProjectEmissionRecord: (id: string) => void;
+  deleteProjectEmissionRecord: (id: string) => Promise<void>;
   
   // 非專案排放記錄管理
-  addNonProjectEmissionRecord: (record: Omit<NonProjectEmissionRecord, 'id'>) => void;
+  addNonProjectEmissionRecord: (record: Omit<NonProjectEmissionRecord, 'id'>) => Promise<void>;
   updateNonProjectEmissionRecord: (id: string, updates: Partial<NonProjectEmissionRecord>) => void;
-  deleteNonProjectEmissionRecord: (id: string) => void;
+  deleteNonProjectEmissionRecord: (id: string) => Promise<void>;
   
   // 分攤參數管理
   addAllocationParameters: (params: Omit<AllocationParameters, 'id' | 'createdAt' | 'updatedAt'>) => void;
@@ -580,7 +580,7 @@ export const useProjectStore = create<ProjectState>()(
         }));
       },
       
-      addProjectEmissionRecord: (record) => {
+      addProjectEmissionRecord: async (record) => {
         const id = generateId();
         const newRecord = { ...record, id };
         
@@ -603,6 +603,38 @@ export const useProjectStore = create<ProjectState>()(
             projectEmissionRecords: [...state.projectEmissionRecords, newRecord],
           };
         });
+
+        // 同步到 Firebase
+        try {
+          const currentUser = auth.currentUser;
+          if (currentUser) {
+            // 清理 undefined 值，Firebase 不支持 undefined
+            const cleanRecord = (obj: any): any => {
+              if (obj === null || obj === undefined) return null;
+              if (typeof obj !== 'object') return obj;
+              
+              const cleaned: any = {};
+              for (const [key, value] of Object.entries(obj)) {
+                if (value !== undefined) {
+                  cleaned[key] = typeof value === 'object' && value !== null ? cleanRecord(value) : value;
+                }
+              }
+              return cleaned;
+            };
+
+            const recordRef = doc(db, 'users', currentUser.uid, 'emissionRecords', newRecord.id);
+            await setDoc(recordRef, {
+              ...cleanRecord(newRecord),
+              syncedAt: new Date().toISOString()
+            }, { merge: true });
+            console.log(`✅ 專案記錄 "${newRecord.description}" 已同步到 Firebase`);
+          } else {
+            console.log('⚠️ 用戶未登入，專案記錄僅保存到本地');
+          }
+        } catch (error) {
+          console.error('❌ Firebase 同步失敗:', error);
+          // 不拋出錯誤，確保本地保存成功
+        }
       },
       
       updateProjectEmissionRecord: (id, updates) => {
@@ -636,9 +668,11 @@ export const useProjectStore = create<ProjectState>()(
         });
       },
       
-      deleteProjectEmissionRecord: (id) => {
+      deleteProjectEmissionRecord: async (id) => {
+        const currentState = get();
+        const recordToDelete = currentState.projectEmissionRecords.find((record) => record.id === id);
+        
         set((state) => {
-          const recordToDelete = state.projectEmissionRecords.find((record) => record.id === id);
           if (!recordToDelete) return state;
           
           const updatedProjects = state.projects.map((project) => {
@@ -659,9 +693,26 @@ export const useProjectStore = create<ProjectState>()(
             projectEmissionRecords: state.projectEmissionRecords.filter((record) => record.id !== id),
           };
         });
+
+        // 同步到 Firebase
+        if (recordToDelete) {
+          try {
+            const currentUser = auth.currentUser;
+            if (currentUser) {
+              const recordRef = doc(db, 'users', currentUser.uid, 'emissionRecords', id);
+              await deleteDoc(recordRef);
+              console.log(`✅ 專案記錄 "${recordToDelete.description}" 已從 Firebase 刪除`);
+            } else {
+              console.log('⚠️ 用戶未登入，專案記錄僅從本地刪除');
+            }
+          } catch (error) {
+            console.error('❌ Firebase 刪除失敗:', error);
+            // 不拋出錯誤，確保本地刪除成功
+          }
+        }
       },
       
-      addNonProjectEmissionRecord: (record) => {
+      addNonProjectEmissionRecord: async (record) => {
         const id = generateId();
         const newRecord = { ...record, id };
         
@@ -696,6 +747,38 @@ export const useProjectStore = create<ProjectState>()(
             allocationRecords: updatedAllocationRecords,
           };
         });
+
+        // 同步到 Firebase
+        try {
+          const currentUser = auth.currentUser;
+          if (currentUser) {
+            // 清理 undefined 值，Firebase 不支持 undefined
+            const cleanRecord = (obj: any): any => {
+              if (obj === null || obj === undefined) return null;
+              if (typeof obj !== 'object') return obj;
+              
+              const cleaned: any = {};
+              for (const [key, value] of Object.entries(obj)) {
+                if (value !== undefined) {
+                  cleaned[key] = typeof value === 'object' && value !== null ? cleanRecord(value) : value;
+                }
+              }
+              return cleaned;
+            };
+
+            const recordRef = doc(db, 'users', currentUser.uid, 'operationalRecords', newRecord.id);
+            await setDoc(recordRef, {
+              ...cleanRecord(newRecord),
+              syncedAt: new Date().toISOString()
+            }, { merge: true });
+            console.log(`✅ 營運記錄 "${newRecord.description}" 已同步到 Firebase`);
+          } else {
+            console.log('⚠️ 用戶未登入，營運記錄僅保存到本地');
+          }
+        } catch (error) {
+          console.error('❌ Firebase 同步失敗:', error);
+          // 不拋出錯誤，確保本地保存成功
+        }
       },
       
       updateNonProjectEmissionRecord: (id, updates) => {
@@ -762,14 +845,16 @@ export const useProjectStore = create<ProjectState>()(
         });
       },
       
-      deleteNonProjectEmissionRecord: (id) => {
+      deleteNonProjectEmissionRecord: async (id) => {
         console.log('Store: 準備刪除記錄，ID:', id);
+        
+        const currentState = get();
+        const recordToDelete = currentState.nonProjectEmissionRecords.find((record) => record.id === id);
         
         set((state) => {
           console.log('Store: 當前記錄數量:', state.nonProjectEmissionRecords.length);
           console.log('Store: 記錄ID列表:', state.nonProjectEmissionRecords.map(r => r.id));
           
-          const recordToDelete = state.nonProjectEmissionRecords.find((record) => record.id === id);
           console.log('Store: 找到記錄:', recordToDelete ? '是' : '否');
           
           if (!recordToDelete) {
@@ -809,6 +894,23 @@ export const useProjectStore = create<ProjectState>()(
         });
         
         console.log('Store: 刪除操作完成');
+
+        // 同步到 Firebase
+        if (recordToDelete) {
+          try {
+            const currentUser = auth.currentUser;
+            if (currentUser) {
+              const recordRef = doc(db, 'users', currentUser.uid, 'operationalRecords', id);
+              await deleteDoc(recordRef);
+              console.log(`✅ 營運記錄 "${recordToDelete.description}" 已從 Firebase 刪除`);
+            } else {
+              console.log('⚠️ 用戶未登入，營運記錄僅從本地刪除');
+            }
+          } catch (error) {
+            console.error('❌ Firebase 刪除失敗:', error);
+            // 不拋出錯誤，確保本地刪除成功
+          }
+        }
       },
       
       calculateAllocations: (record: NonProjectEmissionRecord): AllocationRecord[] => {

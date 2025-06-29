@@ -48,8 +48,6 @@ export default function RegisterScreen() {
   }, [error, clearError, t]);
   
   const handleRegister = async () => {
-  const { t } = useTranslation();
-
     // Validate inputs
     if (!name.trim() || !email.trim() || !password.trim() || !confirmPassword.trim()) {
       Alert.alert(t('common.error'), t('auth.all.fields.required'));

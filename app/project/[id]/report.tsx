@@ -65,8 +65,6 @@ export default function ProjectReportScreen() {
   useEffect(() => {
     setIsLoading(true);
     const timer = setTimeout(() => {
-  const { t } = useTranslation();
-
       setIsLoading(false);
     }, 500);
     

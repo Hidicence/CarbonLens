@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Alert, Platform } from 'react-native';
 import { useAuthStore } from '@/store/authStore';
-import { GoogleSignInService } from '@/services/googleSignInService';
+// import { GoogleSignInService } from '@/services/googleSignInService'; // 暫時禁用避免模塊錯誤
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 
@@ -22,10 +22,10 @@ export default function TestGoogleLoginScreen() {
     addLog('🚀 Google 登入測試頁面已載入');
     addLog(`📱 平台: ${Platform.OS}`);
     
-    // 檢查 Google Sign-In 配置狀態
+    // 檢查 Google Sign-In 配置狀態（暫時禁用）
     if (Platform.OS !== 'web') {
-      const config = GoogleSignInService.getConfigurationStatus();
-      addLog(`⚙️ Google Sign-In 配置狀態: ${JSON.stringify(config, null, 2)}`);
+      // const config = GoogleSignInService.getConfigurationStatus();
+      addLog(`⚙️ Google Sign-In 暫時禁用，避免模塊錯誤`);
     }
   }, []);
 
@@ -63,12 +63,16 @@ export default function TestGoogleLoginScreen() {
     addLog('👤 檢查當前用戶狀態...');
     
     if (Platform.OS !== 'web') {
+      // Google Sign-In 服務暫時禁用
+      addLog(`⚠️ Google Sign-In 服務暫時禁用，避免模塊錯誤`);
+      /*
       try {
         const currentUser = await GoogleSignInService.getCurrentUser();
         addLog(`Google 當前用戶: ${JSON.stringify(currentUser?.data?.user, null, 2)}`);
       } catch (error: any) {
         addLog(`❌ 獲取 Google 用戶失敗: ${error.message}`);
       }
+      */
     }
     
     addLog(`Firebase 當前用戶: ${JSON.stringify(user, null, 2)}`);

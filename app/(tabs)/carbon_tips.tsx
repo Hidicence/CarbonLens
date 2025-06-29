@@ -4,6 +4,7 @@ import { Lightbulb, Car, Laptop, Utensils, Hotel, Trash, Fuel, Droplet, Wind, Za
 import { LinearGradient } from 'expo-linear-gradient';
 import Colors from '@/constants/colors';
 import { useThemeStore } from '@/store/themeStore';
+import { useLanguageStore } from '@/store/languageStore';
 import { useDimensions } from '@/hooks/useDimensions';
 import PageTitle from '@/components/PageTitle';
 import Button from '@/components/Button';
@@ -298,6 +299,7 @@ const PLANT_BASED_CATERING = [
 
 export default function CarbonTipsScreen() {
   const { isDarkMode } = useThemeStore();
+  const { t } = useLanguageStore();
   const theme = isDarkMode ? Colors.dark : Colors.light;
   const { width } = useDimensions();
   const cardWidth = width - 40;
@@ -549,8 +551,8 @@ export default function CarbonTipsScreen() {
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
       <PageTitle 
-        title="減碳建議" 
-        subtitle="專業影視製作減碳策略與解決方案" 
+        title={t('carbon_tips.title')} 
+        subtitle={t('carbon_tips.subtitle')} 
         centered
       />
 

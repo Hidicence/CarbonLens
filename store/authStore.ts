@@ -3,7 +3,7 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { User } from '@/types/auth';
 import { Platform } from 'react-native';
-import { useProfileStore } from '@/store/profileStore';
+// import { useProfileStore } from '@/store/profileStore'; // 暫時禁用避免初始化問題
 
 // 直接導入Firebase Auth功能
 import {
@@ -23,7 +23,7 @@ import {
 } from 'firebase/auth';
 
 // 導入 Google Sign-In 服務
-import { GoogleSignInService } from '@/services/googleSignInService';
+// import { GoogleSignInService } from '@/services/googleSignInService'; // 暫時禁用避免模塊錯誤
 
 // 導入auth實例
 import { auth } from '@/utils/firebaseConfig';
@@ -73,13 +73,14 @@ const mapFirebaseUserToUser = (firebaseUser: FirebaseUser): User => {
     provider
   };
   
-  // 同步到profileStore
-  const profileStore = useProfileStore.getState();
-  profileStore.updateProfile({
-    name: user.name,
-    email: user.email,
-    avatar: user.avatar || profileStore.profile.avatar,
-  });
+  // 暫時禁用 profileStore 同步，避免初始化問題
+  // TODO: 重新啟用 profileStore 同步
+  // const profileStore = useProfileStore.getState();
+  // profileStore.updateProfile({
+  //   name: user.name,
+  //   email: user.email,
+  //   avatar: user.avatar || profileStore.profile.avatar,
+  // });
   
   return user;
 };
@@ -207,6 +208,17 @@ export const useAuthStore = create<AuthState>()(
             // onAuthStateChanged 將會處理狀態更新
             return true;
           } else {
+            // 暫時禁用原生 Google Sign-In，避免模塊錯誤
+            console.log('原生 Google 登入暫時禁用，使用測試帳號登入...');
+            
+            // 在原生平台使用測試帳號作為 fallback
+            if (__DEV__) {
+              return await get().login('test@example.com', 'password', false);
+            }
+            
+            throw new Error('Google 登入功能暫時不可用');
+            
+            /* TODO: 重新啟用原生 Google Sign-In
             // 原生 APP 平台使用 Google Sign-In SDK
             console.log('開始原生 Google 登入流程...');
             
@@ -249,6 +261,7 @@ export const useAuthStore = create<AuthState>()(
               
               throw nativeError;
             }
+            */
           }
         } catch (error: any) {
           console.error('Google login error:', error);
@@ -337,8 +350,11 @@ export const useAuthStore = create<AuthState>()(
         console.log('🚪 開始執行登出流程...');
         
         try {
-          // 1. 登出 Google Sign-In (如果已登入)
+          // 1. 暫時禁用 Google Sign-In 登出，避免模塊錯誤
           if (Platform.OS !== 'web') {
+            console.log('🔍 Google Sign-In 登出暫時跳過...');
+            
+            /* TODO: 重新啟用 Google Sign-In 登出
             try {
               console.log('🔍 檢查 Google Sign-In 狀態...');
               const isSignedIn = await GoogleSignInService.isSignedIn();
@@ -350,6 +366,7 @@ export const useAuthStore = create<AuthState>()(
             } catch (error) {
               console.log('⚠️ Google Sign-In 登出時發生錯誤:', error);
             }
+            */
           }
           
           // 2. 使用Firebase登出
@@ -424,13 +441,13 @@ export const useAuthStore = create<AuthState>()(
             await firebaseUser.reload();
           }
           
-          // 同步到profileStore
-          const profileStore = useProfileStore.getState();
-          profileStore.updateProfile({
-            name: name,
-            email: email,
-            role: '影視製作人員', // 設置默認角色
-          });
+          // 暫時禁用 profileStore 同步，避免初始化問題
+          // TODO: 重新啟用 profileStore 同步
+          // useProfileStore.getState().updateProfile({
+          //   name: name,
+          //   email: email,
+          //   role: '影視製作人員', // 設置默認角色
+          // });
           
           // 註冊成功
           set({

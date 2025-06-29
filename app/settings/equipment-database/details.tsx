@@ -192,11 +192,11 @@ export default function EquipmentDetailsScreen() {
             
             <View style={styles.lifeCycleStats}>
               <View style={styles.lifeCycleStat}>
-                <Text style={[styles.lifeCycleValue, { color: theme.primary }]}>{lifeCycleData?.totalLifeCycle || 0}</Text>
+                <Text style={[styles.lifeCycleValue, { color: theme.primary }]}>{(lifeCycleData?.totalLifeCycle || 0).toString()}</Text>
                 <Text style={[styles.lifeCycleLabel, { color: theme.secondaryText }]}>總排放量 (kg CO₂e)</Text>
               </View>
               <View style={styles.lifeCycleStat}>
-                <Text style={[styles.lifeCycleValue, { color: theme.primary }]}>{lifeCycleData?.lifespan || 0}</Text>
+                <Text style={[styles.lifeCycleValue, { color: theme.primary }]}>{(lifeCycleData?.lifespan || 0).toString()}</Text>
                 <Text style={[styles.lifeCycleLabel, { color: theme.secondaryText }]}>預計壽命 (年)</Text>
               </View>
             </View>
@@ -215,7 +215,7 @@ export default function EquipmentDetailsScreen() {
                     ]} 
                   />
                 </View>
-                <Text style={[styles.chartValue, { color: theme.text }]}>{lifeCycleData?.manufacturing || 0}</Text>
+                                    <Text style={[styles.chartValue, { color: theme.text }]}>{(lifeCycleData?.manufacturing || 0).toString()}</Text>
               </View>
               
               <View style={styles.chartItem}>
@@ -231,7 +231,7 @@ export default function EquipmentDetailsScreen() {
                     ]} 
                   />
                 </View>
-                <Text style={[styles.chartValue, { color: theme.text }]}>{lifeCycleData?.transportation || 0}</Text>
+                                    <Text style={[styles.chartValue, { color: theme.text }]}>{(lifeCycleData?.transportation || 0).toString()}</Text>
               </View>
               
               <View style={styles.chartItem}>
@@ -265,7 +265,7 @@ export default function EquipmentDetailsScreen() {
                     ]} 
                   />
                 </View>
-                <Text style={[styles.chartValue, { color: theme.text }]}>{lifeCycleData?.endOfLife || 0}</Text>
+                                    <Text style={[styles.chartValue, { color: theme.text }]}>{(lifeCycleData?.endOfLife || 0).toString()}</Text>
               </View>
             </View>
           </View>

@@ -22,13 +22,15 @@ import {
   FileText,
   Info,
   ExternalLink,
-  Building
+  Building,
+  Wrench
 } from 'lucide-react-native';
 import Colors from '@/constants/colors';
 import { useThemeStore } from '@/store/themeStore';
 import { useProfileStore } from '@/store/profileStore';
 import { useProjectStore } from '@/store/projectStore';
 import { useAuthStore } from '@/store/authStore';
+import { useBetaToolsStore } from '@/store/betaToolsStore';
 import PageTitle from '@/components/PageTitle';
 import { resetOnboarding } from '@/utils/onboardingManager';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -42,6 +44,7 @@ export default function SettingsScreen() {
   const { profile } = useProfileStore();
   const { projects, nonProjectEmissionRecords, allocationRecords, deleteAllProjects } = useProjectStore();
   const { logout } = useAuthStore();
+  const { showBetaTools, toggleBetaTools } = useBetaToolsStore();
   const { language, setLanguage, t } = useLanguageStore();
   
   const [notificationsEnabled, setNotificationsEnabled] = React.useState(true);
@@ -58,8 +61,6 @@ export default function SettingsScreen() {
   };
 
   const handleClearData = () => {
-  const { t } = useTranslation();
-
     Alert.alert(
       t('settings.delete.all'),
       t('settings.delete.all.confirm'),
@@ -152,18 +153,7 @@ export default function SettingsScreen() {
     );
   };
 
-  // 渲染頁面標題
-  const renderPageHeader = () => (
-    <View style={styles.pageHeader}>
-      <View style={styles.headerContent}>
-        <Text style={[styles.pageTitle, { color: theme.text }]}>{t('settings.page.title')}</Text>
-        <Text style={[styles.pageSubtitle, { color: theme.secondaryText }]}>{t('settings.page.subtitle')}</Text>
-      </View>
-      <View style={[styles.headerIconContainer, { backgroundColor: theme.primary + '20' }]}>
-        <SettingsIcon size={24} color={theme.primary} />
-      </View>
-    </View>
-  );
+  // 渲染頁面標題（已改為使用統一的PageTitle組件）
 
   // 渲染統計概覽
   const renderStatsOverview = () => (
@@ -424,7 +414,11 @@ export default function SettingsScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
-      {renderPageHeader()}
+      <PageTitle 
+        title={t('settings.page.title')} 
+        subtitle={t('settings.page.subtitle')} 
+        centered
+      />
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {renderStatsOverview()}
@@ -479,6 +473,20 @@ export default function SettingsScreen() {
                 onValueChange={toggleTheme}
                 trackColor={{ false: theme.border, true: theme.primary + '60' }}
                 thumbColor={isDarkMode ? theme.primary : theme.secondaryText}
+                ios_backgroundColor={theme.border}
+              />
+            )
+          },
+          {
+            icon: <Wrench size={18} color={theme.primary} />,
+            title: t('settings.beta.tools'),
+            subtitle: t('settings.beta.tools.subtitle'),
+            rightComponent: (
+              <Switch
+                value={showBetaTools}
+                onValueChange={toggleBetaTools}
+                trackColor={{ false: theme.border, true: theme.primary + '60' }}
+                thumbColor={showBetaTools ? theme.primary : theme.secondaryText}
                 ios_backgroundColor={theme.border}
               />
             )

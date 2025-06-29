@@ -63,8 +63,9 @@ export default function ProfileScreen() {
     
     // 如果authStore提供了更新用戶資料的方法，也更新它
     try {
-      if (useAuthStore.getState().updateProfile) {
-        useAuthStore.getState().updateProfile({
+      const authState = useAuthStore.getState();
+      if (authState.updateProfile) {
+        authState.updateProfile({
           name: formData.name,
           avatar: formData.avatar
         });

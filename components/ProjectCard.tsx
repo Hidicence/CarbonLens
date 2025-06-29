@@ -24,6 +24,17 @@ export default function ProjectCard({ project }: ProjectCardProps) {
   const [showOptions, setShowOptions] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   
+  // 額外的數據安全檢查
+  if (!project) {
+    console.warn('ProjectCard: project is null or undefined');
+    return null;
+  }
+  
+  if (!project.name) {
+    console.warn('ProjectCard: project.name is missing', project);
+    return null;
+  }
+  
   // 動態計算項目的排放量統計
   const projectEmissionSummary = calculateProjectEmissions(project.id);
   
@@ -62,15 +73,22 @@ export default function ProjectCard({ project }: ProjectCardProps) {
   };
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return `${date.getFullYear()}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}`;
+    if (!dateString) return t('common.not.set') || '未設定';
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return t('common.invalid.date') || '無效日期';
+      return `${date.getFullYear()}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}`;
+    } catch {
+      return t('common.invalid.date') || '無效日期';
+    }
   };
 
   const formatEmissions = (emissions: number) => {
-    if (emissions >= 1000) {
-      return `${(emissions / 1000).toFixed(1)} ${t('unit.ton.co2e')}`;
+    const safeEmissions = emissions || 0;
+    if (safeEmissions >= 1000) {
+      return `${(safeEmissions / 1000).toFixed(1)} ${t('unit.ton.co2e') || 't CO₂e'}`;
     }
-    return `${emissions.toFixed(1)} ${t('unit.kg.co2e')}`;
+    return `${safeEmissions.toFixed(1)} ${t('unit.kg.co2e') || 'kg CO₂e'}`;
   };
   
   const formatEmissionsShort = (emissions: number) => {
@@ -155,7 +173,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
                 </View>
                 
                 <Text style={[styles.description, styles.descriptionWithBackground]} numberOfLines={2}>
-                  {project.description}
+                  {project.description || t('common.no.data')}
                 </Text>
                 
                 <View style={styles.details}>
@@ -169,14 +187,16 @@ export default function ProjectCard({ project }: ProjectCardProps) {
                   
                   <View style={styles.detailItem}>
                     <MapPin size={14} color="rgba(255,255,255,0.8)" />
-                    <Text style={[styles.detailText, styles.detailTextWithBackground]}>{project.location}</Text>
+                    <Text style={[styles.detailText, styles.detailTextWithBackground]}>
+                      {project.location || t('common.not.specified')}
+                    </Text>
                   </View>
                   
                   {project.budget && project.budget > 0 && (
                     <View style={styles.detailItem}>
                       <DollarSign size={14} color="rgba(255,255,255,0.8)" />
                       <Text style={[styles.detailText, styles.detailTextWithBackground]}>
-                        {t('projects.budget')}: ${project.budget.toLocaleString()}
+                        {t('projects.budget')}: ${(project.budget || 0).toLocaleString()}
                       </Text>
                     </View>
                   )}
@@ -237,7 +257,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
           </View>
           
           <Text style={[styles.description, { color: theme.secondaryText }]} numberOfLines={2}>
-            {project.description}
+            {project.description || t('common.no.data')}
           </Text>
           
           <View style={styles.details}>
@@ -251,14 +271,16 @@ export default function ProjectCard({ project }: ProjectCardProps) {
             
             <View style={styles.detailItem}>
               <MapPin size={14} color={theme.secondaryText} />
-              <Text style={[styles.detailText, { color: theme.secondaryText }]}>{project.location}</Text>
+              <Text style={[styles.detailText, { color: theme.secondaryText }]}>
+                {project.location || t('common.not.specified')}
+              </Text>
             </View>
             
             {project.budget && project.budget > 0 && (
               <View style={styles.detailItem}>
                 <DollarSign size={14} color={theme.secondaryText} />
                 <Text style={[styles.detailText, { color: theme.secondaryText }]}>
-  {t('projects.budget')}: ${project.budget.toLocaleString()}
+                  {t('projects.budget')}: ${(project.budget || 0).toLocaleString()}
                 </Text>
               </View>
             )}
@@ -398,7 +420,7 @@ const styles = StyleSheet.create({
   imageContainer: {
     position: 'relative',
     width: '100%',
-    height: '100%',
+    height: 240,
   },
   backgroundImage: {
     position: 'absolute',
@@ -415,6 +437,7 @@ const styles = StyleSheet.create({
     position: 'relative',
     padding: 16,
     height: '100%',
+    justifyContent: 'space-between',
   },
   titleWithBackground: {
     color: 'white',

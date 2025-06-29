@@ -383,9 +383,9 @@ export default function StageAnalyticsScreen() {
                     </View>
                     <View style={styles.categoryInfo}>
                       <Text style={[styles.categoryName, { color: theme.text }]}>{category.name}</Text>
-                      <Text style={[styles.categoryCount, { color: theme.secondaryText }]}>
-                        {category.count} {t('stage.record.count')}
-                      </Text>
+                                      <Text style={[styles.categoryCount, { color: theme.secondaryText }]}>
+                  {category.count.toString()} {t('stage.record.count')}
+                </Text>
                     </View>
                     <Text style={[styles.categoryValue, { color: category.color }]}>
                       {formatEmissions(category.value)}

@@ -1870,7 +1870,7 @@ export default function AddRecordScreen() {
           <View style={styles.multiEquipmentContainer}>
             <View style={[styles.selectedEquipmentList, { backgroundColor: theme.card }]}>
               <Text style={[styles.selectedEquipmentTitle, { color: theme.text }]}>
-                已選擇的設備 ({selectedEquipmentItems.length})
+                已選擇的設備 ({selectedEquipmentItems.length.toString()})
               </Text>
               
               {selectedEquipmentItems.length > 0 ? (
@@ -2183,7 +2183,7 @@ export default function AddRecordScreen() {
                     <View style={styles.equipmentWeightHeader}>
                       <Weight size={18} color={theme.primary} />
                       <Text style={[styles.equipmentWeightTitle, { color: theme.text }]}>
-                        已選擇的設備 ({selectedEquipmentItems.length})
+                        已選擇的設備 ({selectedEquipmentItems.length.toString()})
                       </Text>
                     </View>
                     

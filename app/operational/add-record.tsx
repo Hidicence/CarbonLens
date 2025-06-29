@@ -51,7 +51,7 @@ import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
 import { useProjectStore } from '@/store/projectStore';
 import { useThemeStore } from '@/store/themeStore';
-import { useTranslation } from '@/hooks/useTranslation';
+import { useLanguageStore } from '@/store/languageStore';
 import Colors from '@/constants/colors';
 import Header from '@/components/Header';
 import Button from '@/components/Button';
@@ -243,13 +243,13 @@ const calculateDataQuality = (
   };
 };
 
-// 數據品質徽章組件
+// 數據品質徽章組件 - 移到文件頂層
 const DataQualityBadge: React.FC<{
   quality: DataQualityScore;
   animated?: boolean;
   theme: any;
 }> = ({ quality, animated = true, theme }) => {
-  const { t } = useTranslation();
+  const { t } = useLanguageStore();
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const rotateAnim = useRef(new Animated.Value(0)).current;
   
@@ -348,7 +348,7 @@ const DocumentUploader: React.FC<{
   onAIAnalysis: (doc: EvidenceDocument) => Promise<void>;
   aiProcessing: AIProcessingState;
 }> = ({ documents, onDocumentsChange, theme, onAIAnalysis, aiProcessing }) => {
-  const { t } = useTranslation();
+  const { t } = useLanguageStore();
   const [uploading, setUploading] = useState(false);
   
   const pickDocument = async () => {
@@ -715,7 +715,7 @@ interface ElectricityFields {
 
 export default function AddOperationalRecordScreen() {
   const router = useRouter();
-  const { t } = useTranslation();
+  const { t } = useLanguageStore();
   const { addNonProjectEmissionRecord, projects } = useProjectStore();
   const { isDarkMode } = useThemeStore();
   const theme = isDarkMode ? Colors.dark : Colors.light;

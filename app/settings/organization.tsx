@@ -40,8 +40,6 @@ export default function OrganizationSettingsScreen() {
   const [formData, setFormData] = useState(organization);
 
   const handleSave = () => {
-  const { t } = useTranslation();
-
     if (!formData.name.trim()) {
       Alert.alert(t('common.error'), t('organization.error.name.required'));
       return;

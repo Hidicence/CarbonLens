@@ -36,7 +36,7 @@ export default function UltraSimpleScreen() {
         textAlign: 'center'
       }}>
         這是最基本的React Native組件測試{'\n'}
-        計數: {count}
+        計數: {count.toString()}
       </Text>
       
       <TouchableOpacity

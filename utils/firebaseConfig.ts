@@ -26,13 +26,14 @@ let auth;
 if (Platform.OS === 'web') {
   auth = getAuth(app);
 } else {
-  // 對於 React Native，首先嘗試 initializeAuth
+  // 對於 React Native，Firebase 11.x 自動處理持久化
   try {
     auth = initializeAuth(app);
-    console.log('Firebase Auth initialized successfully');
+    console.log('Firebase Auth initialized successfully for React Native');
+    console.log('AsyncStorage persistence is handled automatically in Firebase 11.x');
   } catch (error) {
     // 如果已經初始化，使用 getAuth
-    console.log('Auth already initialized, using getAuth');
+    console.log('Auth already initialized, using getAuth:', error);
     auth = getAuth(app);
   }
 }

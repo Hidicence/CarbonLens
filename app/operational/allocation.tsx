@@ -238,9 +238,9 @@ export default function AllocationManagementScreen() {
           <View style={[styles.statIcon, { backgroundColor: theme.success + '20' }]}>
             <CheckCircle size={20} color={theme.success} />
           </View>
-          <Text style={[styles.statValue, { color: theme.success }]}>
-            {allocationStats.allocatedCount}
-          </Text>
+                        <Text style={[styles.statValue, { color: theme.success }]}>
+                {allocationStats.allocatedCount.toString()}
+              </Text>
           <Text style={[styles.statLabel, { color: theme.secondaryText }]}>
             已分攤記錄
           </Text>
@@ -364,7 +364,7 @@ export default function AllocationManagementScreen() {
       >
         <Play size={16} color="white" />
         <Text style={styles.batchAllocateButtonText}>
-          批量分攤 ({unallocatedRecords.length} 筆記錄)
+          批量分攤 ({unallocatedRecords.length.toString()} 筆記錄)
         </Text>
       </TouchableOpacity>
     </View>
@@ -377,7 +377,7 @@ export default function AllocationManagementScreen() {
         <Text style={[styles.cardTitle, { color: theme.text }]}>待分攤記錄</Text>
         <View style={[styles.countBadge, { backgroundColor: theme.warning + '20' }]}>
           <Text style={[styles.countBadgeText, { color: theme.warning }]}>
-            {unallocatedRecords.length}
+            {unallocatedRecords.length.toString()}
           </Text>
         </View>
       </View>
@@ -408,7 +408,7 @@ export default function AllocationManagementScreen() {
         <Text style={[styles.cardTitle, { color: theme.text }]}>已分攤記錄</Text>
         <View style={[styles.countBadge, { backgroundColor: theme.success + '20' }]}>
           <Text style={[styles.countBadgeText, { color: theme.success }]}>
-            {allocatedRecords.length}
+            {allocatedRecords.length.toString()}
           </Text>
         </View>
       </View>
@@ -436,7 +436,7 @@ export default function AllocationManagementScreen() {
           onPress={() => router.push('/operational/records')}
         >
           <Text style={[styles.viewAllButtonText, { color: theme.primary }]}>
-            查看全部 {allocatedRecords.length} 筆記錄
+            查看全部 {allocatedRecords.length.toString()} 筆記錄
           </Text>
           <ArrowRight size={16} color={theme.primary} />
         </TouchableOpacity>

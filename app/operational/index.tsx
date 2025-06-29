@@ -300,9 +300,9 @@ export default function OperationalScreen() {
                   <Text style={[styles.categoryName, { color: theme.text }]}>
                     {stat.category}
                   </Text>
-                  <Text style={[styles.categoryCount, { color: theme.secondaryText }]}>
-                    {stat.recordCount}{t('operational.record.count.suffix')}
-                  </Text>
+                                  <Text style={[styles.categoryCount, { color: theme.secondaryText }]}>
+                  {stat.recordCount.toString()}{t('operational.record.count.suffix')}
+                </Text>
                 </View>
               </View>
               <View style={styles.categoryRight}>

@@ -44,8 +44,6 @@ export default function ForgotPasswordScreen() {
   }, [error, clearError, t]);
   
   const handleSubmit = async () => {
-  const { t } = useTranslation();
-
     // 驗證電子郵件
     if (!email.trim()) {
       Alert.alert(t('common.error'), t('auth.email.required'));

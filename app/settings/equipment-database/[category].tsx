@@ -184,12 +184,12 @@ export default function CategoryScreen() {
       
       <View style={styles.statsContainer}>
         <View style={[styles.statsCard, { backgroundColor: theme.card }]}>
-          <Text style={[styles.statsValue, { color: theme.primary }]}>{equipmentList.length}</Text>
+                      <Text style={[styles.statsValue, { color: theme.primary }]}>{equipmentList.length.toString()}</Text>
           <Text style={[styles.statsLabel, { color: theme.secondaryText }]}>設備總數</Text>
         </View>
         
         <View style={[styles.statsCard, { backgroundColor: theme.card }]}>
-          <Text style={[styles.statsValue, { color: theme.primary }]}>{filteredEquipment.length}</Text>
+                      <Text style={[styles.statsValue, { color: theme.primary }]}>{filteredEquipment.length.toString()}</Text>
           <Text style={[styles.statsLabel, { color: theme.secondaryText }]}>搜尋結果</Text>
         </View>
       </View>

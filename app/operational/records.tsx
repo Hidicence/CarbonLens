@@ -404,7 +404,7 @@ export default function RecordsScreen() {
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
       <Header 
-        title={`營運記錄 (${filteredRecords.length})`}
+        title={`營運記錄 (${filteredRecords.length.toString()})`}
         showBackButton={true}
         rightComponent={
           <View style={styles.headerActions}>

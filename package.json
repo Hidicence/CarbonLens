@@ -10,6 +10,8 @@
     "ios": "expo run:ios"
   },
   "dependencies": {
+    "@babel/plugin-transform-runtime": "^7.27.4",
+    "@babel/runtime": "^7.22.0",
     "@expo-google-fonts/inter": "^0.3.0",
     "@expo/vector-icons": "^14.0.2",
     "@react-native-async-storage/async-storage": "^2.2.0",
@@ -56,8 +58,8 @@
     "nativewind": "^4.1.23",
     "patch-package": "^8.0.0",
     "prop-types": "^15.8.1",
-    "react": "19.0.0",
-    "react-dom": "19.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
     "react-i18next": "^15.4.1",
     "react-native": "^0.79.3",
     "react-native-chart-kit": "^6.12.0",
@@ -71,7 +73,7 @@
     "react-native-web": "~0.19.13",
     "victory-native": "^36.6.8",
     "whatwg-url": "^14.2.0",
-    "zustand": "^5.0.2"
+    "zustand": "^4.5.5"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
