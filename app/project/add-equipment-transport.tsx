@@ -78,7 +78,7 @@ export default function AddEquipmentTransportScreen() {
   const router = useRouter();
   const { projectId } = useLocalSearchParams();
   const { isDarkMode } = useThemeStore();
-  const { addEmissionRecord } = useProjectStore();
+  const { addProjectEmissionRecord } = useProjectStore();
   const theme = isDarkMode ? Colors.dark : Colors.light;
 
   const [selectedEquipment, setSelectedEquipment] = useState<SelectedEquipment[]>([]);
@@ -189,7 +189,7 @@ export default function AddEquipmentTransportScreen() {
     };
 
     setTimeout(() => {
-      addEmissionRecord(record);
+      addProjectEmissionRecord(record);
       setIsSaving(false);
       Alert.alert('成功', '專案器材記錄已添加', [
         { text: '繼續添加', onPress: () => {

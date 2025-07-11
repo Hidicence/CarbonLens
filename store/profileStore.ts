@@ -23,6 +23,10 @@ export interface OrganizationInfo {
   reportingBoundary: string;
   address: string;
   contactPerson: string;
+  contactName?: string; // 聯絡人姓名（補充字段）
+  representative?: string; // 代表人/負責人
+  businessNumber?: string; // 營業登記號碼
+  employeeCount?: number; // 員工人數
   email: string;
   phone: string;
   website?: string;

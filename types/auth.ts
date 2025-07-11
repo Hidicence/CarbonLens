@@ -2,7 +2,7 @@
  * 認證和用戶相關類型定義
  */
 
-import type { BaseEntity, AsyncState, Role } from './base';
+import type { BaseEntity, AsyncState } from './base';
 
 /**
  * 社交登錄提供商
@@ -22,7 +22,7 @@ export interface User extends BaseEntity {
   email: string;
   avatar?: string;
   status: UserStatus;
-  role?: Role;
+  role?: string; // 使用字符串類型保持一致性
   provider?: AuthProvider;
   // 擴展用戶信息
   firstName?: string;

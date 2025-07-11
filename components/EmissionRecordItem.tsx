@@ -2,13 +2,13 @@ import React from 'react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { Calendar, MapPin, FileEdit, Film, Clapperboard, Calculator } from 'lucide-react-native';
-import { EmissionRecord, ProductionStage } from '@/types/project';
+import { ProjectEmissionRecord, ProductionStage } from '@/types/project';
 import { EMISSION_CATEGORIES, STAGE_CATEGORIES, EMISSION_SOURCES } from '@/mocks/projects';
 import { getTranslatedProjectCategories, getTranslatedProjectSources, getTranslatedStageCategories } from '@/utils/translations';
 import Colors from '@/constants/colors';
 
 interface EmissionRecordItemProps {
-  record: EmissionRecord;
+  record: ProjectEmissionRecord;
   onPress: () => void;
 }
 

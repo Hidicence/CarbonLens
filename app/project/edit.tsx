@@ -119,9 +119,9 @@ export default function EditProjectScreen() {
     const carbonBudget = enableCarbonBudget ? {
       total: parseFloat(totalCarbonBudget) || 0,
       stages: {
-        'pre-production': parseFloat(preProductionBudget) || undefined,
-        'production': parseFloat(productionBudget) || undefined,
-        'post-production': parseFloat(postProductionBudget) || undefined,
+        'pre-production': parseFloat(preProductionBudget) || 0,
+        'production': parseFloat(productionBudget) || 0,
+        'post-production': parseFloat(postProductionBudget) || 0,
       }
     } : undefined;
     

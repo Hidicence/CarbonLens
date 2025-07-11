@@ -51,6 +51,7 @@ export interface EmissionRecord {
   equipment?: string
   location?: string
   createdAt: string
+  updatedAt?: string
 }
 
 export interface ProjectEmissionSummary {

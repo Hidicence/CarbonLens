@@ -1,4 +1,4 @@
-import { EmissionRecord, Project, ProductionStage, ProjectStatus } from '@/types/project';
+import { ProjectEmissionRecord, Project, ProductionStage, ProjectStatus } from '@/types/project';
 import { EmissionCategory } from '@/types/database';
 import { TransportCalculationParams, TransportEquipment, SelectedEquipmentItem } from '@/types/equipment';
 import Colors from '@/constants/colors';
@@ -20,7 +20,7 @@ export const formatCurrency = (amount: number): string => {
 };
 
 // Group emission records by category
-export const groupByCategory = (records: EmissionRecord[], categories: EmissionCategory[]): any[] => {
+export const groupByCategory = (records: ProjectEmissionRecord[], categories: EmissionCategory[]): any[] => {
   const categoryMap = new Map();
   
   // Initialize with all categories
@@ -50,7 +50,7 @@ export const groupByCategory = (records: EmissionRecord[], categories: EmissionC
 };
 
 // Group emission records by project
-export const groupByProject = (records: EmissionRecord[], projects: Project[]): any[] => {
+export const groupByProject = (records: ProjectEmissionRecord[], projects: Project[]): any[] => {
   const projectMap = new Map();
   
   // Initialize with all projects
@@ -80,7 +80,7 @@ export const groupByProject = (records: EmissionRecord[], projects: Project[]): 
 };
 
 // Group emission records by month
-export const groupByMonth = (records: EmissionRecord[]): any[] => {
+export const groupByMonth = (records: ProjectEmissionRecord[]): any[] => {
   const monthMap = new Map();
   
   // Sum up emissions by month
@@ -109,7 +109,7 @@ export const groupByMonth = (records: EmissionRecord[]): any[] => {
 };
 
 // Group emission records by stage
-export const groupByStage = (records: EmissionRecord[]): any[] => {
+export const groupByStage = (records: ProjectEmissionRecord[]): any[] => {
   const stageMap = new Map();
   const totalEmissions = records.reduce((sum, record) => sum + (record.amount || 0), 0);
   
@@ -141,7 +141,7 @@ export const groupByStage = (records: EmissionRecord[]): any[] => {
 };
 
 // Get most recent record date
-export const getMostRecentDate = (records: EmissionRecord[]): string => {
+export const getMostRecentDate = (records: ProjectEmissionRecord[]): string => {
   if (records.length === 0) {
     return '';
   }

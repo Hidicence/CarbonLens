@@ -88,7 +88,7 @@ export class GoogleSignInService {
     try {
       const currentUser = await GoogleSignin.getCurrentUser();
       if (currentUser) {
-        console.log('👤 當前 Google 用戶:', currentUser.data?.user?.email);
+        console.log('👤 當前 Google 用戶:', currentUser.user?.email || '未知');
       } else {
         console.log('❌ 沒有當前 Google 用戶');
       }

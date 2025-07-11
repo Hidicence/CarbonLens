@@ -6,7 +6,6 @@ import { withFirebaseErrorHandling } from '@/utils/errorHandling';
 import { 
   ProjectEmissionRecord, 
   NonProjectEmissionRecord, 
-  EmissionRecord,
   ShootingDayEmission,
   ShootingDayStats,
   CrewStats,
@@ -19,7 +18,6 @@ interface EmissionState {
   // 排放記錄數據
   projectEmissionRecords: ProjectEmissionRecord[];
   nonProjectEmissionRecords: NonProjectEmissionRecord[];
-  emissionRecords: Record<string, EmissionRecord[]>; // Legacy support
   shootingDayRecords: Record<string, ShootingDayEmission[]>;
   
   // 專案排放記錄管理
@@ -42,14 +40,6 @@ interface EmissionState {
   getShootingDayStats: (projectId: string) => ShootingDayStats[];
   getCrewStats: (projectId: string) => CrewStats[];
   
-  // Legacy支援 (EmissionRecord)
-  addEmissionRecord: (record: Omit<EmissionRecord, 'id' | 'createdAt' | 'updatedAt'>) => void;
-  updateEmissionRecord: (id: string, updates: Partial<EmissionRecord>) => void;
-  deleteEmissionRecord: (id: string) => void;
-  addNonProjectRecord: (record: Omit<NonProjectEmissionRecord, 'id' | 'createdAt' | 'updatedAt'>) => void;
-  updateNonProjectRecord: (id: string, updates: Partial<NonProjectEmissionRecord>) => void;
-  deleteNonProjectRecord: (id: string) => void;
-  
   // 查詢和統計方法
   getEmissionsByProjectAndStage: (projectId: string, stage: ProductionStage) => ProjectEmissionRecord[];
   getEmissionsByDateRange: (startDate: string, endDate: string) => (ProjectEmissionRecord | NonProjectEmissionRecord)[];
@@ -67,7 +57,6 @@ export const useEmissionStore = create<EmissionState>()(
       // 初始狀態
       projectEmissionRecords: [],
       nonProjectEmissionRecords: [],
-      emissionRecords: {},
       shootingDayRecords: {},
       
       // 新增專案排放記錄
@@ -359,61 +348,6 @@ export const useEmissionStore = create<EmissionState>()(
         }));
       },
       
-      // Legacy支援方法
-      addEmissionRecord: (record) => {
-        const id = generateId();
-        const newRecord: EmissionRecord = {
-          ...record,
-          id,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        };
-        
-        set((state) => ({
-          emissionRecords: {
-            ...state.emissionRecords,
-            [record.projectId]: [
-              ...(state.emissionRecords[record.projectId] || []),
-              newRecord
-            ]
-          }
-        }));
-      },
-      
-      updateEmissionRecord: (id, updates) => {
-        set((state) => {
-          const newRecords = { ...state.emissionRecords };
-          Object.keys(newRecords).forEach(projectId => {
-            newRecords[projectId] = newRecords[projectId].map(record =>
-              record.id === id ? { ...record, ...updates, updatedAt: new Date().toISOString() } : record
-            );
-          });
-          return { emissionRecords: newRecords };
-        });
-      },
-      
-      deleteEmissionRecord: (id) => {
-        set((state) => {
-          const newRecords = { ...state.emissionRecords };
-          Object.keys(newRecords).forEach(projectId => {
-            newRecords[projectId] = newRecords[projectId].filter(record => record.id !== id);
-          });
-          return { emissionRecords: newRecords };
-        });
-      },
-      
-      addNonProjectRecord: (record) => {
-        get().addNonProjectEmissionRecord(record);
-      },
-      
-      updateNonProjectRecord: (id, updates) => {
-        get().updateNonProjectEmissionRecord(id, updates);
-      },
-      
-      deleteNonProjectRecord: (id) => {
-        get().deleteNonProjectEmissionRecord(id);
-      },
-      
       // 查詢和統計方法
       getEmissionsByProjectAndStage: (projectId, stage) => {
         return get().projectEmissionRecords.filter(
@@ -489,7 +423,6 @@ export const useEmissionStore = create<EmissionState>()(
         set({
           projectEmissionRecords: [],
           nonProjectEmissionRecords: [],
-          emissionRecords: {},
           shootingDayRecords: {},
         });
       },
@@ -500,7 +433,6 @@ export const useEmissionStore = create<EmissionState>()(
       partialize: (state) => ({
         projectEmissionRecords: state.projectEmissionRecords,
         nonProjectEmissionRecords: state.nonProjectEmissionRecords,
-        emissionRecords: state.emissionRecords,
         shootingDayRecords: state.shootingDayRecords,
       }),
     }

@@ -291,7 +291,7 @@ export const useProjectStore = create<ProjectState>()(
         if (cached) return cached;
         
         const result = [...get().projects]
-          .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+          .sort((a, b) => new Date(b.updatedAt || b.createdAt).getTime() - new Date(a.updatedAt || a.createdAt).getTime())
           .slice(0, limit);
         
         projectSelectorCache.set(cacheKey, result);

@@ -1,11 +1,11 @@
 import * as FileSystem from 'expo-file-system';
 import { Platform } from 'react-native';
-import { Project, EmissionRecord } from '@/types/project';
+import { Project, ProjectEmissionRecord } from '@/types/project';
 import { formatEmissions, getStageLabel, getStageColor } from '@/utils/helpers';
 
 interface ReportData {
   project: Project;
-  records: EmissionRecord[];
+  records: ProjectEmissionRecord[];
   categories: any[];
   options: {
     includeProjectInfo: boolean;
@@ -258,7 +258,7 @@ const generateReportHTML = (data: ReportData): string => {
       </div>
       <div class="info-row">
         <div class="info-label">${language('projects.start.date')}:</div>
-        <div class="info-value">${formatDate(project.startDate)}</div>
+        <div class="info-value">${project.startDate ? formatDate(project.startDate) : language('common.notSet')}</div>
       </div>
       ${project.endDate ? `
         <div class="info-row">
@@ -349,7 +349,7 @@ const generateReportHTML = (data: ReportData): string => {
         <div class="record-item">
           <div class="record-title">${record.description}</div>
           <div class="record-detail">${language('emissions.amount')}: ${formatEmissions(record.amount)}</div>
-          <div class="record-detail">${language('emissions.category')}: ${categoryData.find(c => c.id === record.categoryId)?.name || record.category}</div>
+          <div class="record-detail">${language('emissions.category')}: ${categoryData.find(c => c.id === record.categoryId)?.name || 'Unknown'}</div>
           <div class="record-detail">${language('stage.' + record.stage)}</div>
           <div class="record-detail">${language('emissions.date')}: ${formatDate(record.date)}</div>
           ${record.location ? `<div class="record-detail">${language('emissions.location')}: ${record.location}</div>` : ''}

@@ -63,12 +63,14 @@ const mapFirebaseUserToUser = (firebaseUser: FirebaseUser): User => {
     provider = 'twitter';
   }
   
-  const user = {
+  const user: User = {
     id: firebaseUser.uid,
     name: firebaseUser.displayName || '用戶',
     email: firebaseUser.email || '',
-    avatar: firebaseUser.photoURL,
+    avatar: firebaseUser.photoURL || undefined,
+    status: 'active' as const,
     role: 'user' as const,
+    emailVerified: firebaseUser.emailVerified,
     createdAt: firebaseUser.metadata?.creationTime || new Date().toISOString(),
     provider
   };
@@ -456,8 +458,10 @@ export const useAuthStore = create<AuthState>()(
               id: firebaseUser.uid,
               name: name,
               email: email,
-              avatar: null,
+              avatar: undefined,
+              status: 'active',
               role: 'user',
+              emailVerified: firebaseUser.emailVerified,
               createdAt: new Date().toISOString(),
               provider: 'email'
             },

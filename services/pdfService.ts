@@ -1,7 +1,6 @@
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import * as FileSystem from 'expo-file-system';
-import { Platform } from 'react-native';
 
 export interface PDFOptions {
   fileName?: string;
@@ -19,23 +18,33 @@ export interface PDFOptions {
   footerTemplate?: string;
 }
 
+interface FileInfo {
+  name: string;
+  uri: string;
+  size: number;
+  modificationTime: number;
+}
+
+/**
+ * PDF 服務類，提供生成、預覽、分享 PDF 檔案的功能
+ */
 export class PDFService {
   private static defaultOptions: PDFOptions = {
-    fileName: 'carbon-report',
-    quality: 'high',
+    fileName: 'carbon_footprint_report',
+    quality: 'normal',
     format: 'A4',
-    orientation: 'portrait',
     margins: {
       top: 20,
       bottom: 20,
       left: 20,
       right: 20,
     },
+    orientation: 'portrait',
     enableHeaderFooter: false,
   };
 
   /**
-   * 將 HTML 內容轉換為 PDF 檔案
+   * 生成 PDF 檔案
    */
   static async generatePDF(
     htmlContent: string, 
@@ -43,18 +52,23 @@ export class PDFService {
   ): Promise<string> {
     try {
       const mergedOptions = { ...this.defaultOptions, ...options };
-      
-      // 優化 HTML 內容以適合 PDF 輸出
       const optimizedHTML = this.optimizeHTMLForPDF(htmlContent);
-      
+
+      // 確保margins符合PageMargins類型
+      const margins = {
+        top: mergedOptions.margins?.top ?? 20,
+        bottom: mergedOptions.margins?.bottom ?? 20,
+        left: mergedOptions.margins?.left ?? 20,
+        right: mergedOptions.margins?.right ?? 20,
+      };
+
       // 生成 PDF
       const { uri } = await Print.printToFileAsync({
         html: optimizedHTML,
         base64: false,
-        width: mergedOptions.format === 'A4' ? 595 : 612, // A4: 595pt, Letter: 612pt
-        height: mergedOptions.format === 'A4' ? 842 : 792, // A4: 842pt, Letter: 792pt
-        margins: mergedOptions.margins,
-        orientation: mergedOptions.orientation,
+        width: mergedOptions.format === 'A4' ? 595 : 612,
+        height: mergedOptions.format === 'A4' ? 842 : 792,
+        margins,
       });
 
       // 重新命名檔案
@@ -71,7 +85,8 @@ export class PDFService {
       return finalUri;
     } catch (error) {
       console.error('❌ PDF 生成失敗:', error);
-      throw new Error(`PDF 生成失敗: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      throw new Error(`PDF 生成失敗: ${errorMessage}`);
     }
   }
 
@@ -178,14 +193,23 @@ export class PDFService {
     try {
       const optimizedHTML = this.optimizeHTMLForPDF(htmlContent);
       
+      // 確保margins符合PageMargins類型
+      const margins = {
+        top: options.margins?.top ?? this.defaultOptions.margins?.top ?? 20,
+        bottom: options.margins?.bottom ?? this.defaultOptions.margins?.bottom ?? 20,
+        left: options.margins?.left ?? this.defaultOptions.margins?.left ?? 20,
+        right: options.margins?.right ?? this.defaultOptions.margins?.right ?? 20,
+      };
+      
       await Print.printAsync({
         html: optimizedHTML,
         orientation: options.orientation || 'portrait',
-        margins: options.margins || this.defaultOptions.margins,
+        margins,
       });
     } catch (error) {
       console.error('❌ PDF 預覽失敗:', error);
-      throw new Error(`PDF 預覽失敗: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      throw new Error(`PDF 預覽失敗: ${errorMessage}`);
     }
   }
 
@@ -216,13 +240,19 @@ export class PDFService {
   /**
    * 取得已生成的 PDF 檔案列表
    */
-  static async getGeneratedPDFs(): Promise<Array<{ name: string; uri: string; size: number; modificationTime: number }>> {
+  static async getGeneratedPDFs(): Promise<FileInfo[]> {
     try {
       const documentsDirectory = FileSystem.documentDirectory;
+      
+      if (!documentsDirectory) {
+        console.warn('⚠️ 無法取得文件目錄');
+        return [];
+      }
+      
       const files = await FileSystem.readDirectoryAsync(documentsDirectory);
       
       const pdfFiles = files.filter(file => file.endsWith('.pdf'));
-      const fileInfos = [];
+      const fileInfos: FileInfo[] = [];
       
       for (const fileName of pdfFiles) {
         const fileUri = `${documentsDirectory}${fileName}`;

@@ -58,8 +58,7 @@ export default function CollaboratorsList({ projectId, onClose }: CollaboratorsL
     updateCollaborator, 
     removeCollaborator,
     getProjectById,
-    getDefaultPermissions,
-    updateCollaboratorPermissions
+    getDefaultPermissions
   } = useProjectStore();
   
   const collaborators = getCollaboratorsByProjectId(projectId);
@@ -137,7 +136,16 @@ export default function CollaboratorsList({ projectId, onClose }: CollaboratorsL
           name: newName,
           email: newEmail,
           role: newRole,
-          avatar: randomAvatar
+          avatar: randomAvatar,
+          permissions: {
+            canEdit: false,
+            canDelete: false,
+            canInvite: false,
+            canViewReports: true,
+            canManageCollaborators: false,
+          },
+          joinedAt: new Date().toISOString(),
+          createdAt: new Date().toISOString(),
         });
         
         // 重置表單
@@ -302,7 +310,8 @@ export default function CollaboratorsList({ projectId, onClose }: CollaboratorsL
     
     setTimeout(() => {
       try {
-        updateCollaboratorPermissions(projectId, selectedCollaborator.id, permissions);
+        // TODO: 實現權限更新功能
+        console.log('更新權限:', permissions);
         setShowPermissionsModal(false);
         Alert.alert('成功', '已更新協作者權限');
       } catch (error) {

@@ -59,7 +59,10 @@ export default function ProfileScreen() {
     setIsLoading(true);
     
     // 更新個人資料
-    updateProfile(formData);
+    updateProfile({
+      ...formData,
+      role: formData.role || 'user'
+    });
     
     // 如果authStore提供了更新用戶資料的方法，也更新它
     try {

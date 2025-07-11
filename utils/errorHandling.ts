@@ -1,4 +1,5 @@
 import { logError, logNetworkError, logAuthError, logFirebaseError, useErrorStore } from '@/store/errorStore';
+import { Platform } from 'react-native';
 
 // 重試配置
 interface RetryConfig {
@@ -280,8 +281,8 @@ export function getFriendlyErrorMessage(error: any): { title: string; message: s
  * 全域未處理錯誤監聽器
  */
 export function setupGlobalErrorHandlers(): void {
-  // 處理未捕獲的Promise拒絕
-  if (typeof window !== 'undefined') {
+  // 只在 Web 環境中處理 window 事件
+  if (Platform.OS === 'web' && typeof window !== 'undefined' && window.addEventListener) {
     window.addEventListener('unhandledrejection', (event) => {
       console.error('Unhandled promise rejection:', event.reason);
       logError(event.reason || new Error('Unhandled promise rejection'));
@@ -334,9 +335,12 @@ export function getErrorRecoveryActions(error: any): Array<{ label: string; acti
     actions.push({
       label: '重新登入',
       action: () => {
-        // 導航到登入頁面
-        if (typeof window !== 'undefined') {
+        // 只在 Web 環境中使用 window.location
+        if (Platform.OS === 'web' && typeof window !== 'undefined') {
           window.location.href = '/login';
+        } else {
+          // 在 React Native 中，錯誤恢復動作需要通過上下文傳遞 router
+          console.log('需要導航到登入頁面');
         }
       }
     });
@@ -346,8 +350,11 @@ export function getErrorRecoveryActions(error: any): Array<{ label: string; acti
   actions.push({
     label: '回到首頁',
     action: () => {
-      if (typeof window !== 'undefined') {
+      if (Platform.OS === 'web' && typeof window !== 'undefined') {
         window.location.href = '/';
+      } else {
+        // 在 React Native 中，錯誤恢復動作需要通過上下文傳遞 router
+        console.log('需要導航到首頁');
       }
     }
   });

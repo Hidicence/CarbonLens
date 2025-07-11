@@ -121,13 +121,13 @@ export default function NewProjectScreen() {
     // Prepare carbon budget data if enabled
     const carbonBudget = enableCarbonBudget ? {
       total: parseFloat(totalCarbonBudget) || 0,
-      preProduction: parseFloat(preProductionBudget) || undefined,
-      production: parseFloat(productionBudget) || undefined,
-      postProduction: parseFloat(postProductionBudget) || undefined,
+      preProduction: parseFloat(preProductionBudget) || 0,
+      production: parseFloat(productionBudget) || 0,
+      postProduction: parseFloat(postProductionBudget) || 0,
       stages: {
-        'pre-production': parseFloat(preProductionBudget) || undefined,
-        'production': parseFloat(productionBudget) || undefined,
-        'post-production': parseFloat(postProductionBudget) || undefined,
+        'pre-production': parseFloat(preProductionBudget) || 0,
+        'production': parseFloat(productionBudget) || 0,
+        'post-production': parseFloat(postProductionBudget) || 0,
       }
     } : undefined;
     

@@ -289,8 +289,8 @@ const Projects: React.FC = () => {
   const cleanupDuplicateProjects = async () => {
     try {
       const projectsData = await firebaseService.getProjects();
-      const seenIds = new Set();
-      const duplicates = [];
+      const seenIds = new Set<string>();
+      const duplicates: Project[] = [];
       
       for (const project of projectsData) {
         if (seenIds.has(project.id)) {

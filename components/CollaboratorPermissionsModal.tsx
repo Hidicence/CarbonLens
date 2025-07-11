@@ -80,7 +80,7 @@ export default function CollaboratorPermissionsModal({
         return '編輯專案資訊';
       case 'deleteProject':
         return '刪除專案';
-      case 'manageCollaborators':
+      case 'canManageCollaborators':
         return '管理協作者';
       case 'manageBudget':
         return '管理預算';
@@ -110,7 +110,7 @@ export default function CollaboratorPermissionsModal({
         return '可以編輯專案名稱、描述、時間等資訊';
       case 'deleteProject':
         return '可以永久刪除整個專案及其所有數據';
-      case 'manageCollaborators':
+      case 'canManageCollaborators':
         return '可以添加、編輯和移除協作者';
       case 'manageBudget':
         return '可以設置和修改專案預算和碳排放預算';
@@ -133,9 +133,8 @@ export default function CollaboratorPermissionsModal({
   
   // 將所有權限分組
   const permissionGroups = {
-    project: ['viewProject', 'editProject', 'deleteProject', 'manageCollaborators', 'manageBudget'],
-    records: ['viewRecords', 'addRecords', 'editRecords', 'deleteRecords'],
-    data: ['exportData', 'generateReports']
+    project: ['canEdit', 'canDelete', 'canManageCollaborators', 'canInvite'],
+    data: ['canViewReports']
   };
   
   // 處理保存

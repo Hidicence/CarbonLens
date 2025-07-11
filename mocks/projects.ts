@@ -10,6 +10,7 @@ export const OPERATIONAL_CATEGORIES: EmissionCategory[] = [
     color: '#EF4444',
     isOperational: true,
     scope: 1,
+    createdAt: new Date().toISOString(),
   },
   {
     id: 'scope1-stationary-combustion',
@@ -18,6 +19,7 @@ export const OPERATIONAL_CATEGORIES: EmissionCategory[] = [
     color: '#F97316',
     isOperational: true,
     scope: 1,
+    createdAt: new Date().toISOString(),
   },
   {
     id: 'scope1-refrigerant',
@@ -26,6 +28,7 @@ export const OPERATIONAL_CATEGORIES: EmissionCategory[] = [
     color: '#3B82F6',
     isOperational: true,
     scope: 1,
+    createdAt: new Date().toISOString(),
   },
   {
     id: 'scope1-fire-extinguisher',
@@ -34,6 +37,7 @@ export const OPERATIONAL_CATEGORIES: EmissionCategory[] = [
     color: '#DC2626',
     isOperational: true,
     scope: 1,
+    createdAt: new Date().toISOString(),
   },
   
   // Scope 2 - 間接能源排放
@@ -44,6 +48,7 @@ export const OPERATIONAL_CATEGORIES: EmissionCategory[] = [
     color: '#F59E0B',
     isOperational: true,
     scope: 2,
+    createdAt: new Date().toISOString(),
   },
   
   // Scope 3 - 其他間接排放
@@ -54,6 +59,7 @@ export const OPERATIONAL_CATEGORIES: EmissionCategory[] = [
     color: '#10B981',
     isOperational: true,
     scope: 3,
+    createdAt: new Date().toISOString(),
     },
     {
     id: 'scope3-paper',
@@ -62,6 +68,7 @@ export const OPERATIONAL_CATEGORIES: EmissionCategory[] = [
     color: '#8B5CF6',
     isOperational: true,
     scope: 3,
+    createdAt: new Date().toISOString(),
     },
     {
     id: 'scope3-waste',
@@ -70,6 +77,7 @@ export const OPERATIONAL_CATEGORIES: EmissionCategory[] = [
     color: '#06B6D4',
     isOperational: true,
     scope: 3,
+    createdAt: new Date().toISOString(),
     },
     {
     id: 'scope3-food-waste',
@@ -78,6 +86,7 @@ export const OPERATIONAL_CATEGORIES: EmissionCategory[] = [
     color: '#84CC16',
     isOperational: true,
     scope: 3,
+    createdAt: new Date().toISOString(),
   },
 ];
 
@@ -89,6 +98,7 @@ export const PROJECT_CATEGORIES: EmissionCategory[] = [
     icon: 'truck',
     color: '#F87171',
     stage: 'pre-production',
+    createdAt: new Date().toISOString(),
     },
     {
     id: 'equipment-pre',
@@ -96,6 +106,7 @@ export const PROJECT_CATEGORIES: EmissionCategory[] = [
     icon: 'camera',
     color: '#60A5FA',
     stage: 'pre-production',
+    createdAt: new Date().toISOString(),
     },
     {
     id: 'accommodation-pre',
@@ -103,6 +114,7 @@ export const PROJECT_CATEGORIES: EmissionCategory[] = [
     icon: 'home',
     color: '#34D399',
     stage: 'pre-production',
+    createdAt: new Date().toISOString(),
     },
     {
     id: 'transport-prod',
@@ -110,6 +122,7 @@ export const PROJECT_CATEGORIES: EmissionCategory[] = [
     icon: 'truck',
     color: '#F87171',
     stage: 'production',
+    createdAt: new Date().toISOString(),
   },
   {
     id: 'energy-prod',
@@ -117,6 +130,7 @@ export const PROJECT_CATEGORIES: EmissionCategory[] = [
     icon: 'zap',
     color: '#FBBF24',
     stage: 'production',
+    createdAt: new Date().toISOString(),
   },
   {
     id: 'catering-prod',
@@ -124,6 +138,7 @@ export const PROJECT_CATEGORIES: EmissionCategory[] = [
     icon: 'utensils',
     color: '#A78BFA',
     stage: 'production',
+    createdAt: new Date().toISOString(),
   },
   {
     id: 'waste-prod',
@@ -131,6 +146,7 @@ export const PROJECT_CATEGORIES: EmissionCategory[] = [
     icon: 'trash-2',
     color: '#FB7185',
     stage: 'production',
+    createdAt: new Date().toISOString(),
   },
   {
     id: 'editing-post',
@@ -138,6 +154,7 @@ export const PROJECT_CATEGORIES: EmissionCategory[] = [
     icon: 'edit',
     color: '#10B981',
     stage: 'post-production',
+    createdAt: new Date().toISOString(),
   },
   {
     id: 'distribution-post',
@@ -145,6 +162,7 @@ export const PROJECT_CATEGORIES: EmissionCategory[] = [
     icon: 'package',
     color: '#8B5CF6',
     stage: 'post-production',
+    createdAt: new Date().toISOString(),
   },
 ];
 
@@ -172,6 +190,7 @@ export const OPERATIONAL_SOURCES: EmissionSource[] = [
     emissionFactor: 2.31, // 公斤CO2e/公升汽油
     isOperational: true,
     description: '公司自有車輛汽油消耗',
+    createdAt: new Date().toISOString(),
   },
   {
     id: 'company-car-diesel',
@@ -181,6 +200,7 @@ export const OPERATIONAL_SOURCES: EmissionSource[] = [
     emissionFactor: 2.68, // 公斤CO2e/公升柴油
     isOperational: true,
     description: '公司自有車輛柴油消耗',
+    createdAt: new Date().toISOString(),
   },
   
   // Scope 1 - 固定燃燒源：天然氣、瓦斯桶等
@@ -192,246 +212,349 @@ export const OPERATIONAL_SOURCES: EmissionSource[] = [
     emissionFactor: 1.96, // 公斤CO2e/立方公尺天然氣
     isOperational: true,
     description: '辦公室管線天然氣燃燒',
+    createdAt: new Date().toISOString(),
   },
   {
     id: 'lpg-tank',
     name: '液化石油氣（瓦斯桶）',
     categoryId: 'scope1-stationary-combustion',
     unit: '公斤',
-    emissionFactor: 3.0, // 公斤CO2e/公斤LPG
+    emissionFactor: 2.94, // 公斤CO2e/公斤LPG
     isOperational: true,
     description: '瓦斯桶燃燒排放',
+    createdAt: new Date().toISOString(),
   },
   {
     id: 'heating-oil',
-    name: '燃料油（暖氣用）',
+    name: '燃料油',
     categoryId: 'scope1-stationary-combustion',
     unit: '公升',
     emissionFactor: 2.52, // 公斤CO2e/公升燃料油
     isOperational: true,
     description: '燃料油燃燒排放',
+    createdAt: new Date().toISOString(),
   },
   {
     id: 'biomass-wood',
     name: '木材燃燒',
     categoryId: 'scope1-stationary-combustion',
     unit: '公斤',
-    emissionFactor: 0, // 生質燃料CO2排放不計入Scope 1
+    emissionFactor: 0.39, // 公斤CO2e/公斤木材（生質燃料）
     isOperational: true,
     description: '木材燃燒（CO2排放需另計生質燃料）',
+    createdAt: new Date().toISOString(),
   },
   
-  // Scope 1 - 冷氣冷媒逸散
+  // Scope 1 - 冷媒逸散
   {
     id: 'refrigerant-r410a',
-    name: '冷媒逸散 - R-410A',
+    name: 'R-410A冷媒',
     categoryId: 'scope1-refrigerant',
     unit: '公斤',
-    emissionFactor: 2088, // 公斤CO2e/公斤冷媒 (R-410A的GWP值)
+    emissionFactor: 2088, // 公斤CO2e/公斤R-410A
     isOperational: true,
     description: 'R-410A冷媒洩漏排放',
+    createdAt: new Date().toISOString(),
   },
   {
     id: 'refrigerant-r134a',
-    name: '冷媒逸散 - R-134a',
+    name: 'R-134a冷媒',
     categoryId: 'scope1-refrigerant',
     unit: '公斤',
-    emissionFactor: 1430, // 公斤CO2e/公斤冷媒 (R-134a的GWP值)
+    emissionFactor: 1430, // 公斤CO2e/公斤R-134a
     isOperational: true,
     description: 'R-134a冷媒洩漏排放',
+    createdAt: new Date().toISOString(),
   },
   
   // Scope 1 - 滅火器逸散
   {
     id: 'fire-extinguisher-co2',
-    name: '滅火器逸散 - CO2滅火器',
+    name: 'CO2滅火器',
     categoryId: 'scope1-fire-extinguisher',
     unit: '公斤',
     emissionFactor: 1, // 公斤CO2e/公斤CO2
     isOperational: true,
     description: 'CO2滅火器洩漏排放',
+    createdAt: new Date().toISOString(),
   },
   
-  // Scope 2 - 間接能源排放：辦公室電費
+  // Scope 2 - 間接能源：電力
   {
     id: 'office-electricity-full',
-    name: '辦公室用電 - 全租',
+    name: '辦公室用電（全租）',
     categoryId: 'scope2-electricity',
     unit: '度',
-    emissionFactor: 0.502, // 公斤CO2e/度 (台灣電力排放係數)
+    emissionFactor: 0.502, // 公斤CO2e/度電（台灣電網排放係數2022年）
     isOperational: true,
     description: '辦公室電力消耗（全租）',
+    createdAt: new Date().toISOString(),
   },
   {
     id: 'office-electricity-shared',
-    name: '辦公室用電 - 分租',
+    name: '辦公室用電（分租）',
     categoryId: 'scope2-electricity',
-    unit: '度',
-    emissionFactor: 0.502, // 公斤CO2e/度 (需要乘以佔比)
+    unit: '坪',
+    emissionFactor: 20.08, // 公斤CO2e/坪·月（假設辦公室每坪每月用電40度）
     isOperational: true,
     description: '辦公室電力消耗（分租）',
+    createdAt: new Date().toISOString(),
   },
   
-  // Scope 3 - 其他間接排放
+  // Scope 3 - 其他間接排放：員工通勤
   {
     id: 'employee-commuting-car',
     name: '員工通勤 - 汽車',
     categoryId: 'scope3-commuting',
-    unit: '公里',
-    emissionFactor: 0.192, // 公斤CO2e/公里
+    unit: '人·公里',
+    emissionFactor: 0.14, // 公斤CO2e/人·公里
     isOperational: true,
     description: '員工汽車通勤',
+    createdAt: new Date().toISOString(),
   },
   {
     id: 'employee-commuting-public',
     name: '員工通勤 - 大眾運輸',
     categoryId: 'scope3-commuting',
-    unit: '公里',
-    emissionFactor: 0.089, // 公斤CO2e/公里
+    unit: '人·公里',
+    emissionFactor: 0.05, // 公斤CO2e/人·公里
     isOperational: true,
     description: '員工大眾運輸通勤',
+    createdAt: new Date().toISOString(),
   },
   {
     id: 'employee-commuting-motorcycle',
     name: '員工通勤 - 機車',
     categoryId: 'scope3-commuting',
-    unit: '公里',
-    emissionFactor: 0.067, // 公斤CO2e/公里
+    unit: '人·公里',
+    emissionFactor: 0.09, // 公斤CO2e/人·公里
     isOperational: true,
     description: '員工機車通勤',
+    createdAt: new Date().toISOString(),
   },
   {
     id: 'office-paper-a4',
     name: 'A4影印紙',
     categoryId: 'scope3-paper',
-    unit: '張',
-    emissionFactor: 0.0048, // 公斤CO2e/張
+    unit: '包',
+    emissionFactor: 12.5, // 公斤CO2e/包（500張）
     isOperational: true,
     description: 'A4影印紙使用',
+    createdAt: new Date().toISOString(),
   },
   {
     id: 'office-paper-a3',
     name: 'A3影印紙',
     categoryId: 'scope3-paper',
-    unit: '張',
-    emissionFactor: 0.0096, // 公斤CO2e/張 (約A4的2倍)
+    unit: '包',
+    emissionFactor: 25, // 公斤CO2e/包（500張）
     isOperational: true,
     description: 'A3影印紙使用',
+    createdAt: new Date().toISOString(),
   },
   {
     id: 'office-waste-general',
     name: '一般垃圾',
     categoryId: 'scope3-waste',
     unit: '公斤',
-    emissionFactor: 0.45, // 公斤CO2e/公斤
+    emissionFactor: 0.49, // 公斤CO2e/公斤垃圾
     isOperational: true,
     description: '辦公室一般垃圾處理',
+    createdAt: new Date().toISOString(),
   },
   {
     id: 'office-waste-recycle',
     name: '回收垃圾',
     categoryId: 'scope3-waste',
     unit: '公斤',
-    emissionFactor: 0.12, // 公斤CO2e/公斤
+    emissionFactor: 0.15, // 公斤CO2e/公斤回收垃圾
     isOperational: true,
     description: '辦公室回收垃圾處理',
+    createdAt: new Date().toISOString(),
   },
   {
-    id: 'food-waste-kitchen',
-    name: '廚餘',
+    id: 'office-food-waste',
+    name: '廚餘垃圾',
     categoryId: 'scope3-food-waste',
     unit: '公斤',
-    emissionFactor: 0.18, // 公斤CO2e/公斤
+    emissionFactor: 0.31, // 公斤CO2e/公斤廚餘
     isOperational: true,
     description: '辦公室廚餘處理',
+    createdAt: new Date().toISOString(),
   },
 ];
 
 // 專案排放源
 export const PROJECT_SOURCES: EmissionSource[] = [
-  // 前期製作
+  // 前期製作 - 交通運輸
   {
-    id: 'van-transport',
-    name: '廂型車運輸',
-    stage: 'pre-production',
+    id: 'crew-transport-car',
+    name: '工作人員汽車交通',
     categoryId: 'transport-pre',
     unit: '公里',
-    emissionFactor: 0.251,
-    description: '廂型車運輸排放',
+    emissionFactor: 0.21, // 公斤CO2e/公里
+    description: '工作人員使用汽車往返交通',
+    createdAt: new Date().toISOString(),
   },
+  {
+    id: 'equipment-transport-truck',
+    name: '設備運輸卡車',
+    categoryId: 'transport-pre',
+    unit: '公里',
+    emissionFactor: 0.95, // 公斤CO2e/公里
+    description: '大型設備運輸車輛',
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: 'flight-domestic',
+    name: '國內航班',
+    categoryId: 'transport-pre',
+    unit: '人·公里',
+    emissionFactor: 0.25, // 公斤CO2e/人·公里
+    description: '國內航班交通',
+    createdAt: new Date().toISOString(),
+  },
+  
+  // 前期製作 - 設備器材
   {
     id: 'camera-equipment',
     name: '攝影設備',
-    stage: 'pre-production',
     categoryId: 'equipment-pre',
-    unit: '台',
-    emissionFactor: 2.5,
-    description: '攝影設備使用排放',
+    unit: '天',
+    emissionFactor: 15.2, // 公斤CO2e/天
+    description: '攝影機、鏡頭等攝影設備能耗',
+    createdAt: new Date().toISOString(),
   },
   {
-    id: 'hotel-accommodation',
+    id: 'lighting-equipment',
+    name: '燈光設備',
+    categoryId: 'equipment-pre',
+    unit: 'kWh',
+    emissionFactor: 0.502, // 公斤CO2e/kWh
+    description: 'LED燈、鎢絲燈等燈光設備',
+    createdAt: new Date().toISOString(),
+  },
+  
+  // 前期製作 - 住宿
+  {
+    id: 'hotel-stay',
     name: '飯店住宿',
-    stage: 'pre-production',
     categoryId: 'accommodation-pre',
-    unit: '房夜',
-    emissionFactor: 14.2,
-    description: '飯店住宿排放',
+    unit: '人·夜',
+    emissionFactor: 28.5, // 公斤CO2e/人·夜
+    description: '工作人員飯店住宿',
+    createdAt: new Date().toISOString(),
   },
-  // 製作期
+  
+  // 製作期 - 交通運輸
   {
-    id: 'truck-transport',
-    name: '卡車運輸',
-    stage: 'production',
+    id: 'daily-commute-car',
+    name: '拍攝現場通勤汽車',
+    categoryId: 'transport-prod',
+    unit: '人·公里',
+    emissionFactor: 0.14, // 公斤CO2e/人·公里
+    description: '拍攝期間每日通勤交通',
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: 'location-shuttle',
+    name: '拍攝現場接駁車',
     categoryId: 'transport-prod',
     unit: '公里',
-    emissionFactor: 0.82,
-    description: '卡車運輸排放',
+    emissionFactor: 0.75, // 公斤CO2e/公里
+    description: '拍攝現場接駁巴士',
+    createdAt: new Date().toISOString(),
   },
+  
+  // 製作期 - 能源消耗
   {
     id: 'generator-diesel',
-    name: '發電機柴油',
-    stage: 'production',
+    name: '柴油發電機',
     categoryId: 'energy-prod',
     unit: '公升',
-    emissionFactor: 2.68,
-    description: '發電機柴油排放',
+    emissionFactor: 2.68, // 公斤CO2e/公升柴油
+    description: '外景拍攝柴油發電機',
+    createdAt: new Date().toISOString(),
   },
   {
-    id: 'film-crew-catering',
-    name: '劇組餐飲',
-    stage: 'production',
-    categoryId: 'catering-prod',
-    unit: '人餐',
-    emissionFactor: 3.2,
-    description: '劇組餐飲排放',
+    id: 'location-electricity',
+    name: '拍攝現場用電',
+    categoryId: 'energy-prod',
+    unit: 'kWh',
+    emissionFactor: 0.502, // 公斤CO2e/kWh
+    description: '拍攝現場電力消耗',
+    createdAt: new Date().toISOString(),
   },
+  
+  // 製作期 - 餐飲
+  {
+    id: 'catering-local',
+    name: '當地餐飲',
+    categoryId: 'catering-prod',
+    unit: '人·餐',
+    emissionFactor: 3.2, // 公斤CO2e/人·餐
+    description: '拍攝期間餐飲服務',
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: 'catering-imported',
+    name: '外地餐飲',
+    categoryId: 'catering-prod',
+    unit: '人·餐',
+    emissionFactor: 5.8, // 公斤CO2e/人·餐
+    description: '外地運送餐飲服務',
+    createdAt: new Date().toISOString(),
+  },
+  
+  // 製作期 - 廢棄物
   {
     id: 'production-waste',
-    name: '製作廢料',
-    stage: 'production',
+    name: '拍攝現場垃圾',
     categoryId: 'waste-prod',
     unit: '公斤',
-    emissionFactor: 0.45,
-    description: '製作廢料處理排放',
+    emissionFactor: 0.49, // 公斤CO2e/公斤垃圾
+    description: '拍攝現場一般垃圾處理',
+    createdAt: new Date().toISOString(),
   },
-  // 後期製作
+  
+  // 後期製作 - 編輯
   {
-    id: 'editing-station',
-    name: '剪輯工作站',
-    stage: 'post-production',
+    id: 'editing-workstation',
+    name: '後期編輯工作站',
     categoryId: 'editing-post',
     unit: '小時',
-    emissionFactor: 0.8,
-    description: '剪輯工作站用電排放',
+    emissionFactor: 0.35, // 公斤CO2e/小時
+    description: '高性能後期編輯電腦',
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: 'rendering-farm',
+    name: '渲染農場',
+    categoryId: 'editing-post',
+    unit: '小時',
+    emissionFactor: 12.5, // 公斤CO2e/小時
+    description: '大型渲染運算農場',
+    createdAt: new Date().toISOString(),
+  },
+  
+  // 後期製作 - 發行配送
+  {
+    id: 'digital-distribution',
+    name: '數位發行',
+    categoryId: 'distribution-post',
+    unit: 'GB',
+    emissionFactor: 0.004, // 公斤CO2e/GB
+    description: '線上平台數位發行',
+    createdAt: new Date().toISOString(),
   },
   {
     id: 'dvd-production',
     name: 'DVD製作',
-    stage: 'post-production',
     categoryId: 'distribution-post',
     unit: '片',
-    emissionFactor: 0.15,
+    emissionFactor: 0.15, // 公斤CO2e/片
     description: 'DVD製作排放',
+    createdAt: new Date().toISOString(),
   },
 ];
 
@@ -669,4 +792,5 @@ export const getCategoriesByStage = (stage: ProductionStage) =>
   PROJECT_CATEGORIES.filter(category => category.stage === stage);
 
 export const getOperationalCategories2 = () => 
+  EMISSION_CATEGORIES.filter(category => category.isOperational); 
   EMISSION_CATEGORIES.filter(category => category.isOperational); 

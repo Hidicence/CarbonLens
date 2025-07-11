@@ -274,7 +274,9 @@ const ProjectEmissionFormModal: React.FC<ProjectEmissionFormModalProps> = ({
         amount: Number(formData.amount),
         date: formData.date,
         location: formData.location || undefined,
-        equipment: formData.equipment || undefined
+        equipment: formData.equipment || undefined,
+        createdAt: emission?.createdAt || new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       }
       
       let savedEmission: EmissionRecord

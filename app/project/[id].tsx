@@ -69,9 +69,9 @@ export default function ProjectDetailScreen() {
     projects, 
     projectEmissionRecords, 
     deleteProject, 
-    emissionRecords, 
     shootingDayRecords,
-    calculateProjectEmissions 
+    calculateProjectEmissions,
+    getProjectEmissionRecords
   } = useProjectStore();
   const { isDarkMode } = useThemeStore();
   const { t } = useLanguageStore();
@@ -118,33 +118,12 @@ export default function ProjectDetailScreen() {
   const projectEmissionSummary = id ? calculateProjectEmissions(id) : null;
   const dynamicTotalEmissions = projectEmissionSummary?.totalEmissions || 0;
   
-  // 合併 projectEmissionRecords、emissionRecords 和 shootingDayRecords 中的數據
+  // 合併 projectEmissionRecords 和 shootingDayRecords 中的數據
   const projectRecords = useMemo(() => {
     if (!id) return [];
     
-    const oldRecords = (projectEmissionRecords || []).filter(record => record.projectId === id);
-    const newRecords = emissionRecords[id] || [];
+    const directRecords = getProjectEmissionRecords(id);
     const shootingRecords = shootingDayRecords[id] || [];
-    
-    // 將新的 EmissionRecord 轉換為 ProjectEmissionRecord 格式
-    const convertedNewRecords = newRecords.map(record => ({
-      id: record.id,
-      projectId: record.projectId,
-      stage: record.stage,
-      category: record.category || 'transportation',
-      categoryId: record.categoryId || '',
-      description: record.description,
-      title: record.title || record.description,
-      sourceId: record.sourceId || '',
-      quantity: record.quantity,
-      unit: record.unit,
-      amount: record.amount,
-      date: record.date,
-      location: record.location || '',
-      notes: record.notes || '',
-      createdAt: record.createdAt,
-      updatedAt: record.updatedAt,
-    }));
     
     // 將拍攝日記錄轉換為 ProjectEmissionRecord 格式
     const convertedShootingRecords = shootingRecords.map(record => {
@@ -155,10 +134,8 @@ export default function ProjectDetailScreen() {
         id: record.id,
         projectId: record.projectId,
         stage: 'production' as const,
-        category: 'shooting',
         categoryId: record.category,
         description: `${crewName} - ${record.description}`,
-        title: `${crewName} - ${record.description}`,
         sourceId: record.category,
         quantity: record.quantity || 0,
         unit: record.unit || '',
@@ -171,8 +148,8 @@ export default function ProjectDetailScreen() {
       };
     });
     
-    return [...oldRecords, ...convertedNewRecords, ...convertedShootingRecords];
-  }, [projectEmissionRecords, emissionRecords, shootingDayRecords, id]);
+    return [...directRecords, ...convertedShootingRecords];
+  }, [getProjectEmissionRecords, shootingDayRecords, id]);
   
   // Restore scroll position after any re-renders
   useEffect(() => {

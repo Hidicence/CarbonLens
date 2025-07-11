@@ -163,7 +163,7 @@ export default function Button({
               styles.text,
               getTextStyle(),
               textSizeStyle,
-              icon && { marginLeft: iconPosition === 'left' ? 8 : 0, marginRight: iconPosition === 'right' ? 8 : 0 },
+              icon ? { marginLeft: iconPosition === 'left' ? 8 : 0, marginRight: iconPosition === 'right' ? 8 : 0 } : {},
               textStyle,
             ]}
           >

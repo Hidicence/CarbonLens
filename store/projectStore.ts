@@ -2,20 +2,20 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { firebaseService } from '@/services/firebaseService';
+import { withFirebaseErrorHandling } from '@/utils/errorHandling';
 import { 
   Project, 
   ProjectEmissionRecord, 
-  NonProjectEmissionRecord,
-  AllocationRecord,
-  AllocationRule,
-  AllocationMethod,
-  AllocationParameters,
-  ProjectEmissionSummary,
+  NonProjectEmissionRecord, 
+  AllocationRecord, 
+  AllocationParameters, 
+  AllocationRule, 
+  AllocationMethod, 
+  ProjectEmissionSummary, 
   ProductionStage, 
   Collaborator, 
   CollaboratorRole, 
   CollaboratorPermissions,
-  EmissionRecord,
   ShootingDayEmission,
   ShootingDayStats,
   CrewStats,
@@ -32,7 +32,6 @@ interface ProjectState {
   allocationParameters: AllocationParameters[];
   selectedProjectId: string | null;
   isInitialized: boolean;
-  emissionRecords: Record<string, EmissionRecord[]>;
   shootingDayRecords: Record<string, ShootingDayEmission[]>;
   selectedProject: Project | null;
   allocationRules: AllocationRule[];
@@ -100,18 +99,8 @@ interface ProjectState {
   getShootingDayStats: (projectId: string) => ShootingDayStats[];
   getCrewStats: (projectId: string) => CrewStats[];
 
-  // 新增排放記錄方法
-  addEmissionRecord: (record: Omit<EmissionRecord, 'id' | 'createdAt' | 'updatedAt'>) => void;
-  updateEmissionRecord: (id: string, updates: Partial<EmissionRecord>) => void;
-  deleteEmissionRecord: (id: string) => void;
+  // 計算和分攤方法
   calculateProjectEmissions: (projectId: string) => ProjectEmissionSummary;
-  
-  // 非專案記錄方法
-  addNonProjectRecord: (record: Omit<NonProjectEmissionRecord, 'id' | 'createdAt' | 'updatedAt'>) => void;
-  updateNonProjectRecord: (id: string, updates: Partial<NonProjectEmissionRecord>) => void;
-  deleteNonProjectRecord: (id: string) => void;
-  
-  // 分攤記錄方法
   addAllocationRecord: (record: Omit<AllocationRecord, 'id'>) => void;
   getAllocatedEmissions: (projectId: string) => number;
   getTotalOperationalEmissions: () => number;
@@ -128,7 +117,6 @@ export const useProjectStore = create<ProjectState>()(
       allocationParameters: [],
       selectedProjectId: null,
       isInitialized: false,
-      emissionRecords: {},
       shootingDayRecords: {},
       selectedProject: null,
       allocationRules: [],
@@ -523,9 +511,6 @@ export const useProjectStore = create<ProjectState>()(
             projectEmissionRecords: updatedProjectEmissionRecords,
             allocationRecords: updatedAllocationRecords,
             // 清除相關的排放記錄
-            emissionRecords: Object.fromEntries(
-              Object.entries(state.emissionRecords).filter(([projectId]) => projectId !== id)
-            ),
             shootingDayRecords: Object.fromEntries(
               Object.entries(state.shootingDayRecords).filter(([projectId]) => projectId !== id)
             ),
@@ -1241,7 +1226,6 @@ export const useProjectStore = create<ProjectState>()(
           allocationRecords: [],
           selectedProjectId: null,
           isInitialized: false,
-          emissionRecords: {},
           shootingDayRecords: {},
           selectedProject: null,
           allocationRules: [],
@@ -1425,64 +1409,14 @@ export const useProjectStore = create<ProjectState>()(
         })) as CrewStats[];
       },
 
-      // 新增方法實現
-      addEmissionRecord: (record) => {
-        const id = Date.now().toString();
-        const timestamp = new Date().toISOString();
-        
-        const newRecord: EmissionRecord = {
-          ...record,
-          id,
-          createdAt: timestamp,
-          updatedAt: timestamp,
-        };
-
-        set((state) => ({
-          emissionRecords: {
-            ...state.emissionRecords,
-            [record.projectId]: [
-              ...(state.emissionRecords[record.projectId] || []),
-              newRecord
-            ]
-          }
-        }));
-      },
-      
-      updateEmissionRecord: (id, updates) => {
-        set((state) => {
-          const newEmissionRecords = { ...state.emissionRecords };
-          
-          Object.keys(newEmissionRecords).forEach(projectId => {
-            newEmissionRecords[projectId] = newEmissionRecords[projectId].map(record =>
-              record.id === id ? { ...record, ...updates, updatedAt: new Date().toISOString() } : record
-            );
-          });
-          
-          return { emissionRecords: newEmissionRecords };
-        });
-      },
-      
-      deleteEmissionRecord: (id) => {
-        set((state) => {
-          const newEmissionRecords = { ...state.emissionRecords };
-          
-          Object.keys(newEmissionRecords).forEach(projectId => {
-            newEmissionRecords[projectId] = newEmissionRecords[projectId].filter(record => record.id !== id);
-          });
-          
-          return { emissionRecords: newEmissionRecords };
-        });
-      },
-      
+      // 計算和分攤方法
       calculateProjectEmissions: (projectId) => {
         const state = get();
         const directRecords = state.projectEmissionRecords.filter(r => r.projectId === projectId);
-        const emissionRecords = state.emissionRecords[projectId] || [];
         const shootingDayRecords = state.shootingDayRecords[projectId] || [];
         const allocatedRecords = state.allocationRecords.filter(r => r.projectId === projectId);
         
         const directEmissions = directRecords.reduce((sum, r) => sum + r.amount, 0);
-        const additionalEmissions = emissionRecords.reduce((sum, r) => sum + r.amount, 0);
         const shootingEmissions = shootingDayRecords.reduce((sum, r) => sum + r.amount, 0);
         const allocatedEmissions = allocatedRecords.reduce((sum, r) => sum + r.allocatedAmount, 0);
         
@@ -1503,15 +1437,6 @@ export const useProjectStore = create<ProjectState>()(
           }
         });
         
-        // 分析其他排放記錄的階段分佈
-        emissionRecords.forEach(record => {
-          if (record.stage && stageEmissions.hasOwnProperty(record.stage)) {
-            stageEmissions[record.stage] += record.amount;
-          } else {
-            stageEmissions['production'] += record.amount;
-          }
-        });
-        
         // 拍攝日記錄全部歸類為製作期
         stageEmissions['production'] += shootingEmissions;
         
@@ -1524,10 +1449,10 @@ export const useProjectStore = create<ProjectState>()(
         
         return {
           projectId,
-          directEmissions: directEmissions + additionalEmissions + shootingEmissions,
+          directEmissions: directEmissions + shootingEmissions,
           allocatedEmissions,
-          totalEmissions: directEmissions + additionalEmissions + shootingEmissions + allocatedEmissions,
-          directRecordCount: directRecords.length + emissionRecords.length + shootingDayRecords.length,
+          totalEmissions: directEmissions + shootingEmissions + allocatedEmissions,
+          directRecordCount: directRecords.length,
           allocatedRecordCount: allocatedRecords.length,
           // 新增：生命週期階段分析
           stageEmissions,
@@ -1538,36 +1463,6 @@ export const useProjectStore = create<ProjectState>()(
             total: allocatedEmissions
           }
         };
-      },
-      
-      addNonProjectRecord: (record) => {
-        const id = Date.now().toString();
-        const timestamp = new Date().toISOString();
-        
-        const newRecord: NonProjectEmissionRecord = {
-          ...record,
-          id,
-          createdAt: timestamp,
-          updatedAt: timestamp,
-        };
-
-        set((state) => ({
-          nonProjectEmissionRecords: [...state.nonProjectEmissionRecords, newRecord]
-        }));
-      },
-      
-      updateNonProjectRecord: (id, updates) => {
-        set((state) => ({
-          nonProjectEmissionRecords: state.nonProjectEmissionRecords.map(record =>
-            record.id === id ? { ...record, ...updates, updatedAt: new Date().toISOString() } : record
-          )
-        }));
-      },
-      
-      deleteNonProjectRecord: (id) => {
-        set((state) => ({
-          nonProjectEmissionRecords: state.nonProjectEmissionRecords.filter(record => record.id !== id)
-        }));
       },
       
       addAllocationRecord: (record) => {
@@ -1690,7 +1585,6 @@ export const useProjectStore = create<ProjectState>()(
             allocationParameters: [],
             selectedProjectId: null,
             isInitialized: false,
-            emissionRecords: {},
             shootingDayRecords: {},
             selectedProject: null,
             allocationRules: [],
@@ -1713,7 +1607,6 @@ export const useProjectStore = create<ProjectState>()(
             allocationParameters: [],
             selectedProjectId: null,
             isInitialized: false,
-            emissionRecords: {},
             shootingDayRecords: {},
             selectedProject: null,
             allocationRules: [],

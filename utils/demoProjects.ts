@@ -1,19 +1,18 @@
-import { Project, EmissionRecord } from '@/types/project';
+import { Project, ProjectEmissionRecord, Collaborator } from '@/types/project';
 
 // 生成隨機ID
 const generateId = () => `demo-${Math.random().toString(36).substr(2, 9)}`;
 
-// 示例排放記錄
-const demoEmissionRecords: Record<string, EmissionRecord[]> = {
+// 示例專案排放記錄 (使用新的ProjectEmissionRecord類型)
+const demoProjectEmissionRecords: Record<string, ProjectEmissionRecord[]> = {
   'demo-movie': [
     {
       id: 'demo-record-1',
       projectId: 'demo-movie',
       stage: 'pre-production',
-      category: '運輸',
-      categoryId: 'transport',
-      title: '前期勘景用車',
+      categoryId: 'transport-pre',
       description: '前期場地勘景使用的車輛油耗',
+      sourceId: 'crew-transport-car',
       quantity: 50,
       unit: '公升',
       amount: 115,
@@ -26,10 +25,9 @@ const demoEmissionRecords: Record<string, EmissionRecord[]> = {
       id: 'demo-record-2',
       projectId: 'demo-movie',
       stage: 'production',
-      category: '電力',
-      categoryId: 'electricity',
-      title: '攝影機及照明設備用電',
+      categoryId: 'energy-prod',
       description: '攝影機及照明設備消耗的電量',
+      sourceId: 'location-electricity',
       quantity: 120,
       unit: '度',
       amount: 60,
@@ -41,13 +39,12 @@ const demoEmissionRecords: Record<string, EmissionRecord[]> = {
     {
       id: 'demo-record-3',
       projectId: 'demo-movie',
-      stage: 'production',
-      category: '住宿',
-      categoryId: 'accommodation',
-      title: '劇組員工住宿',
+      stage: 'pre-production',
+      categoryId: 'accommodation-pre',
       description: '劇組人員外地拍攝住宿',
+      sourceId: 'hotel-stay',
       quantity: 10,
-      unit: '晚',
+      unit: '人·夜',
       amount: 150,
       date: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
       notes: '三星級酒店',
@@ -58,12 +55,11 @@ const demoEmissionRecords: Record<string, EmissionRecord[]> = {
       id: 'demo-record-4',
       projectId: 'demo-movie',
       stage: 'production',
-      category: '伙食',
-      categoryId: 'catering',
-      title: '劇組餐飲',
+      categoryId: 'catering-prod',
       description: '劇組日常餐飲',
+      sourceId: 'catering-local',
       quantity: 50,
-      unit: '人次',
+      unit: '人·餐',
       amount: 75,
       date: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
       notes: '使用當地食材，減少運輸排放',
@@ -76,10 +72,9 @@ const demoEmissionRecords: Record<string, EmissionRecord[]> = {
       id: 'demo-record-5',
       projectId: 'demo-tv',
       stage: 'pre-production',
-      category: '前期規劃',
-      categoryId: 'planning',
-      title: '遠程會議',
+      categoryId: 'equipment-pre',
       description: '使用電腦進行遠程會議代替面對面會議',
+      sourceId: 'camera-equipment',
       quantity: 30,
       unit: '度',
       amount: 15,
@@ -112,11 +107,48 @@ export const demoProjects: Project[] = [
     totalEmissions: 400, // 已記錄的總排放量
     thumbnail: 'https://images.unsplash.com/photo-1485846234645-a62644f84728?q=80&w=2059',
     collaborators: [
-      { id: 'demo-user-1', name: '王導演', email: 'director@example.com', role: 'owner', avatar: 'https://randomuser.me/api/portraits/men/32.jpg' },
-      { id: 'demo-user-2', name: '李製片', email: 'producer@example.com', role: 'editor', avatar: 'https://randomuser.me/api/portraits/women/44.jpg' },
+      { 
+        id: 'demo-user-1', 
+        name: '王導演', 
+        email: 'director@example.com', 
+        role: 'owner', 
+        avatar: 'https://randomuser.me/api/portraits/men/32.jpg',
+        permissions: {
+          canEdit: true,
+          canDelete: true,
+          canInvite: true,
+          canViewReports: true,
+          canManageCollaborators: true,
+        },
+        joinedAt: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000).toISOString(),
+        createdAt: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000).toISOString(),
+      },
+      { 
+        id: 'demo-user-2', 
+        name: '李製片', 
+        email: 'producer@example.com', 
+        role: 'editor', 
+        avatar: 'https://randomuser.me/api/portraits/women/44.jpg',
+        permissions: {
+          canEdit: true,
+          canDelete: false,
+          canInvite: false,
+          canViewReports: true,
+          canManageCollaborators: false,
+        },
+        joinedAt: new Date(Date.now() - 40 * 24 * 60 * 60 * 1000).toISOString(),
+        createdAt: new Date(Date.now() - 40 * 24 * 60 * 60 * 1000).toISOString(),
+      },
     ],
     createdAt: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000).toISOString(),
-    updatedAt: new Date().toISOString(),
+    emissionSummary: {
+      projectId: 'demo-movie',
+      directEmissions: 400,
+      allocatedEmissions: 0,
+      totalEmissions: 400,
+      directRecordCount: 4,
+      allocatedRecordCount: 0,
+    }
   },
   {
     id: 'demo-tv',
@@ -136,11 +168,48 @@ export const demoProjects: Project[] = [
     totalEmissions: 15, // 已記錄的總排放量
     thumbnail: 'https://images.unsplash.com/photo-1532190715524-2b0ddafb9d36?q=80&w=2070',
     collaborators: [
-      { id: 'demo-user-2', name: '李製片', email: 'producer@example.com', role: 'owner', avatar: 'https://randomuser.me/api/portraits/women/44.jpg' },
-      { id: 'demo-user-3', name: '張攝影', email: 'camera@example.com', role: 'editor', avatar: 'https://randomuser.me/api/portraits/men/68.jpg' },
+      { 
+        id: 'demo-user-2', 
+        name: '李製片', 
+        email: 'producer@example.com', 
+        role: 'owner', 
+        avatar: 'https://randomuser.me/api/portraits/women/44.jpg',
+        permissions: {
+          canEdit: true,
+          canDelete: true,
+          canInvite: true,
+          canViewReports: true,
+          canManageCollaborators: true,
+        },
+        joinedAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
+        createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
+      },
+      { 
+        id: 'demo-user-3', 
+        name: '張攝影', 
+        email: 'camera@example.com', 
+        role: 'editor', 
+        avatar: 'https://randomuser.me/api/portraits/men/68.jpg',
+        permissions: {
+          canEdit: true,
+          canDelete: false,
+          canInvite: false,
+          canViewReports: true,
+          canManageCollaborators: false,
+        },
+        joinedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+        createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+      },
     ],
     createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
-    updatedAt: new Date().toISOString(),
+    emissionSummary: {
+      projectId: 'demo-tv',
+      directEmissions: 15,
+      allocatedEmissions: 0,
+      totalEmissions: 15,
+      directRecordCount: 1,
+      allocatedRecordCount: 0,
+    }
   }
 ];
 
@@ -151,9 +220,9 @@ export const loadDemoProjects = (projectStore: any, recordStore?: any) => {
     projectStore.addProject(project);
     
     // 如果提供了記錄存儲，添加相關排放記錄
-    if (recordStore && demoEmissionRecords[project.id]) {
-      demoEmissionRecords[project.id].forEach(record => {
-        recordStore.addRecord(project.id, record);
+    if (recordStore && demoProjectEmissionRecords[project.id]) {
+      demoProjectEmissionRecords[project.id].forEach(record => {
+        recordStore.addProjectEmissionRecord(record);
       });
     }
   });
@@ -163,9 +232,9 @@ export const loadDemoProjects = (projectStore: any, recordStore?: any) => {
 export const removeDemoProjects = (projectStore: any, recordStore?: any) => {
   demoProjects.forEach(project => {
     // 如果提供了記錄存儲，移除相關排放記錄
-    if (recordStore && demoEmissionRecords[project.id]) {
-      demoEmissionRecords[project.id].forEach(record => {
-        recordStore.removeRecord(record.id);
+    if (recordStore && demoProjectEmissionRecords[project.id]) {
+      demoProjectEmissionRecords[project.id].forEach(record => {
+        recordStore.deleteProjectEmissionRecord(record.id);
       });
     }
     

@@ -93,7 +93,7 @@ export default function AddRecordScreen() {
     stage?: ProductionStage,
     crew?: string 
   }>();
-  const { addEmissionRecord, projects } = useProjectStore();
+  const { addProjectEmissionRecord, projects } = useProjectStore();
   const { isDarkMode } = useThemeStore();
   const { t } = useLanguageStore();
   const theme = isDarkMode ? Colors.dark : Colors.light;
@@ -810,7 +810,7 @@ export default function AddRecordScreen() {
     
     // 添加記錄
     setTimeout(() => {
-      addEmissionRecord(record);
+      addProjectEmissionRecord(record);
       setIsSaving(false);
       Alert.alert('成功', '碳排放記錄已添加', [
         { text: '確定', onPress: () => router.back() }

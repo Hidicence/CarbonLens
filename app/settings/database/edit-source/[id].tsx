@@ -54,8 +54,8 @@ export default function EditSourceScreen() {
   useEffect(() => {
     if (source) {
       setName(source.name);
-      setCategory(source.category);
-      setStage(source.stage);
+      setCategory(source.categoryId);
+      setStage(source.stage || 'production');
       setEmissionFactor(source.emissionFactor.toString());
       setUnit(source.unit);
       setDescription(source.description || '');
@@ -105,7 +105,7 @@ export default function EditSourceScreen() {
     setTimeout(() => {
       updateEmissionSource(id, {
         name,
-        category,
+        categoryId: category,
         stage,
         emissionFactor: parseFloat(emissionFactor),
         unit,

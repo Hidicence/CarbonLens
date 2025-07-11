@@ -27,29 +27,30 @@ import DatePickerField from '@/components/DatePickerField';
 export default function EditRecordScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { emissionRecords, updateEmissionRecord, deleteEmissionRecord } = useProjectStore();
+  const { getProjectEmissionRecords, updateProjectEmissionRecord, deleteProjectEmissionRecord } = useProjectStore();
   const { isDarkMode } = useThemeStore();
   const theme = isDarkMode ? Colors.dark : Colors.light;
   
   const scrollViewRef = useRef<ScrollView>(null);
   
-  // 從所有項目的排放記錄中查找指定記錄
-  const record = Object.values(emissionRecords)
-    .flat()
-    .find(r => r.id === id);
+  // 從專案排放記錄中查找指定記錄
+  const record = useProjectStore.getState().projectEmissionRecords.find(r => r.id === id);
   
   const [stage, setStage] = useState<ProductionStage>('production');
-  const [categoryId, setCategoryId] = useState('');
-  const [description, setDescription] = useState('');
-  const [sourceId, setSourceId] = useState('');
-  const [quantity, setQuantity] = useState('');
-  const [calculatedAmount, setCalculatedAmount] = useState<number | null>(null);
-  const [date, setDate] = useState(new Date());
-  const [location, setLocation] = useState('');
-  const [notes, setNotes] = useState('');
+  const [categoryId, setCategoryId] = useState<string>('');
+  const [description, setDescription] = useState<string>('');
+  const [sourceId, setSourceId] = useState<string>('');
+  const [quantity, setQuantity] = useState<string>('');
+  const [calculatedAmount, setCalculatedAmount] = useState<number>(0);
+  const [amount, setAmount] = useState<string>('');
+  const [date, setDate] = useState<Date>(new Date());
+  const [location, setLocation] = useState<string>('');
+  const [notes, setNotes] = useState<string>('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isAmountModified, setIsAmountModified] = useState(false);
   const [isCalculating, setIsCalculating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
   const [keyboardVisible, setKeyboardVisible] = useState(false);
   
   // 展開/收起區段的狀態
@@ -98,7 +99,7 @@ export default function EditRecordScreen() {
     };
   }, []);
   
-  // 載入記錄數據
+  // 當找到記錄時設置初始值
   useEffect(() => {
     if (record) {
       setStage(record.stage);
@@ -107,10 +108,8 @@ export default function EditRecordScreen() {
       setSourceId(record.sourceId || '');
       setQuantity(record.quantity ? record.quantity.toString() : '');
       setCalculatedAmount(record.amount);
-      
-      // 設置日期
+      setAmount(record.amount.toString());
       setDate(new Date(record.date));
-      
       setLocation(record.location || '');
       setNotes(record.notes || '');
     }
@@ -250,19 +249,16 @@ export default function EditRecordScreen() {
     
     // 模擬保存延遲
     setTimeout(() => {
-      updateEmissionRecord(id, {
-        category: record.category, // Keep original category for compatibility
+      updateProjectEmissionRecord(id, {
         categoryId,
-        stage,
         description,
-        title: description, // For compatibility
-        amount: calculatedAmount,
-        date: date.toISOString(),
-        location: location || undefined,
-        notes: notes || undefined,
-        sourceId: sourceId,
+        sourceId,
         quantity: parseFloat(quantity),
-        unit: selectedSource?.unit || '',
+        amount: isAmountModified ? parseFloat(amount) : calculatedAmount,
+        date: date.toISOString(),
+        location: location.trim() || undefined,
+        notes: notes.trim() || undefined,
+        updatedAt: new Date().toISOString()
       });
       
       setIsSaving(false);
@@ -287,7 +283,7 @@ export default function EditRecordScreen() {
             
             // 模擬刪除延遲
             setTimeout(() => {
-              deleteEmissionRecord(id);
+              deleteProjectEmissionRecord(id);
               setIsDeleting(false);
               Alert.alert("成功", "碳排放記錄已刪除");
               router.back();

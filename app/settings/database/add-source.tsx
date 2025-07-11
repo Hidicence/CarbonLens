@@ -89,11 +89,12 @@ export default function AddSourceScreen() {
     setTimeout(() => {
       addEmissionSource({
         name,
-        category,
+        categoryId: category,
         stage,
         emissionFactor: parseFloat(emissionFactor),
         unit,
-        description: description.trim() || undefined
+        description: description.trim() || undefined,
+        createdAt: new Date().toISOString(),
       });
       
       setIsSaving(false);

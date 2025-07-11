@@ -36,7 +36,7 @@ export default function AddRecordSimpleScreen() {
     projectId: string, 
     crew?: string 
   }>();
-  const { addEmissionRecord } = useProjectStore();
+  const { addProjectEmissionRecord } = useProjectStore();
   const { isDarkMode } = useThemeStore();
   const theme = isDarkMode ? Colors.dark : Colors.light;
   
@@ -257,7 +257,7 @@ export default function AddRecordSimpleScreen() {
     };
     
     setTimeout(() => {
-      addEmissionRecord(record);
+      addProjectEmissionRecord(record);
       setIsSaving(false);
       Alert.alert('成功', '碳排放記錄已添加', [
         { text: '繼續添加', onPress: () => {

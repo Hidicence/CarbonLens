@@ -16,7 +16,7 @@ import { Search, Filter, ArrowUp, ArrowDown, X, Calendar, DollarSign, MessageSqu
 import { useProjectStore } from '@/store/projectStore';
 import { useFloatingAIStore } from '@/store/floatingAIStore';
 import { useLanguageStore } from '@/store/languageStore';
-import { EmissionRecord, ProductionStage } from '@/types/project';
+import { ProjectEmissionRecord, ProductionStage } from '@/types/project';
 import Header from '@/components/Header';
 import EmissionRecordItem from '@/components/EmissionRecordItem';
 import Colors from '@/constants/colors';
@@ -40,7 +40,7 @@ export default function ProjectRecordsScreen() {
   const [selectedStage, setSelectedStage] = useState<ProductionStage | null>(null);
   const [sortBy, setSortBy] = useState<SortBy>('date');
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
-  const [filteredRecords, setFilteredRecords] = useState<EmissionRecord[]>([]);
+  const [filteredRecords, setFilteredRecords] = useState<ProjectEmissionRecord[]>([]);
 
   
   // Memoize project and projectRecords to prevent infinite re-renders

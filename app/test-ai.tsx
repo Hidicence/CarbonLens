@@ -21,7 +21,7 @@ export default function TestAIScreen() {
 
       <TouchableOpacity 
         style={styles.testButton}
-        onPress={showFloatingAI}
+        onPress={() => showFloatingAI()}
       >
         <MessageSquare size={20} color="white" />
         <Text style={styles.buttonText}>啟動 AI 助手</Text>

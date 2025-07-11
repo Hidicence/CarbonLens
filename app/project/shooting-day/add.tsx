@@ -110,7 +110,7 @@ const getCategoryIcon = (categoryKey: string, size: number = 24, color?: string)
 export default function AddShootingDayRecord() {
   const router = useRouter();
   const { projectId, crew: initialCrew } = useLocalSearchParams<{ projectId: string, crew?: FilmCrew }>();
-  const { addShootingDayRecord, emissionRecords } = useProjectStore();
+  const { addShootingDayRecord } = useProjectStore();
   const { isDarkMode } = useThemeStore();
   const { t } = useLanguageStore();
   const theme = isDarkMode ? Colors.dark : Colors.light;
@@ -159,9 +159,10 @@ export default function AddShootingDayRecord() {
     if (!projectId) return 0;
     
     // 查找專案器材記錄
-    const projectRecords = emissionRecords[projectId] || [];
+    const { getProjectEmissionRecords } = useProjectStore();
+    const projectRecords = getProjectEmissionRecords(projectId);
     const equipmentRecords = projectRecords.filter(
-      record => record.category === 'equipment' && record.categoryId === 'project-equipment'
+      record => record.categoryId === 'project-equipment'
     );
     
     return equipmentRecords.reduce((total, record) => total + (record.amount || 0), 0);
@@ -244,6 +245,7 @@ export default function AddShootingDayRecord() {
         quantity: parseFloat(quantity),
         unit: selectedCategoryOption?.unit,
         notes: notes.trim() || undefined,
+        createdAt: new Date().toISOString(),
       };
       
       console.log('準備保存的記錄:', recordData);

@@ -37,19 +37,23 @@ import { CREW_OPTIONS } from '@/constants/crews';
 export default function RecordDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { emissionRecords, shootingDayRecords, deleteEmissionRecord, deleteShootingDayRecord } = useProjectStore();
+  const { 
+    projectEmissionRecords, 
+    shootingDayRecords, 
+    deleteProjectEmissionRecord, 
+    deleteShootingDayRecord,
+    getProjectEmissionRecords 
+  } = useProjectStore();
   const { isDarkMode } = useThemeStore();
   const theme = isDarkMode ? Colors.dark : Colors.light;
   
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   
-  // 從所有項目的排放記錄中查找指定記錄
-  let record = Object.values(emissionRecords)
-    .flat()
-    .find(r => r.id === id);
+  // 從專案排放記錄中查找指定記錄
+  let record = projectEmissionRecords.find(r => r.id === id);
   
-  // 如果在 emissionRecords 中找不到，則在 shootingDayRecords 中查找
+  // 如果在專案排放記錄中找不到，則在 shootingDayRecords 中查找
   let isShootingDayRecord = false;
   if (!record) {
     const shootingRecord = Object.values(shootingDayRecords)
@@ -64,10 +68,8 @@ export default function RecordDetailScreen() {
         id: shootingRecord.id,
         projectId: shootingRecord.projectId,
         stage: 'production' as const,
-        category: 'shooting',
         categoryId: shootingRecord.category,
         description: `${crewName} - ${shootingRecord.description}`,
-        title: `${crewName} - ${shootingRecord.description}`,
         sourceId: shootingRecord.category,
         quantity: shootingRecord.quantity || 0,
         unit: shootingRecord.unit || '',
@@ -136,7 +138,7 @@ export default function RecordDetailScreen() {
       if (isShootingDayRecord) {
         deleteShootingDayRecord(id);
       } else {
-      deleteEmissionRecord(id);
+      deleteProjectEmissionRecord(id);
       }
       setIsDeleting(false);
       router.back();
