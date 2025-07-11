@@ -3,8 +3,12 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { firebaseService } from '@/services/firebaseService';
 import { withFirebaseErrorHandling } from '@/utils/errorHandling';
-import { Project } from '@/types/project';
+import { Project, Collaborator } from '@/types/project';
 import { generateId } from '@/utils/helpers';
+import { memoize, createSelector, TTLCache, performanceMonitor } from '@/utils/performance';
+
+// 選擇器緩存
+const projectSelectorCache = new TTLCache<any>(5 * 60 * 1000); // 5分鐘緩存
 
 interface ProjectState {
   // 專案數據
@@ -24,6 +28,20 @@ interface ProjectState {
   getProjectById: (id: string) => Project | undefined;
   getActiveProjects: () => Project[];
   getProjectsByStatus: (status: Project['status']) => Project[];
+  
+  // 優化的選擇器方法
+  getOptimizedProjects: (filters?: {
+    status?: Project['status'][];
+    searchTerm?: string;
+    sortBy?: keyof Project;
+    sortOrder?: 'asc' | 'desc';
+  }) => Project[];
+  getProjectsWithCollaborators: () => Project[];
+  getProjectsByDateRange: (startDate: string, endDate: string) => Project[];
+  getRecentProjects: (limit?: number) => Project[];
+  
+  // 緩存管理
+  clearProjectCache: () => void;
   
   // 選擇狀態
   setSelectedProject: (id: string | null) => void;
@@ -171,6 +189,119 @@ export const useProjectStore = create<ProjectState>()(
       // 根據狀態獲取專案
       getProjectsByStatus: (status) => {
         return get().projects.filter(project => project.status === status);
+      },
+      
+      // 優化的專案篩選 (記憶化)
+      getOptimizedProjects: memoize((filters = {}) => {
+        const { status, searchTerm, sortBy, sortOrder = 'asc' } = filters;
+        const cacheKey = `optimized_${JSON.stringify(filters)}`;
+        
+        // 檢查緩存
+        const cached = projectSelectorCache.get(cacheKey);
+        if (cached) {
+          return cached;
+        }
+        
+        const endMonitor = performanceMonitor.start('getOptimizedProjects');
+        
+        try {
+          let result = [...get().projects];
+          
+          // 狀態篩選
+          if (status && status.length > 0) {
+            result = result.filter(project => status.includes(project.status));
+          }
+          
+          // 搜索篩選
+          if (searchTerm) {
+            const searchLower = searchTerm.toLowerCase();
+            result = result.filter(project => 
+              project.name.toLowerCase().includes(searchLower) ||
+              (project.description || '').toLowerCase().includes(searchLower) ||
+              (project.location || '').toLowerCase().includes(searchLower)
+            );
+          }
+          
+          // 排序
+          if (sortBy) {
+            result.sort((a, b) => {
+              const aValue = a[sortBy];
+              const bValue = b[sortBy];
+              
+              if (aValue == null && bValue == null) return 0;
+              if (aValue == null) return sortOrder === 'asc' ? 1 : -1;
+              if (bValue == null) return sortOrder === 'asc' ? -1 : 1;
+              
+              if (aValue < bValue) return sortOrder === 'asc' ? -1 : 1;
+              if (aValue > bValue) return sortOrder === 'asc' ? 1 : -1;
+              return 0;
+            });
+          }
+          
+          // 存入緩存
+          projectSelectorCache.set(cacheKey, result);
+          
+          return result;
+        } finally {
+          endMonitor();
+        }
+      }),
+      
+      // 獲取有協作者的專案
+      getProjectsWithCollaborators: () => {
+        const cacheKey = 'projects_with_collaborators';
+        const cached = projectSelectorCache.get(cacheKey);
+        if (cached) return cached;
+        
+        const result = get().projects.filter(project => 
+          project.collaborators && project.collaborators.length > 0
+        );
+        
+        projectSelectorCache.set(cacheKey, result);
+        return result;
+      },
+      
+      // 按日期範圍獲取專案
+      getProjectsByDateRange: (startDate, endDate) => {
+        const cacheKey = `projects_date_range_${startDate}_${endDate}`;
+        const cached = projectSelectorCache.get(cacheKey);
+        if (cached) return cached;
+        
+        const start = new Date(startDate).getTime();
+        const end = new Date(endDate).getTime();
+        
+        const result = get().projects.filter(project => {
+          if (!project.startDate) return false;
+          
+          const projectStart = new Date(project.startDate!).getTime();
+          const projectEnd = project.endDate ? new Date(project.endDate).getTime() : projectStart;
+          
+          // 檢查是否有重疊
+          return projectStart <= end && projectEnd >= start;
+        });
+        
+        projectSelectorCache.set(cacheKey, result);
+        return result;
+      },
+      
+      // 獲取最近的專案
+      getRecentProjects: (limit = 10) => {
+        const cacheKey = `recent_projects_${limit}`;
+        const cached = projectSelectorCache.get(cacheKey);
+        if (cached) return cached;
+        
+        const result = [...get().projects]
+          .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+          .slice(0, limit);
+        
+        projectSelectorCache.set(cacheKey, result);
+        return result;
+      },
+      
+      // 清除專案緩存
+      clearProjectCache: () => {
+        projectSelectorCache.clear();
+        console.log('🧹 專案選擇器緩存已清除');
       },
       
       // 設置選擇的專案

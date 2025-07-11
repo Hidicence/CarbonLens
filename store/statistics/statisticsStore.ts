@@ -8,8 +8,18 @@ import {
   ProductionStage,
   ShootingDayEmission 
 } from '@/types/project';
+import { memoize, TTLCache, performanceMonitor, groupBy } from '@/utils/performance';
+
+// 緩存管理
+const summaryCache = new TTLCache<ProjectEmissionSummary>(10 * 60 * 1000); // 10分鐘緩存
+const trendsCache = new TTLCache<Array<{ period: string; emissions: number; recordCount: number }>>(5 * 60 * 1000);
+const categoryCache = new TTLCache<Array<{ categoryId: string; categoryName: string; emissions: number; percentage: number; recordCount: number }>>(5 * 60 * 1000);
 
 interface StatisticsState {
+  // 緩存管理
+  clearCache: () => void;
+  getCacheStats: () => Record<string, any>;
+  
   // 專案排放摘要計算
   calculateProjectEmissions: (
     projectId: string,
@@ -97,43 +107,76 @@ interface StatisticsState {
 }
 
 export const useStatisticsStore = create<StatisticsState>()((set, get) => ({
-  // 計算專案排放摘要
-  calculateProjectEmissions: (projectId, projectRecords, allocationRecords) => {
-    const directRecords = projectRecords.filter(record => record.projectId === projectId);
-    const allocatedRecords = allocationRecords.filter(record => record.projectId === projectId);
-    
-    const directEmissions = directRecords.reduce((sum, record) => sum + record.amount, 0);
-    const allocatedEmissions = allocatedRecords.reduce((sum, record) => sum + record.allocatedAmount, 0);
-    const totalEmissions = directEmissions + allocatedEmissions;
-    
-    // 計算階段排放
-    const stageEmissions: Record<ProductionStage, number> = {
-      'pre-production': 0,
-      'production': 0,
-      'post-production': 0,
-    };
-    
-    directRecords.forEach(record => {
-      stageEmissions[record.stage] += record.amount;
-    });
-    
-    // 計算營運分攤到各階段（簡化處理，平均分配）
-    const operationalAllocation = {
-      'pre-production': allocatedEmissions * 0.2, // 20%
-      'post-production': allocatedEmissions * 0.2, // 20%
-      total: allocatedEmissions,
-    };
-    
+  // 緩存管理
+  clearCache: () => {
+    summaryCache.clear();
+    trendsCache.clear();
+    categoryCache.clear();
+    console.log('🧹 統計緩存已清除');
+  },
+  
+  getCacheStats: () => {
     return {
-      projectId,
-      directEmissions,
-      allocatedEmissions,
-      totalEmissions,
-      directRecordCount: directRecords.length,
-      allocatedRecordCount: allocatedRecords.length,
-      stageEmissions,
-      operationalAllocation,
+      summary: summaryCache.getStats(),
+      trends: trendsCache.getStats(),
+      category: categoryCache.getStats(),
     };
+  },
+  
+  // 計算專案排放摘要 (帶緩存)
+  calculateProjectEmissions: (projectId, projectRecords, allocationRecords) => {
+    const cacheKey = `${projectId}_${projectRecords.length}_${allocationRecords.length}`;
+    
+    // 檢查緩存
+    const cached = summaryCache.get(cacheKey);
+    if (cached) {
+      return cached;
+    }
+    
+    // 性能監控
+    const endMonitor = performanceMonitor.start('calculateProjectEmissions');
+    
+    try {
+      const directRecords = projectRecords.filter(record => record.projectId === projectId);
+      const allocatedRecords = allocationRecords.filter(record => record.projectId === projectId);
+      
+      const directEmissions = directRecords.reduce((sum, record) => sum + record.amount, 0);
+      const allocatedEmissions = allocatedRecords.reduce((sum, record) => sum + record.allocatedAmount, 0);
+      const totalEmissions = directEmissions + allocatedEmissions;
+      
+      // 使用groupBy優化階段分組
+      const stageGroups = groupBy(directRecords, record => record.stage);
+      const stageEmissions: Record<ProductionStage, number> = {
+        'pre-production': (stageGroups['pre-production'] || []).reduce((sum, record) => sum + record.amount, 0),
+        'production': (stageGroups['production'] || []).reduce((sum, record) => sum + record.amount, 0),
+        'post-production': (stageGroups['post-production'] || []).reduce((sum, record) => sum + record.amount, 0),
+      };
+      
+      // 計算營運分攤到各階段（簡化處理，平均分配）
+      const operationalAllocation = {
+        'pre-production': allocatedEmissions * 0.2, // 20%
+        'post-production': allocatedEmissions * 0.2, // 20%
+        total: allocatedEmissions,
+      };
+      
+      const result = {
+        projectId,
+        directEmissions,
+        allocatedEmissions,
+        totalEmissions,
+        directRecordCount: directRecords.length,
+        allocatedRecordCount: allocatedRecords.length,
+        stageEmissions,
+        operationalAllocation,
+      };
+      
+      // 存入緩存
+      summaryCache.set(cacheKey, result);
+      
+      return result;
+    } finally {
+      endMonitor();
+    }
   },
   
   getProjectEmissionSummary: (projectId, projectRecords, allocationRecords) => {
@@ -221,45 +264,50 @@ export const useStatisticsStore = create<StatisticsState>()((set, get) => ({
     };
   },
   
-  // 排放趨勢分析
-  getEmissionTrends: (records, groupBy) => {
-    const trendsMap = new Map<string, { emissions: number; recordCount: number }>();
+  // 排放趨勢分析 (優化版)
+  getEmissionTrends: (records, groupByPeriod) => {
+    const cacheKey = `trends_${groupByPeriod}_${records.length}_${records[0]?.id || 'empty'}`;
     
-    records.forEach(record => {
-      const date = new Date(record.date);
-      let period: string;
-      
-      switch (groupBy) {
-        case 'day':
-          period = date.toISOString().split('T')[0];
-          break;
-        case 'week':
-          const weekStart = new Date(date);
-          weekStart.setDate(date.getDate() - date.getDay());
-          period = weekStart.toISOString().split('T')[0];
-          break;
-        case 'month':
-          period = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-          break;
-        case 'year':
-          period = String(date.getFullYear());
-          break;
-        default:
-          period = date.toISOString().split('T')[0];
-      }
-      
-      if (!trendsMap.has(period)) {
-        trendsMap.set(period, { emissions: 0, recordCount: 0 });
-      }
-      
-      const trend = trendsMap.get(period)!;
-      trend.emissions += record.amount;
-      trend.recordCount += 1;
-    });
+    // 檢查緩存
+    const cached = trendsCache.get(cacheKey);
+    if (cached) {
+      return cached;
+    }
     
-    return Array.from(trendsMap.entries())
-      .map(([period, data]) => ({ period, ...data }))
-      .sort((a, b) => a.period.localeCompare(b.period));
+    const endMonitor = performanceMonitor.start('getEmissionTrends');
+    
+    try {
+      // 使用groupBy優化日期分組
+      const recordsByPeriod = groupByPeriod === 'month' 
+        ? groupBy(records, record => {
+            const date = new Date(record.date);
+            return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+          })
+        : groupByPeriod === 'year'
+        ? groupBy(records, record => String(new Date(record.date).getFullYear()))
+        : groupBy(records, record => {
+            const date = new Date(record.date);
+            if (groupByPeriod === 'week') {
+              const weekStart = new Date(date);
+              weekStart.setDate(date.getDate() - date.getDay());
+              return weekStart.toISOString().split('T')[0];
+            }
+            return date.toISOString().split('T')[0]; // day
+          });
+      
+      const trends = Object.entries(recordsByPeriod).map(([period, periodRecords]) => ({
+        period,
+        emissions: (periodRecords as any[]).reduce((sum, record) => sum + record.amount, 0),
+        recordCount: (periodRecords as any[]).length,
+      })).sort((a, b) => a.period.localeCompare(b.period));
+      
+      // 存入緩存
+      trendsCache.set(cacheKey, trends);
+      
+      return trends;
+    } finally {
+      endMonitor();
+    }
   },
   
   // 拍攝日排放摘要
@@ -306,30 +354,49 @@ export const useStatisticsStore = create<StatisticsState>()((set, get) => ({
   
   // 按類別分析排放
   getEmissionsByCategory: (records, categoryMapping = {}) => {
-    const categoryMap = new Map<string, { emissions: number; recordCount: number }>();
+    const cacheKey = `category_${records.length}_${records[0]?.id || 'empty'}`;
     
-    records.forEach(record => {
-      const categoryId = record.categoryId;
-      if (!categoryMap.has(categoryId)) {
-        categoryMap.set(categoryId, { emissions: 0, recordCount: 0 });
-      }
+    // 檢查緩存
+    const cached = categoryCache.get(cacheKey);
+    if (cached) {
+      return cached;
+    }
+    
+    const endMonitor = performanceMonitor.start('getEmissionsByCategory');
+    
+    try {
+      const categoryMap = new Map<string, { emissions: number; recordCount: number }>();
       
-      const category = categoryMap.get(categoryId)!;
-      category.emissions += record.amount;
-      category.recordCount += 1;
-    });
-    
-    const totalEmissions = records.reduce((sum, record) => sum + record.amount, 0);
-    
-    return Array.from(categoryMap.entries())
-      .map(([categoryId, data]) => ({
-        categoryId,
-        categoryName: categoryMapping[categoryId] || categoryId,
-        emissions: data.emissions,
-        percentage: totalEmissions > 0 ? (data.emissions / totalEmissions) * 100 : 0,
-        recordCount: data.recordCount,
-      }))
-      .sort((a, b) => b.emissions - a.emissions);
+      records.forEach(record => {
+        const categoryId = record.categoryId;
+        if (!categoryMap.has(categoryId)) {
+          categoryMap.set(categoryId, { emissions: 0, recordCount: 0 });
+        }
+        
+        const category = categoryMap.get(categoryId)!;
+        category.emissions += record.amount;
+        category.recordCount += 1;
+      });
+      
+      const totalEmissions = records.reduce((sum, record) => sum + record.amount, 0);
+      
+      const result = Array.from(categoryMap.entries())
+        .map(([categoryId, data]) => ({
+          categoryId,
+          categoryName: categoryMapping[categoryId] || categoryId,
+          emissions: data.emissions,
+          percentage: totalEmissions > 0 ? (data.emissions / totalEmissions) * 100 : 0,
+          recordCount: data.recordCount,
+        }))
+        .sort((a, b) => b.emissions - a.emissions);
+      
+      // 存入緩存
+      categoryCache.set(cacheKey, result);
+      
+      return result;
+    } finally {
+      endMonitor();
+    }
   },
   
   // 效率指標

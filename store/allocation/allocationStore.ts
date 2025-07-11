@@ -10,6 +10,12 @@ import {
   Project 
 } from '@/types/project';
 import { generateId } from '@/utils/helpers';
+import { withFirebaseErrorHandling } from '@/utils/errorHandling';
+import { memoize, TTLCache, performanceMonitor, batch } from '@/utils/performance';
+
+// 分攤計算緩存
+const allocationCache = new TTLCache<AllocationRecord[]>(15 * 60 * 1000); // 15分鐘緩存
+const calculationCache = new TTLCache<number>(10 * 60 * 1000); // 10分鐘緩存
 
 interface AllocationState {
   // 分攤數據
@@ -182,119 +188,149 @@ export const useAllocationStore = create<AllocationState>()(
         }));
       },
       
-      // 計算分攤
+      // 計算分攤 (優化版)
       calculateAllocations: (record, projects) => {
         const { allocationRule } = record;
         if (!allocationRule || !record.isAllocated) return [];
         
-        const targetProjects = projects.filter(p => 
-          allocationRule.targetProjects.includes(p.id)
-        );
+        // 緩存鍵
+        const cacheKey = `${record.id}_${allocationRule.method}_${allocationRule.targetProjects.join(',')}_${record.amount}`;
         
-        if (targetProjects.length === 0) return [];
+        // 檢查緩存
+        const cached = allocationCache.get(cacheKey);
+        if (cached) {
+          return cached;
+        }
         
-        const allocations: AllocationRecord[] = [];
+        const endMonitor = performanceMonitor.start('calculateAllocations');
         
-        switch (allocationRule.method) {
-          case 'equal': {
-            // 平均分攤
-            const amountPerProject = record.amount / targetProjects.length;
-            const percentagePerProject = 100 / targetProjects.length;
-            
-            targetProjects.forEach(project => {
-              allocations.push({
-                id: generateId(),
-                nonProjectRecordId: record.id!,
-                projectId: project.id,
-                allocatedAmount: amountPerProject,
-                percentage: percentagePerProject,
-                method: 'equal',
-                createdAt: new Date().toISOString(),
-              });
-            });
-            break;
-          }
+        try {
+          const targetProjects = projects.filter(p => 
+            allocationRule.targetProjects.includes(p.id)
+          );
           
-          case 'budget': {
-            // 按預算比例分攤
-            const totalBudget = targetProjects.reduce((sum, p) => sum + (p.budget || 0), 0);
-            
-            if (totalBudget > 0) {
+          if (targetProjects.length === 0) return [];
+          
+          const allocations: AllocationRecord[] = [];
+          
+          switch (allocationRule.method) {
+            case 'equal': {
+              // 平均分攤 - 預計算優化
+              const amountPerProject = record.amount / targetProjects.length;
+              const percentagePerProject = 100 / targetProjects.length;
+              
               targetProjects.forEach(project => {
-                const projectBudget = project.budget || 0;
-                const percentage = (projectBudget / totalBudget) * 100;
-                const allocatedAmount = (projectBudget / totalBudget) * record.amount;
-                
                 allocations.push({
                   id: generateId(),
                   nonProjectRecordId: record.id!,
                   projectId: project.id,
-                  allocatedAmount,
-                  percentage,
-                  method: 'budget',
+                  allocatedAmount: amountPerProject,
+                  percentage: percentagePerProject,
+                  method: 'equal',
                   createdAt: new Date().toISOString(),
                 });
               });
+              break;
             }
-            break;
-          }
-          
-          case 'duration': {
-            // 按時長比例分攤（簡化計算，基於startDate和endDate）
-            const projectDurations = targetProjects.map(project => {
-              if (project.startDate && project.endDate) {
-                const start = new Date(project.startDate);
-                const end = new Date(project.endDate);
-                return { project, duration: end.getTime() - start.getTime() };
-              }
-              return { project, duration: 0 };
-            }).filter(item => item.duration > 0);
             
-            const totalDuration = projectDurations.reduce((sum, item) => sum + item.duration, 0);
-            
-            if (totalDuration > 0) {
-              projectDurations.forEach(({ project, duration }) => {
-                const percentage = (duration / totalDuration) * 100;
-                const allocatedAmount = (duration / totalDuration) * record.amount;
-                
-                allocations.push({
-                  id: generateId(),
-                  nonProjectRecordId: record.id!,
-                  projectId: project.id,
-                  allocatedAmount,
-                  percentage,
-                  method: 'duration',
-                  createdAt: new Date().toISOString(),
-                });
-              });
-            }
-            break;
-          }
-          
-          case 'custom': {
-            // 自訂比例分攤
-            if (allocationRule.customPercentages) {
-              Object.entries(allocationRule.customPercentages).forEach(([projectId, percentage]) => {
-                if (targetProjects.some(p => p.id === projectId)) {
-                  const allocatedAmount = (percentage / 100) * record.amount;
+            case 'budget': {
+              // 按預算比例分攤 - 批量計算優化
+              const projectsWithBudget = targetProjects.filter(p => (p.budget || 0) > 0);
+              const totalBudget = projectsWithBudget.reduce((sum, p) => sum + (p.budget || 0), 0);
+              
+              if (totalBudget > 0) {
+                // 使用批量處理避免頻繁的數組操作
+                const budgetAllocations = projectsWithBudget.map(project => {
+                  const projectBudget = project.budget || 0;
+                  const percentage = (projectBudget / totalBudget) * 100;
+                  const allocatedAmount = (projectBudget / totalBudget) * record.amount;
                   
-                  allocations.push({
+                  return {
+                    id: generateId(),
+                    nonProjectRecordId: record.id!,
+                    projectId: project.id,
+                    allocatedAmount,
+                    percentage,
+                    method: 'budget' as const,
+                    createdAt: new Date().toISOString(),
+                  };
+                });
+                
+                allocations.push(...budgetAllocations);
+              }
+              break;
+            }
+            
+            case 'duration': {
+              // 按時長比例分攤 - 記憶化日期計算
+              const calculateDuration = memoize((startDate: string, endDate: string) => {
+                const start = new Date(startDate);
+                const end = new Date(endDate);
+                return end.getTime() - start.getTime();
+              });
+              
+              const projectDurations = targetProjects
+                .map(project => ({
+                  project,
+                  duration: project.startDate && project.endDate 
+                    ? calculateDuration(project.startDate, project.endDate)
+                    : 0
+                }))
+                .filter(item => item.duration > 0);
+              
+              const totalDuration = projectDurations.reduce((sum, item) => sum + item.duration, 0);
+              
+              if (totalDuration > 0) {
+                const durationAllocations = projectDurations.map(({ project, duration }) => {
+                  const percentage = (duration / totalDuration) * 100;
+                  const allocatedAmount = (duration / totalDuration) * record.amount;
+                  
+                  return {
+                    id: generateId(),
+                    nonProjectRecordId: record.id!,
+                    projectId: project.id,
+                    allocatedAmount,
+                    percentage,
+                    method: 'duration' as const,
+                    createdAt: new Date().toISOString(),
+                  };
+                });
+                
+                allocations.push(...durationAllocations);
+              }
+              break;
+            }
+            
+            case 'custom': {
+              // 自訂比例分攤 - 優化對象遍歷
+              if (allocationRule.customPercentages) {
+                const validProjects = new Set(targetProjects.map(p => p.id));
+                
+                const customAllocations = Object.entries(allocationRule.customPercentages)
+                  .filter(([projectId]) => validProjects.has(projectId))
+                  .map(([projectId, percentage]) => ({
                     id: generateId(),
                     nonProjectRecordId: record.id!,
                     projectId,
-                    allocatedAmount,
+                    allocatedAmount: (percentage / 100) * record.amount,
                     percentage,
-                    method: 'custom',
+                    method: 'custom' as const,
                     createdAt: new Date().toISOString(),
-                  });
-                }
-              });
+                  }));
+                
+                allocations.push(...customAllocations);
+              }
+              break;
             }
-            break;
           }
+          
+          // 存入緩存
+          allocationCache.set(cacheKey, allocations);
+          
+          return allocations;
+        } finally {
+          endMonitor();
         }
-        
-        return allocations;
       },
       
       // 應用分攤
