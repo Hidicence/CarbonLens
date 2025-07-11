@@ -9,6 +9,8 @@ import { SplashScreen } from "expo-router";
 import { useProjectStore } from "@/store/projectStore";
 import { useAuthStore } from "@/store/authStore";
 import { isFirstLaunch, isOnboardingCompleted, setupOnboarding } from "@/utils/onboardingManager";
+import { ErrorBoundary } from '@/app/error-boundary';
+import { ToastContainer } from '@/components/ErrorToast';
 // Firebase同步服務已整合到統一的firebaseService中
 // import { GoogleSignInService } from "@/services/googleSignInService"; // 暫時禁用 Google Sign-In 服務
 import '@/utils/i18n'; // 導入i18n配置
@@ -81,29 +83,31 @@ function RootLayoutNav() {
   // 登入狀態的判斷交給 (tabs) layout 處理，這樣可以確保正確的導航
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <StatusBar 
-        barStyle={isDarkMode ? "light-content" : "dark-content"} 
-        backgroundColor={isDarkMode ? Colors.dark.background : Colors.light.background} 
-      />
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="onboarding" options={{ gestureEnabled: false }} />
-        <Stack.Screen name="login" />
-        <Stack.Screen name="register" />
-        <Stack.Screen name="forgot-password" />
-        <Stack.Screen name="direct-login" />
-        <Stack.Screen name="test-google-login" />
-        <Stack.Screen name="simple-login-test" />
-        <Stack.Screen 
-          name="modal" 
-          options={{ 
-            headerShown: true,
-            presentation: 'modal' 
-          }} 
+    <ErrorBoundary>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <StatusBar 
+          barStyle={isDarkMode ? "light-content" : "dark-content"} 
+          backgroundColor={isDarkMode ? Colors.dark.background : Colors.light.background} 
         />
-      </Stack>
-    </GestureHandlerRootView>
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="onboarding" options={{ gestureEnabled: false }} />
+          <Stack.Screen name="login" />
+          <Stack.Screen name="register" />
+          <Stack.Screen name="forgot-password" />
+          <Stack.Screen 
+            name="modal" 
+            options={{ 
+              headerShown: true,
+              presentation: 'modal' 
+            }} 
+          />
+        </Stack>
+        
+        {/* 全域錯誤提示容器 */}
+        <ToastContainer />
+      </GestureHandlerRootView>
+    </ErrorBoundary>
   );
 }
 

@@ -23,14 +23,15 @@ const api = axios.create({
   timeout: 10000, // 10秒超時
 });
 
-// 請求攔截器 - 添加認證token
+// 請求攔截器 - 添加認證token (暫時禁用 - 使用Firebase認證)
 api.interceptors.request.use(
   async (config) => {
     try {
-      const token = await AsyncStorage.getItem('auth_token');
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
+      // 暫時禁用API token認證，目前使用Firebase認證
+      // const token = await AsyncStorage.getItem('auth_token');
+      // if (token) {
+      //   config.headers.Authorization = `Bearer ${token}`;
+      // }
     } catch (error) {
       console.warn('獲取認證token失敗:', error);
     }
@@ -41,7 +42,7 @@ api.interceptors.request.use(
   }
 );
 
-// 響應攔截器 - 處理錯誤
+// 響應攔截器 - 處理錯誤 (認證錯誤處理已禁用)
 api.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -52,12 +53,12 @@ api.interceptors.response.use(
       throw new Error('網絡連接失敗，請檢查網絡設置');
     }
     
-    // 處理認證錯誤
-    if (error.response.status === 401) {
-      // 清除本地認證信息
-      AsyncStorage.removeItem('auth_token');
-      throw new Error('認證已過期，請重新登入');
-    }
+    // 處理認證錯誤 (暫時禁用 - 使用Firebase認證)
+    // if (error.response.status === 401) {
+    //   // 清除本地認證信息
+    //   AsyncStorage.removeItem('auth_token');
+    //   throw new Error('認證已過期，請重新登入');
+    // }
     
     throw error;
   }
@@ -290,49 +291,49 @@ export const syncApi = {
   },
 };
 
-// 認證API
-export const authApi = {
-  // 登入
-  login: async (email: string, password: string) => {
-    try {
-      const response = await api.post('/auth/login', { email, password });
-      const { token, user } = response.data.data || response.data;
-      
-      // 保存認證token
-      if (token) {
-        await AsyncStorage.setItem('auth_token', token);
-      }
-      
-      return { token, user };
-    } catch (error) {
-      console.error('登入失敗:', error);
-      throw error;
-    }
-  },
+// 認證API (未實現 - 目前使用Firebase認證)
+// export const authApi = {
+//   // 登入
+//   login: async (email: string, password: string) => {
+//     try {
+//       const response = await api.post('/auth/login', { email, password });
+//       const { token, user } = response.data.data || response.data;
+//       
+//       // 保存認證token
+//       if (token) {
+//         await AsyncStorage.setItem('auth_token', token);
+//       }
+//       
+//       return { token, user };
+//     } catch (error) {
+//       console.error('登入失敗:', error);
+//       throw error;
+//     }
+//   },
 
-  // 登出
-  logout: async () => {
-    try {
-      await api.post('/auth/logout');
-      await AsyncStorage.removeItem('auth_token');
-    } catch (error) {
-      console.error('登出失敗:', error);
-      // 即使API調用失敗，也要清除本地token
-      await AsyncStorage.removeItem('auth_token');
-    }
-  },
+//   // 登出
+//   logout: async () => {
+//     try {
+//       await api.post('/auth/logout');
+//       await AsyncStorage.removeItem('auth_token');
+//     } catch (error) {
+//       console.error('登出失敗:', error);
+//       // 即使API調用失敗，也要清除本地token
+//       await AsyncStorage.removeItem('auth_token');
+//     }
+//   },
 
-  // 註冊
-  register: async (name: string, email: string, password: string) => {
-    try {
-      const response = await api.post('/auth/register', { name, email, password });
-      return response.data.data || response.data;
-    } catch (error) {
-      console.error('註冊失敗:', error);
-      throw error;
-    }
-  },
-};
+//   // 註冊
+//   register: async (name: string, email: string, password: string) => {
+//     try {
+//       const response = await api.post('/auth/register', { name, email, password });
+//       return response.data.data || response.data;
+//     } catch (error) {
+//       console.error('註冊失敗:', error);
+//       throw error;
+//     }
+//   },
+// };
 
 // 導出配置
 export { API_BASE_URL };
