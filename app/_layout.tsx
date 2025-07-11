@@ -11,6 +11,7 @@ import { useAuthStore } from "@/store/authStore";
 import { isFirstLaunch, isOnboardingCompleted, setupOnboarding } from "@/utils/onboardingManager";
 import { ErrorBoundary } from '@/app/error-boundary';
 import { ToastContainer } from '@/components/ErrorToast';
+import { setupGlobalErrorHandlers } from '@/utils/errorHandling';
 // Firebase同步服務已整合到統一的firebaseService中
 // import { GoogleSignInService } from "@/services/googleSignInService"; // 暫時禁用 Google Sign-In 服務
 import '@/utils/i18n'; // 導入i18n配置
@@ -41,6 +42,9 @@ function RootLayoutNav() {
     console.log('🚀 Firebase服務已整合到統一架構中...');
     // firebaseService 會在認證狀態變化時自動管理數據同步
     // 不需要額外的初始化代碼
+    
+    // 設置全域錯誤處理器
+    setupGlobalErrorHandlers();
     
     // 暫時禁用 Google Sign-In 配置，避免原生模塊錯誤
     // TODO: 重新啟用 Google Sign-In 配置
