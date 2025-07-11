@@ -1,8 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { doc, setDoc, deleteDoc } from 'firebase/firestore';
-import { auth, db } from '@/utils/firebaseConfig';
+import { firebaseService } from '@/services/firebaseService';
 import { 
   Project, 
   ProjectEmissionRecord, 
@@ -24,7 +23,6 @@ import {
 } from '@/types/project';
 import { generateId } from '@/utils/helpers';
 import { PROJECTS, EMISSION_RECORDS, SAMPLE_NON_PROJECT_EMISSION_RECORDS } from '@/mocks/projects';
-import { collection, getDocs } from 'firebase/firestore';
 
 interface ProjectState {
   projects: Project[];
@@ -249,31 +247,7 @@ export const useProjectStore = create<ProjectState>()(
 
         // 同步到 Firebase
         try {
-          const currentUser = auth.currentUser;
-          if (currentUser) {
-            // 清理 undefined 值，Firebase 不支持 undefined
-            const cleanProject = (obj: any): any => {
-              if (obj === null || obj === undefined) return null;
-              if (typeof obj !== 'object') return obj;
-              
-              const cleaned: any = {};
-              for (const [key, value] of Object.entries(obj)) {
-                if (value !== undefined) {
-                  cleaned[key] = typeof value === 'object' && value !== null ? cleanProject(value) : value;
-                }
-              }
-              return cleaned;
-            };
-
-            const projectRef = doc(db, 'users', currentUser.uid, 'projects', newProject.id);
-            await setDoc(projectRef, {
-              ...cleanProject(newProject),
-              syncedAt: new Date().toISOString()
-            }, { merge: true });
-            console.log(`✅ 專案 "${newProject.name}" 已同步到 Firebase`);
-          } else {
-            console.log('⚠️ 用戶未登入，專案僅保存到本地');
-          }
+          await firebaseService.saveProject(newProject);
         } catch (error) {
           console.error('❌ Firebase 同步失敗:', error);
           // 不拋出錯誤，確保本地保存成功
@@ -606,31 +580,7 @@ export const useProjectStore = create<ProjectState>()(
 
         // 同步到 Firebase
         try {
-          const currentUser = auth.currentUser;
-          if (currentUser) {
-            // 清理 undefined 值，Firebase 不支持 undefined
-            const cleanRecord = (obj: any): any => {
-              if (obj === null || obj === undefined) return null;
-              if (typeof obj !== 'object') return obj;
-              
-              const cleaned: any = {};
-              for (const [key, value] of Object.entries(obj)) {
-                if (value !== undefined) {
-                  cleaned[key] = typeof value === 'object' && value !== null ? cleanRecord(value) : value;
-                }
-              }
-              return cleaned;
-            };
-
-            const recordRef = doc(db, 'users', currentUser.uid, 'emissionRecords', newRecord.id);
-            await setDoc(recordRef, {
-              ...cleanRecord(newRecord),
-              syncedAt: new Date().toISOString()
-            }, { merge: true });
-            console.log(`✅ 專案記錄 "${newRecord.description}" 已同步到 Firebase`);
-          } else {
-            console.log('⚠️ 用戶未登入，專案記錄僅保存到本地');
-          }
+          await firebaseService.saveProjectEmissionRecord(newRecord);
         } catch (error) {
           console.error('❌ Firebase 同步失敗:', error);
           // 不拋出錯誤，確保本地保存成功
@@ -697,14 +647,7 @@ export const useProjectStore = create<ProjectState>()(
         // 同步到 Firebase
         if (recordToDelete) {
           try {
-            const currentUser = auth.currentUser;
-            if (currentUser) {
-              const recordRef = doc(db, 'users', currentUser.uid, 'emissionRecords', id);
-              await deleteDoc(recordRef);
-              console.log(`✅ 專案記錄 "${recordToDelete.description}" 已從 Firebase 刪除`);
-            } else {
-              console.log('⚠️ 用戶未登入，專案記錄僅從本地刪除');
-            }
+            await firebaseService.deleteProjectEmissionRecord(id);
           } catch (error) {
             console.error('❌ Firebase 刪除失敗:', error);
             // 不拋出錯誤，確保本地刪除成功
@@ -750,31 +693,7 @@ export const useProjectStore = create<ProjectState>()(
 
         // 同步到 Firebase
         try {
-          const currentUser = auth.currentUser;
-          if (currentUser) {
-            // 清理 undefined 值，Firebase 不支持 undefined
-            const cleanRecord = (obj: any): any => {
-              if (obj === null || obj === undefined) return null;
-              if (typeof obj !== 'object') return obj;
-              
-              const cleaned: any = {};
-              for (const [key, value] of Object.entries(obj)) {
-                if (value !== undefined) {
-                  cleaned[key] = typeof value === 'object' && value !== null ? cleanRecord(value) : value;
-                }
-              }
-              return cleaned;
-            };
-
-            const recordRef = doc(db, 'users', currentUser.uid, 'operationalRecords', newRecord.id);
-            await setDoc(recordRef, {
-              ...cleanRecord(newRecord),
-              syncedAt: new Date().toISOString()
-            }, { merge: true });
-            console.log(`✅ 營運記錄 "${newRecord.description}" 已同步到 Firebase`);
-          } else {
-            console.log('⚠️ 用戶未登入，營運記錄僅保存到本地');
-          }
+          await firebaseService.saveOperationalEmissionRecord(newRecord);
         } catch (error) {
           console.error('❌ Firebase 同步失敗:', error);
           // 不拋出錯誤，確保本地保存成功
