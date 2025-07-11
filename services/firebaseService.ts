@@ -350,6 +350,40 @@ class FirebaseService {
   }
 
   /**
+   * 清除用戶所有Firebase數據
+   */
+  async clearAllUserData(): Promise<void> {
+    if (!this.userId) {
+      console.log('⚠️ 用戶未登入，無法清除Firebase數據');
+      return;
+    }
+
+    try {
+      console.log('🔄 開始清除 Firebase 雲端數據...');
+      
+      // 獲取所有集合的數據並刪除
+      const collections = ['projects', 'emissionRecords', 'operationalRecords', 'shootingDayRecords'];
+      const deletePromises: Promise<void>[] = [];
+
+      for (const collectionName of collections) {
+        const collectionRef = this.getUserCollection(collectionName);
+        const snapshot = await getDocs(collectionRef);
+        
+        const collectionDeletePromises = snapshot.docs.map(doc => deleteDoc(doc.ref));
+        deletePromises.push(...collectionDeletePromises);
+      }
+
+      // 執行所有刪除操作
+      await Promise.all(deletePromises);
+      
+      console.log('✅ Firebase 雲端數據已清除');
+    } catch (error) {
+      console.error('❌ 清除 Firebase 數據失敗:', error);
+      throw error;
+    }
+  }
+
+  /**
    * 清理所有監聽器 (在登出時調用)
    */
   cleanup(): void {

@@ -817,14 +817,7 @@ export const useProjectStore = create<ProjectState>()(
         // 同步到 Firebase
         if (recordToDelete) {
           try {
-            const currentUser = auth.currentUser;
-            if (currentUser) {
-              const recordRef = doc(db, 'users', currentUser.uid, 'operationalRecords', id);
-              await deleteDoc(recordRef);
-              console.log(`✅ 營運記錄 "${recordToDelete.description}" 已從 Firebase 刪除`);
-            } else {
-              console.log('⚠️ 用戶未登入，營運記錄僅從本地刪除');
-            }
+            await firebaseService.deleteOperationalEmissionRecord(id);
           } catch (error) {
             console.error('❌ Firebase 刪除失敗:', error);
             // 不拋出錯誤，確保本地刪除成功
@@ -1240,15 +1233,6 @@ export const useProjectStore = create<ProjectState>()(
       },
       
       clearAllData: async () => {
-        // 先停止Firebase同步，避免重複下載
-        try {
-          const { firebaseSync } = await import('@/services/firebaseDataSync');
-          firebaseSync.stopSync();
-          console.log('⏹️ Firebase同步已停止');
-        } catch (error) {
-          console.error('停止Firebase同步失敗:', error);
-        }
-
         // 清除本地數據
         set({
           projects: [],
@@ -1266,50 +1250,7 @@ export const useProjectStore = create<ProjectState>()(
 
         // 同步清除 Firebase 數據
         try {
-          const currentUser = auth.currentUser;
-          if (currentUser) {
-            console.log('🔄 開始清除 Firebase 雲端數據...');
-            
-            // 清除所有專案
-            const projectsRef = collection(db, 'users', currentUser.uid, 'projects');
-            const projectsSnapshot = await getDocs(projectsRef);
-            const projectDeletePromises = projectsSnapshot.docs.map(doc => 
-              deleteDoc(doc.ref)
-            );
-            
-            // 清除所有排放記錄
-            const emissionRecordsRef = collection(db, 'users', currentUser.uid, 'emissionRecords');
-            const emissionSnapshot = await getDocs(emissionRecordsRef);
-            const emissionDeletePromises = emissionSnapshot.docs.map(doc => 
-              deleteDoc(doc.ref)
-            );
-            
-            // 清除所有營運記錄
-            const operationalRecordsRef = collection(db, 'users', currentUser.uid, 'operationalRecords');
-            const operationalSnapshot = await getDocs(operationalRecordsRef);
-            const operationalDeletePromises = operationalSnapshot.docs.map(doc => 
-              deleteDoc(doc.ref)
-            );
-            
-            // 清除所有拍攝日記錄
-            const shootingRecordsRef = collection(db, 'users', currentUser.uid, 'shootingDayRecords');
-            const shootingSnapshot = await getDocs(shootingRecordsRef);
-            const shootingDeletePromises = shootingSnapshot.docs.map(doc => 
-              deleteDoc(doc.ref)
-            );
-            
-            // 執行所有刪除操作
-            await Promise.all([
-              ...projectDeletePromises,
-              ...emissionDeletePromises,
-              ...operationalDeletePromises,
-              ...shootingDeletePromises
-            ]);
-            
-            console.log('✅ Firebase 雲端數據已清除');
-          } else {
-            console.log('⚠️ 用戶未登入，僅清除本地數據');
-          }
+          await firebaseService.clearAllUserData();
         } catch (error) {
           console.error('❌ 清除 Firebase 數據失敗:', error);
           // 不拋出錯誤，確保本地清除成功

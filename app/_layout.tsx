@@ -9,7 +9,7 @@ import { SplashScreen } from "expo-router";
 import { useProjectStore } from "@/store/projectStore";
 import { useAuthStore } from "@/store/authStore";
 import { isFirstLaunch, isOnboardingCompleted, setupOnboarding } from "@/utils/onboardingManager";
-import { firebaseSync } from "@/services/firebaseDataSync"; // 導入同步服務
+// Firebase同步服務已整合到統一的firebaseService中
 // import { GoogleSignInService } from "@/services/googleSignInService"; // 暫時禁用 Google Sign-In 服務
 import '@/utils/i18n'; // 導入i18n配置
 
@@ -34,11 +34,11 @@ function RootLayoutNav() {
     return () => unsubscribe();
   }, [initAuthListener]);
 
-  // 初始化Firebase數據同步服務
+  // Firebase服務初始化 (由firebaseService自動處理)
   useEffect(() => {
-    console.log('🚀 正在啟動Firebase數據同步服務...');
-    // firebaseSync 會自動監聽用戶登入狀態並開始同步
-    // 這裡不需要額外的代碼，服務會自動運行
+    console.log('🚀 Firebase服務已整合到統一架構中...');
+    // firebaseService 會在認證狀態變化時自動管理數據同步
+    // 不需要額外的初始化代碼
     
     // 暫時禁用 Google Sign-In 配置，避免原生模塊錯誤
     // TODO: 重新啟用 Google Sign-In 配置
