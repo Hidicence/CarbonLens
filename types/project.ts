@@ -1,12 +1,22 @@
-export type ProjectStatus = 'planning' | 'active' | 'completed' | 'on-hold';
+/**
+ * 項目和排放相關類型定義
+ */
+
+import type { BaseEntity, CreatedEntity, ID, Timestamp } from './base';
+
+// ===== 基礎枚舉類型 =====
+
+export type ProjectStatus = 'planning' | 'active' | 'completed' | 'on-hold' | 'cancelled';
 export type ProductionStage = 'pre-production' | 'production' | 'post-production';
-
-// 分攤方式枚舉
 export type AllocationMethod = 'equal' | 'budget' | 'duration' | 'custom';
+export type CollaboratorRole = 'owner' | 'admin' | 'editor' | 'contributor' | 'viewer';
 
-// 分攤參數設定
-export interface AllocationParameters {
-  id: string;
+// ===== 分攤相關類型 =====
+
+/**
+ * 分攤參數設定
+ */
+export interface AllocationParameters extends BaseEntity {
   name: string;
   description: string;
   stageAllocations: {
@@ -20,92 +30,81 @@ export interface AllocationParameters {
     scope3: number;          // 範疇3權重
   };
   isDefault: boolean;        // 是否為預設參數
-  createdAt: string;
-  updatedAt: string;
 }
 
-// 分攤規則
+/**
+ * 分攤規則
+ */
 export interface AllocationRule {
   method: AllocationMethod;
-  targetProjects: string[]; // 目標專案ID列表
-  customPercentages?: { [projectId: string]: number }; // 自訂百分比
-  parametersId?: string;   // 使用的分攤參數ID
+  targetProjects: ID[]; // 目標專案ID列表
+  customPercentages?: Record<ID, number>; // 自訂百分比
+  parametersId?: ID;   // 使用的分攤參數ID
 }
 
-// 分攤記錄
-export interface AllocationRecord {
-  id: string;
-  nonProjectRecordId: string;
-  projectId: string;
+/**
+ * 分攤記錄
+ */
+export interface AllocationRecord extends BaseEntity {
+  nonProjectRecordId: ID;
+  projectId: ID;
   allocatedAmount: number;
   percentage: number;
   method: AllocationMethod;
-  createdAt: string;
 }
 
-// 非專案碳排放記錄
-export interface NonProjectEmissionRecord {
-  id?: string;
-  categoryId: string;
+// ===== 排放記錄類型 =====
+
+/**
+ * 非專案碳排放記錄（日常營運排放）
+ */
+export interface NonProjectEmissionRecord extends CreatedEntity {
+  categoryId: ID;
   description: string;
-  sourceId?: string;
+  sourceId?: ID;
   quantity: number;
   unit?: string;
   amount: number;
-  date: string;
+  date: Timestamp;
   location?: string;
   notes?: string;
-  createdAt: string;
-  createdBy?: string;
-  updatedAt?: string;
   // 分攤相關
   isAllocated: boolean; // 是否要分攤到專案
   allocationRule?: AllocationRule;
   allocations?: AllocationRecord[]; // 分攤記錄
 }
 
-// 專案碳排放記錄（直接歸屬於專案的排放）
-export interface ProjectEmissionRecord {
-  id?: string;
-  projectId: string;
+/**
+ * 專案碳排放記錄（直接歸屬於專案的排放）
+ */
+export interface ProjectEmissionRecord extends CreatedEntity {
+  projectId: ID;
   stage: ProductionStage;
-  categoryId: string;
+  categoryId: ID;
   description: string;
-  sourceId?: string;
+  sourceId?: ID;
   quantity: number;
   unit?: string;
   amount: number;
-  date: string;
+  date: Timestamp;
   location?: string;
   notes?: string;
-  createdAt: string;
-  createdBy?: string;
-  updatedAt?: string;
   equipmentList?: string;
   peopleCount?: number;
 }
 
-// 保留舊的EmissionRecord作為兼容性類型，但標記為廢棄
-/** @deprecated 請使用 ProjectEmissionRecord 或 NonProjectEmissionRecord */
-export interface EmissionRecord extends ProjectEmissionRecord {
-  category?: string; // Legacy field
-  title?: string; // Legacy field
-}
-
-// 專案排放摘要
+/**
+ * 專案排放摘要
+ */
 export interface ProjectEmissionSummary {
-  projectId: string;
+  projectId: ID;
   directEmissions: number; // 直接排放
   allocatedEmissions: number; // 分攤排放
   totalEmissions: number; // 總排放
   directRecordCount: number;
   allocatedRecordCount: number;
   // 新增：生命週期階段排放分析
-  stageEmissions?: {
-    'pre-production': number;
-    'production': number;
-    'post-production': number;
-  };
+  stageEmissions?: Record<ProductionStage, number>;
   // 新增：營運分攤到各階段的詳細分配
   operationalAllocation?: {
     'pre-production': number;
@@ -114,10 +113,11 @@ export interface ProjectEmissionSummary {
   };
 }
 
-// 擴展協作者角色
-export type CollaboratorRole = 'owner' | 'admin' | 'editor' | 'contributor' | 'viewer';
+// ===== 協作者相關類型 =====
 
-// 權限定義
+/**
+ * 權限定義
+ */
 export interface CollaboratorPermissions {
   canEdit: boolean;             // 可以編輯
   canDelete: boolean;           // 可以刪除
@@ -138,28 +138,32 @@ export interface CollaboratorPermissions {
   generateReports?: boolean;     
 }
 
-export interface Collaborator {
-  id: string;
+/**
+ * 協作者實體
+ */
+export interface Collaborator extends BaseEntity {
   name: string;
   email: string;
   role: CollaboratorRole;
   permissions: CollaboratorPermissions;
   avatar?: string;
   // 擴展協作者信息
-  joinedAt: string;            // 加入時間
-  lastActive?: string;          // 最後活動時間
-  department?: string;          // 部門
-  position?: string;            // 職位
-  invitedBy?: string;           // 邀請人ID
+  joinedAt: Timestamp;         // 加入時間
+  lastActive?: Timestamp;      // 最後活動時間
+  department?: string;         // 部門
+  position?: string;           // 職位
+  invitedBy?: ID;              // 邀請人ID
   isActive?: boolean;
 }
 
-export interface Project {
-  id: string;
+/**
+ * 專案實體
+ */
+export interface Project extends BaseEntity {
   name: string;
   description?: string;
-  startDate?: string;
-  endDate?: string;
+  startDate?: Timestamp;
+  endDate?: Timestamp;
   location?: string;
   status: ProjectStatus;
   thumbnail?: string;
@@ -170,37 +174,36 @@ export interface Project {
     preProduction?: number;
     production?: number;
     postProduction?: number;
-    stages?: {
-      'pre-production'?: number;
-      'production'?: number;
-      'post-production'?: number;
-      [key: string]: number | undefined;
-    };
+    stages?: Record<ProductionStage, number>;
   };
   // 新的排放統計
   emissionSummary: ProjectEmissionSummary;
   totalEmissions: number;
   collaborators?: Collaborator[];
-  createdAt: string;
-  updatedAt?: string;
   // 添加權限相關字段
   isPrivate?: boolean;          // 是否為私有專案
   accessCode?: string;          // 專案訪問碼
 }
 
-export interface EmissionSource {
-  id: string;
+// ===== 排放源和類別 =====
+
+/**
+ * 排放源
+ */
+export interface EmissionSource extends BaseEntity {
   name: string;
   stage?: ProductionStage; // 對於非專案排放源可以為空
-  categoryId: string;
+  categoryId: ID;
   unit: string;
   emissionFactor: number;
   description?: string;
   isOperational?: boolean; // 是否為日常營運排放源
 }
 
-export interface EmissionCategory {
-  id: string;
+/**
+ * 排放類別
+ */
+export interface EmissionCategory extends BaseEntity {
   name: string;
   icon: string;
   color: string;
@@ -209,7 +212,11 @@ export interface EmissionCategory {
   scope?: 1 | 2 | 3; // 碳排放範疇 (1=直接, 2=間接能源, 3=其他間接)
 }
 
-// 影視製作組別
+// ===== 影視製作相關類型 =====
+
+/**
+ * 影視製作組別
+ */
 export type FilmCrew = 
   | 'director'      // 導演組
   | 'camera'        // 攝影組  
@@ -228,27 +235,28 @@ export type FilmCrew =
   | 'post'          // 後期組
   | 'other';        // 其他
 
-// 拍攝日碳排放記錄
-export interface ShootingDayEmission {
-  id: string;
-  projectId: string;
-  shootingDate: string;           // 拍攝日期
-  location: string;               // 拍攝地點
-  sceneNumber?: string;           // 場次編號
-  crew: FilmCrew;                 // 組別
-  category: string;               // 排放類別 (交通、設備、餐飲等)
-  description: string;            // 描述
-  amount: number;                 // 排放量 (kg CO₂e)
-  quantity?: number;              // 數量
-  unit?: string;                  // 單位
-  notes?: string;                 // 備註
-  createdAt: string;
-  updatedAt: string;
+/**
+ * 拍攝日碳排放記錄
+ */
+export interface ShootingDayEmission extends BaseEntity {
+  projectId: ID;
+  shootingDate: Timestamp;     // 拍攝日期
+  location: string;            // 拍攝地點
+  sceneNumber?: string;        // 場次編號
+  crew: FilmCrew;              // 組別
+  category: string;            // 排放類別 (交通、設備、餐飲等)
+  description: string;         // 描述
+  amount: number;              // 排放量 (kg CO₂e)
+  quantity?: number;           // 數量
+  unit?: string;               // 單位
+  notes?: string;              // 備註
 }
 
-// 拍攝日統計
+/**
+ * 拍攝日統計
+ */
 export interface ShootingDayStats {
-  date: string;
+  date: Timestamp;
   location: string;
   totalEmissions: number;
   crewEmissions: Record<FilmCrew, number>;
@@ -256,7 +264,9 @@ export interface ShootingDayStats {
   recordCount: number;
 }
 
-// 組別統計
+/**
+ * 組別統計
+ */
 export interface CrewStats {
   crew: FilmCrew;
   totalEmissions: number;
