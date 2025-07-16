@@ -152,15 +152,27 @@ export default function LoginScreen() {
 
   const handleGuestLogin = async () => {
     console.log('訪客登入被點擊');
-    try {
-      const success = await login('guest@example.com', 'guest123', false);
-      if (success) {
-        console.log('訪客登入成功，導航到主頁面');
-        router.replace('/(tabs)');
-      }
-    } catch (error) {
-      console.error('訪客登入失敗:', error);
-    }
+    Alert.alert(
+      '訪客模式', 
+      '訪客模式僅供體驗使用，數據不會保存。建議註冊帳戶以完整使用功能。',
+      [
+        { text: '取消', style: 'cancel' },
+        { 
+          text: '繼續', 
+          onPress: async () => {
+            try {
+              const success = await login('guest@example.com', 'guest123', false);
+              if (success) {
+                console.log('訪客登入成功，導航到主頁面');
+                router.replace('/(tabs)');
+              }
+            } catch (error) {
+              console.error('訪客登入失敗:', error);
+            }
+          }
+        }
+      ]
+    );
   };
 
   // 如果用戶已登入且沒有強制登出參數，並且已經處理過參數，直接跳轉
@@ -208,19 +220,9 @@ export default function LoginScreen() {
           <View style={[styles.formContainer, { backgroundColor: theme.card }]}>
             <Text style={[styles.formTitle, { color: theme.text }]}>歡迎回來</Text>
             <Text style={[styles.formSubtitle, { color: theme.secondaryText }]}>
-              請登入您的帳戶以繼續使用（測試版本）
+              請登入您的帳戶以繼續使用
             </Text>
             
-            {/* 測試登入提示 */}
-            <View style={[styles.testInfo, { backgroundColor: theme.primary + '20', borderColor: theme.primary }]}>
-              <Text style={[styles.testInfoTitle, { color: theme.primary }]}>📝 測試登入資訊</Text>
-              <Text style={[styles.testInfoText, { color: theme.text }]}>
-                電子郵件: test@example.com{'\n'}
-                密碼: password{'\n'}
-                或點擊 "使用 Google 登入" 按鈕{'\n'}
-                {Platform.OS !== 'web' ? '✅ APP 版支援 Google 登入' : '✅ Web 版支援 Google 登入'}
-              </Text>
-            </View>
 
             {/* 電子郵件輸入 */}
             <View style={styles.inputContainer}>
@@ -333,7 +335,7 @@ export default function LoginScreen() {
                 disabled={isLoading}
               >
                 <Ionicons name="person-circle-outline" size={24} color={theme.text} />
-                <Text style={[styles.socialButtonText, { color: theme.text }]}>使用訪客模式</Text>
+                <Text style={[styles.socialButtonText, { color: theme.text }]}>訪客體驗</Text>
               </TouchableOpacity>
             </View>
 

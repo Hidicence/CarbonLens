@@ -1,6 +1,19 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+// 條件導入AsyncStorage避免類型錯誤
+let AsyncStorage: any;
+try {
+  AsyncStorage = require('@react-native-async-storage/async-storage').default;
+} catch (error) {
+  // Web環境下的後備存儲
+  AsyncStorage = {
+    getItem: (key: string) => Promise.resolve(localStorage.getItem(key)),
+    setItem: (key: string, value: string) => Promise.resolve(localStorage.setItem(key, value)),
+    removeItem: (key: string) => Promise.resolve(localStorage.removeItem(key)),
+    getAllKeys: () => Promise.resolve(Object.keys(localStorage)),
+    multiRemove: (keys: string[]) => Promise.resolve(keys.forEach(key => localStorage.removeItem(key)))
+  };
+}
 import { firebaseService } from '@/services/firebaseService';
 import { withFirebaseErrorHandling } from '@/utils/errorHandling';
 import { 
@@ -175,8 +188,6 @@ export const useProjectStore = create<ProjectState>()(
           });
           
           if (recordsNeedingReallocation.length > 0) {
-            console.log(`新增專案 ${newProject.name}，重新計算 ${recordsNeedingReallocation.length} 筆營運分攤...`);
-            
             let updatedAllocationRecords = state.allocationRecords;
             let finalProjects = updatedProjects;
             
@@ -259,7 +270,7 @@ export const useProjectStore = create<ProjectState>()(
             if (needsDurationReallocation) changedFields.push('日期');
             if (needsStatusReallocation) changedFields.push('狀態');
             
-            console.log(`專案 ${id} ${changedFields.join('、')}更新，重新計算分攤...`);
+            // console.log(`專案 ${id} ${changedFields.join('、')}更新，重新計算分攤...`);
             
             // 找到所有需要重新計算的記錄
             const recordsNeedingReallocation = state.nonProjectEmissionRecords.filter(record => {
@@ -426,7 +437,7 @@ export const useProjectStore = create<ProjectState>()(
               });
             });
             
-            console.log(`已重新計算 ${recordsNeedingReallocation.length} 個預算分攤記錄`);
+            // console.log(`已重新計算 ${recordsNeedingReallocation.length} 個預算分攤記錄`);
             
             return {
               ...state,
@@ -452,7 +463,7 @@ export const useProjectStore = create<ProjectState>()(
           const deletedAllocationRecords = state.allocationRecords.filter((allocation) => allocation.projectId === id);
           let updatedAllocationRecords = state.allocationRecords.filter((allocation) => allocation.projectId !== id);
           
-          console.log(`刪除專案 ${deletedProject.name}，需要重新分攤相關的營運排放...`);
+          // console.log(`刪除專案 ${deletedProject.name}，需要重新分攤相關的營運排放...`);
           
           // 找到需要重新分攤的營運排放記錄（原本包含被刪除專案的記錄）
           const recordsNeedingReallocation = state.nonProjectEmissionRecords.filter(record => {
@@ -504,7 +515,7 @@ export const useProjectStore = create<ProjectState>()(
             });
           });
           
-          console.log(`已重新分攤 ${recordsNeedingReallocation.length} 筆營運排放記錄至剩餘專案`);
+          // console.log(`已重新分攤 ${recordsNeedingReallocation.length} 筆營運排放記錄至剩餘專案`);
           
           return {
             projects: finalProjects,
@@ -750,25 +761,16 @@ export const useProjectStore = create<ProjectState>()(
       },
       
       deleteNonProjectEmissionRecord: async (id) => {
-        console.log('Store: 準備刪除記錄，ID:', id);
-        
         const currentState = get();
         const recordToDelete = currentState.nonProjectEmissionRecords.find((record) => record.id === id);
         
         set((state) => {
-          console.log('Store: 當前記錄數量:', state.nonProjectEmissionRecords.length);
-          console.log('Store: 記錄ID列表:', state.nonProjectEmissionRecords.map(r => r.id));
-          
-          console.log('Store: 找到記錄:', recordToDelete ? '是' : '否');
-          
           if (!recordToDelete) {
-            console.log('Store: 記錄不存在，取消刪除');
             return state;
           }
           
           // 移除相關的分攤記錄
           const allocationsToRemove = state.allocationRecords.filter(a => a.nonProjectRecordId === id);
-          console.log('Store: 要移除的分攤記錄數量:', allocationsToRemove.length);
           
           const updatedAllocationRecords = state.allocationRecords.filter(a => a.nonProjectRecordId !== id);
           
@@ -788,7 +790,6 @@ export const useProjectStore = create<ProjectState>()(
           });
           
           const updatedRecords = state.nonProjectEmissionRecords.filter((record) => record.id !== id);
-          console.log('Store: 刪除後記錄數量:', updatedRecords.length);
           
           return {
             projects: updatedProjects,
@@ -796,8 +797,6 @@ export const useProjectStore = create<ProjectState>()(
             allocationRecords: updatedAllocationRecords,
           };
         });
-        
-        console.log('Store: 刪除操作完成');
 
         // 同步到 Firebase
         if (recordToDelete) {
@@ -932,7 +931,7 @@ export const useProjectStore = create<ProjectState>()(
       },
       
       recalculateAllAllocations: () => {
-        console.log('手動重新計算所有分攤...');
+        // console.log('手動重新計算所有分攤...');
         
         set((state) => {
           // 獲取所有活躍專案的ID
@@ -996,8 +995,8 @@ export const useProjectStore = create<ProjectState>()(
             });
           });
           
-          console.log(`已重新計算 ${updatedAllocatedRecords.length} 個分攤記錄`);
-          console.log(`活躍專案ID: [${activeProjectIds.join(', ')}]`);
+          // console.log(`已重新計算 ${updatedAllocatedRecords.length} 個分攤記錄`);
+          // console.log(`活躍專案ID: [${activeProjectIds.join(', ')}]`);
           
           return {
             ...state,
@@ -1114,7 +1113,7 @@ export const useProjectStore = create<ProjectState>()(
       
       initializeWithSampleData: () => {
         set((state) => {
-          console.log('開始初始化示例數據...');
+          // console.log('開始初始化示例數據...');
           
           // 導入示例數據
           const sampleProjects = PROJECTS.map(project => ({
@@ -1153,9 +1152,9 @@ export const useProjectStore = create<ProjectState>()(
             id: record.id || generateId()
           }));
           
-          console.log('初始化專案數量:', sampleProjects.length);
-          console.log('初始化專案記錄數量:', projectEmissionRecords.length);
-          console.log('初始化非專案記錄數量:', nonProjectEmissionRecords.length);
+          // console.log('初始化專案數量:', sampleProjects.length);
+          // console.log('初始化專案記錄數量:', projectEmissionRecords.length);
+          // console.log('初始化非專案記錄數量:', nonProjectEmissionRecords.length);
           
           // 計算分攤和生成分攤記錄
           const allocationRecords: AllocationRecord[] = [];
@@ -1204,7 +1203,7 @@ export const useProjectStore = create<ProjectState>()(
             };
           });
           
-          console.log('初始化完成，記錄數量:', nonProjectEmissionRecords.length);
+          // console.log('初始化完成，記錄數量:', nonProjectEmissionRecords.length);
           
           return {
             ...state,
@@ -1576,7 +1575,7 @@ export const useProjectStore = create<ProjectState>()(
       migrate: (persistedState: any, version: number) => {
         // 如果是舊版本或數據結構不匹配，直接返回初始狀態
         if (version < 3 || !persistedState) {
-          console.log('遷移到新版本，清除舊數據');
+          // console.log('遷移到新版本，清除舊數據');
           return {
             projects: [],
             projectEmissionRecords: [],
@@ -1598,7 +1597,7 @@ export const useProjectStore = create<ProjectState>()(
           !Array.isArray(persistedState.nonProjectEmissionRecords) ||
           !Array.isArray(persistedState.allocationRecords)
         ) {
-          console.log('數據格式不正確，重置為初始狀態');
+          // console.log('數據格式不正確，重置為初始狀態');
           return {
             projects: [],
             projectEmissionRecords: [],

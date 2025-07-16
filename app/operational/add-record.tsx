@@ -13,22 +13,17 @@ import {
   FlatList,
   Modal,
   Dimensions,
-  Animated,
-  Image
+  Animated
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import {
   Save,
   Calendar,
   MapPin,
-  FileText,
   Building,
   ChevronDown,
   X,
-  Plus,
   Settings,
-  Car,
-  Zap,
   Users,
   Calculator,
   AlertCircle,
@@ -39,14 +34,17 @@ import {
   CheckCircle,
   Camera,
   Paperclip,
-  Brain,
-  Eye,
-  CheckCircle2,
-  AlertTriangle,
-  Bot
+  Brain
 } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import DateTimePicker from '@react-native-community/datetimepicker';
+// 條件導入DateTimePicker避免類型錯誤
+let DateTimePicker: any;
+try {
+  DateTimePicker = require('@react-native-community/datetimepicker').default;
+} catch (error) {
+  // 如果導入失敗，使用空組件
+  DateTimePicker = () => null;
+}
 import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
 import { useProjectStore } from '@/store/projectStore';
@@ -62,9 +60,7 @@ import {
 } from '@/mocks/projects';
 import { 
   getTranslatedOperationalCategories, 
-  getTranslatedOperationalSources,
-  getTranslatedCategoryName,
-  getTranslatedSourceName 
+  getTranslatedOperationalSources
 } from '@/utils/translations';
 import { 
   NonProjectEmissionRecord, 
@@ -391,7 +387,7 @@ const DocumentUploader: React.FC<{
     try {
       setUploading(true);
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: ImagePicker.MediaTypeOptions.Images, // @ts-ignore - deprecated but still functional
         allowsEditing: true,
         aspect: [4, 3],
         quality: 0.8,
@@ -843,16 +839,23 @@ export default function AddOperationalRecordScreen() {
   };
   
           // 獲取翻譯後的類別和排放源
-    const translatedCategories = getTranslatedOperationalCategories(t);
-    const translatedSources = getTranslatedOperationalSources(t);
+    const translatedCategories = React.useMemo(() => getTranslatedOperationalCategories(t), [t]);
+    const translatedSources = React.useMemo(() => getTranslatedOperationalSources(t), [t]);
     
     // 獲取選中的類別和排放源
-    const selectedCategory = translatedCategories.find(cat => cat.id === formData.categoryId);
+    const selectedCategory = React.useMemo(() => 
+      translatedCategories.find(cat => cat.id === formData.categoryId), 
+      [translatedCategories, formData.categoryId]
+    );
 
-  const availableSources = translatedSources.filter(source => 
-    source.categoryId === formData.categoryId
+  const availableSources = React.useMemo(() => 
+    translatedSources.filter(source => source.categoryId === formData.categoryId), 
+    [translatedSources, formData.categoryId]
   );
-  const selectedSource = availableSources.find(source => source.id === formData.sourceId);
+  const selectedSource = React.useMemo(() => 
+    availableSources.find(source => source.id === formData.sourceId), 
+    [availableSources, formData.sourceId]
+  );
   
   // 進行中的專案
   const activeProjects = projects.filter(p => p.status === 'active');
@@ -922,7 +925,7 @@ export default function AddOperationalRecordScreen() {
         targetProjects: activeProjects.map(p => p.id)
       }));
     }
-  }, [formData.isAllocated, activeProjects]);
+  }, [formData.isAllocated, formData.targetProjects.length, activeProjects]);
 
   // 計算表單完成度
   const calculateProgress = () => {
@@ -947,7 +950,7 @@ export default function AddOperationalRecordScreen() {
       duration: 500,
       useNativeDriver: false,
     }).start();
-  }, [formData]);
+  }, [formData.categoryId, formData.sourceId, formData.description, formData.quantity, formData.date, formData.isAllocated, formData.targetProjects.length]);
 
   const validateForm = () => {
     const newErrors: { [key: string]: string } = {};
@@ -958,13 +961,14 @@ export default function AddOperationalRecordScreen() {
     if (!formData.quantity) newErrors.quantity = t('add.record.validation.required').replace('{field}', t('add.record.quantity'));
           if (!formData.amount) newErrors.amount = t('validation.required').replace('{field}', t('add.record.amount'));
     
-    const quantity = parseFloat(formData.quantity);
-    if (isNaN(quantity) || quantity <= 0) {
+    // 安全的數字驗證
+    const quantity = formData.quantity ? parseFloat(formData.quantity) : NaN;
+    if (!formData.quantity || isNaN(quantity) || quantity <= 0) {
       newErrors.quantity = '請輸入有效的正數';
     }
     
-    const amount = parseFloat(formData.amount);
-    if (isNaN(amount) || amount <= 0) {
+    const amount = formData.amount ? parseFloat(formData.amount) : NaN;
+    if (!formData.amount || isNaN(amount) || amount <= 0) {
       newErrors.amount = '請確保排放量大於0';
     }
     

@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install:*)",
+      "Bash(npm view:*)",
+      "mcp__ide__getDiagnostics",
+      "Bash(find:*)"
+    ],
+    "deny": []
+  }
+}

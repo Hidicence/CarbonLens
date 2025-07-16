@@ -9,10 +9,10 @@ import {
   AllocationRecord 
 } from '@/types/project';
 
-// API配置
-const API_BASE_URL = Platform.OS === 'web' 
-  ? 'http://localhost:3001/api' 
-  : 'http://10.0.2.2:3001/api'; // Android模擬器使用10.0.2.2，iOS模擬器使用localhost
+// API配置 - 從簡化配置讀取
+import { simpleConfig } from '@/config/simple';
+
+const API_BASE_URL = simpleConfig.getApiBaseUrl() + '/api';
 
 // 創建axios實例
 const api = axios.create({

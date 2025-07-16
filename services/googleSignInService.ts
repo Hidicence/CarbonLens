@@ -1,5 +1,6 @@
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { Platform } from 'react-native';
+import { simpleConfig } from '@/config/simple';
 
 export class GoogleSignInService {
   private static isConfigured = false;
@@ -10,19 +11,30 @@ export class GoogleSignInService {
     }
 
     try {
+      const webClientId = simpleConfig.getGoogleClientId();
+      
+      if (!webClientId) {
+        console.error('❌ Google Client ID 未設置');
+        return;
+      }
+      
+      if (webClientId === '574507647166-vqvlvlckpq5t33u5cqdpnqh5qhv1qm7k.apps.googleusercontent.com') {
+        console.warn('⚠️  使用默認 Google Client ID，建議設置環境變數 EXPO_PUBLIC_GOOGLE_SIGNIN_WEB_CLIENT_ID');
+      }
+
       GoogleSignin.configure({
         // 這個 Web Client ID 必須與 Firebase Console 中的一致
-        webClientId: '574507647166-vqvlvlckpq5t33u5cqdpnqh5qhv1qm7k.apps.googleusercontent.com',
+        webClientId: webClientId,
         offlineAccess: true,
         forceCodeForRefreshToken: true,
         profileImageSize: 120,
         // 添加 iOS Client ID (如果有的話)
-        iosClientId: '574507647166-vqvlvlckpq5t33u5cqdpnqh5qhv1qm7k.apps.googleusercontent.com',
+        iosClientId: webClientId,
       });
       
       this.isConfigured = true;
       console.log('✅ Google Sign-In 配置成功');
-      console.log('📋 Web Client ID:', '574507647166-vqvlvlckpq5t33u5cqdpnqh5qhv1qm7k.apps.googleusercontent.com');
+      console.log('📋 Web Client ID:', webClientId.substring(0, 10) + '***');
     } catch (error) {
       console.error('❌ Google Sign-In 配置失敗:', error);
     }
@@ -128,7 +140,7 @@ export class GoogleSignInService {
     return {
       isConfigured: this.isConfigured,
       platform: Platform.OS,
-      webClientId: '574507647166-vqvlvlckpq5t33u5cqdpnqh5qhv1qm7k.apps.googleusercontent.com'
+      webClientId: simpleConfig.getGoogleClientId()
     };
   }
 } 

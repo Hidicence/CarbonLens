@@ -31,7 +31,15 @@
         "backgroundColor": "#1E1E1E"
       },
       "package": "com.carbonlens.app",
-      "runtimeVersion": "1.0.6"
+      "runtimeVersion": {
+        "policy": "appVersion"
+      },
+      "permissions": [
+        "INTERNET",
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -42,7 +50,7 @@
       [
         "@react-native-google-signin/google-signin",
         {
-          "iosUrlScheme": "com.googleusercontent.apps.574507647166-vqvlvlckpq5t33u5cqdpnqh5qhv1qm7k"
+          "iosUrlScheme": "com.googleusercontent.apps.318489404801-abcdefghijklmnopqrstuvwxyz123456"
         }
       ]
     ],

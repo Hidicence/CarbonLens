@@ -1,6 +1,17 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+// 條件導入AsyncStorage避免類型錯誤
+let AsyncStorage: any;
+try {
+  AsyncStorage = require('@react-native-async-storage/async-storage').default;
+} catch (error) {
+  // Web環境下的後備存儲
+  AsyncStorage = {
+    getItem: (key: string) => Promise.resolve(localStorage.getItem(key)),
+    setItem: (key: string, value: string) => Promise.resolve(localStorage.setItem(key, value)),
+    removeItem: (key: string) => Promise.resolve(localStorage.removeItem(key))
+  };
+}
 
 interface FloatingAIState {
   isVisible: boolean;
@@ -16,18 +27,16 @@ export const useFloatingAIStore = create<FloatingAIState>()(
       isVisible: false,
       mode: 'project',
       
-      showFloatingAI: (mode = 'project') => {
-        console.log(`調用 showFloatingAI，模式: ${mode}，設置 isVisible 為 true`);
-        set({ isVisible: true, mode });
+      showFloatingAI: (mode?: string) => {
+        const validMode = mode === 'project' || mode === 'operational' ? mode : 'project';
+        set({ isVisible: true, mode: validMode });
       },
       
       hideFloatingAI: () => {
-        console.log('調用 hideFloatingAI，設置 isVisible 為 false');
         set({ isVisible: false });
       },
       
       toggleFloatingAI: () => {
-        console.log('調用 toggleFloatingAI');
         set((state) => ({ isVisible: !state.isVisible }));
       },
     }),

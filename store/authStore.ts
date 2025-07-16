@@ -1,6 +1,19 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+// 條件導入AsyncStorage避免類型錯誤
+let AsyncStorage: any;
+try {
+  AsyncStorage = require('@react-native-async-storage/async-storage').default;
+} catch (error) {
+  // Web環境下的後備存儲
+  AsyncStorage = {
+    getItem: (key: string) => Promise.resolve(localStorage.getItem(key)),
+    setItem: (key: string, value: string) => Promise.resolve(localStorage.setItem(key, value)),
+    removeItem: (key: string) => Promise.resolve(localStorage.removeItem(key)),
+    getAllKeys: () => Promise.resolve(Object.keys(localStorage)),
+    multiRemove: (keys: string[]) => Promise.resolve(keys.forEach(key => localStorage.removeItem(key)))
+  };
+}
 import { User } from '@/types/auth';
 import { Platform } from 'react-native';
 // import { useProfileStore } from '@/store/profileStore'; // 暫時禁用避免初始化問題
@@ -134,28 +147,27 @@ export const useAuthStore = create<AuthState>()(
           const auth = getAuth(firebaseApp);
           await signInWithEmailAndPassword(auth, email, password);
           // onAuthStateChanged 將會處理 user 和 isLoggedIn 狀態
-          console.log('登入成功:', email);
+          __DEV__ && console.log('登入成功:', email);
           return true;
         } catch (error: any) {
           console.error('登入錯誤:', error);
           
-          // 如果是測試帳號或訪客帳號且登入失敗，嘗試創建它們
-          const isTestAccount = email === 'test@example.com' || email === 'guest@example.com';
+          // 如果是訪客帳號且登入失敗，嘗試創建它
+          const isGuestAccount = email === 'guest@example.com';
           const isCredentialError = error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential';
           
-          if (isTestAccount && isCredentialError) {
-            console.log(`${email} 帳號不存在或密碼錯誤，嘗試創建新帳號...`);
+          if (isGuestAccount && isCredentialError) {
+            console.log(`${email} 帳號不存在，嘗試創建新帳號...`);
             try {
               const auth = getAuth(firebaseApp);
               const userCredential = await createUserWithEmailAndPassword(auth, email, password);
               
               // 設置顯示名稱
-              const displayName = email === 'test@example.com' ? '測試用戶' : '訪客用戶';
               await updateProfile(userCredential.user, {
-                displayName: displayName
+                displayName: '訪客用戶'
               });
               
-              console.log(`${email} 帳號創建成功並登入`);
+              __DEV__ && console.log(`${email} 帳號創建成功並登入`);
               return true;
             } catch (creationError: any) {
               console.error(`創建 ${email} 帳號失敗:`, creationError);
@@ -164,7 +176,7 @@ export const useAuthStore = create<AuthState>()(
               if (creationError.code === 'auth/email-already-in-use') {
                 set({ error: `${email} 帳號已存在，但密碼不正確`, isLoading: false });
               } else {
-              set({ error: creationError.message, isLoading: false });
+                set({ error: creationError.message, isLoading: false });
               }
               return false;
             }
@@ -210,60 +222,13 @@ export const useAuthStore = create<AuthState>()(
             // onAuthStateChanged 將會處理狀態更新
             return true;
           } else {
-            // 暫時禁用原生 Google Sign-In，避免模塊錯誤
-            console.log('原生 Google 登入暫時禁用，使用測試帳號登入...');
-            
-            // 在原生平台使用測試帳號作為 fallback
-            if (__DEV__) {
-              return await get().login('test@example.com', 'password', false);
-            }
-            
-            throw new Error('Google 登入功能暫時不可用');
-            
-            /* TODO: 重新啟用原生 Google Sign-In
-            // 原生 APP 平台使用 Google Sign-In SDK
-            console.log('開始原生 Google 登入流程...');
-            
-            try {
-              // 執行 Google 登入
-              const userInfo = await GoogleSignInService.signIn();
-              console.log('Google 登入成功，用戶資訊:', userInfo);
-              
-              if (!userInfo.data?.idToken) {
-                throw new Error('未獲取到 Google ID Token');
-              }
-              
-              // 獲取 Google 認證憑證
-              const googleCredential = GoogleAuthProvider.credential(
-                userInfo.data.idToken
-              );
-              
-              console.log('正在使用 Google 憑證登入 Firebase...');
-              
-              // 使用 Google 憑證登入 Firebase
-              const result = await signInWithCredential(auth, googleCredential);
-              const firebaseUser = result.user;
-              
-              if (!firebaseUser) {
-                throw new Error('Google 登入未返回用戶資訊');
-              }
-              
-              console.log('Firebase 登入成功:', firebaseUser.email);
-              
-              // onAuthStateChanged 將會處理狀態更新
-              return true;
-            } catch (nativeError: any) {
-              console.error('原生 Google 登入失敗:', nativeError);
-              
-              // 如果原生登入失敗，在開發環境下可以嘗試測試帳號登入
-              if (__DEV__) {
-                console.log('開發環境：嘗試使用測試帳號登入...');
-                return await get().login('test@example.com', 'password', false);
-              }
-              
-              throw nativeError;
-            }
-            */
+            // 原生平台暫時不支援 Google Sign-In
+            // 用戶需要使用電子郵件註冊/登入方式
+            set({ 
+              error: 'Google 登入目前僅支援網頁版本，請使用電子郵件登入或註冊新帳戶', 
+              isLoading: false 
+            });
+            return false;
           }
         } catch (error: any) {
           console.error('Google login error:', error);

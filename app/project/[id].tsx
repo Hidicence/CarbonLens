@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { useTranslation } from '@/hooks/useTranslation';
 import { 
   View, 
   Text, 
@@ -89,8 +88,6 @@ export default function ProjectDetailScreen() {
     const keyboardDidShowListener = Keyboard.addListener(
       'keyboardDidShow',
       () => {
-  const { t } = useTranslation();
-
         setKeyboardVisible(true);
       }
     );

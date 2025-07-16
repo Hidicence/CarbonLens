@@ -1,4 +1,6 @@
 // DeepSeek AI 智能助手服務
+import { simpleConfig } from '@/config/simple';
+
 interface DeepSeekResponse {
   choices: {
     message: {
@@ -28,8 +30,18 @@ class DeepSeekAIService {
   private baseURL = 'https://api.deepseek.com/v1/chat/completions';
 
   constructor() {
-    // 從環境變數或配置中獲取 API Key
-    this.apiKey = process.env.DEEPSEEK_API_KEY || 'sk-3ca8a2c16a504c1a830041f9fcff6853';
+    const apiKey = simpleConfig.getDeepSeekApiKey();
+    if (!apiKey) {
+      // 在開發模式下警告，但不拋出錯誤以避免應用崩潰
+      console.warn('⚠️  DeepSeek API密鑰未設置，AI功能將被禁用');
+      this.apiKey = '';
+      return;
+    }
+    this.apiKey = apiKey;
+    
+    if (this.apiKey === 'sk-3ca8a2c16a504c1a830041f9fcff6853') {
+      console.warn('⚠️  使用默認 API Key，建議設置環境變數 EXPO_PUBLIC_DEEPSEEK_API_KEY');
+    }
   }
 
   /**

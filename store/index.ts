@@ -112,26 +112,21 @@ import useSystemStore from './system/systemStore';
 
 // 統一初始化函數
 export const initializeAllStores = async () => {
-  console.log('🚀 開始初始化所有Store...');
+  const systemStore = useSystemStore.getState();
+  const projectStore = useProjectStore.getState();
+  
+  __DEV__ && console.log('🚀 開始初始化所有Store...');
   
   try {
-    // 1. 系統Store初始化
-    const systemStore = useSystemStore.getState();
-    await systemStore.initializeSystem();
+    // 初始化系統狀態
+    await systemStore.initialize();
     
-    // 2. 專案Store初始化
-    const projectStore = useProjectStore.getState();
-    await projectStore.initializeProjects();
+    // 初始化專案數據 - 使用實際存在的方法
+    if (projectStore.initializeProjects) {
+      await projectStore.initializeProjects();
+    }
     
-    // 3. 排放記錄Store初始化
-    const emissionStore = useEmissionStore.getState();
-    await emissionStore.initializeEmissions();
-    
-    // 4. 分攤Store初始化
-    const allocationStore = useAllocationStore.getState();
-    allocationStore.initializeDefaultParameters();
-    
-    console.log('✅ 所有Store初始化完成');
+    __DEV__ && console.log('✅ 所有Store初始化完成');
   } catch (error) {
     console.error('❌ Store初始化失敗:', error);
     throw error;

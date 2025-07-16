@@ -12,7 +12,8 @@ import {
   Platform,
   Image,
   Keyboard,
-  Switch
+  Switch,
+  Alert
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { X, MapPin, Image as ImageIcon, DollarSign, Lightbulb } from 'lucide-react-native';
@@ -149,7 +150,8 @@ export default function NewProjectScreen() {
     router.back();
     } catch (error) {
       console.error('❌ 創建專案失敗:', error);
-      // 可以在這裡添加錯誤提示
+      const errorMessage = error instanceof Error ? error.message : '創建專案時發生未知錯誤';
+      Alert.alert('創建失敗', errorMessage);
     }
   };
   

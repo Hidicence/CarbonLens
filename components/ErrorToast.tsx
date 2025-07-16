@@ -187,7 +187,7 @@ class ToastManager {
   }
 
   show(message: Omit<ToastMessage, 'id'>) {
-    const id = `toast_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const id = `toast_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
     const newMessage: ToastMessage = { ...message, id };
     
     this.messages = [newMessage, ...this.messages].slice(0, 3); // 最多顯示3個

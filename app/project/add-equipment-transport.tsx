@@ -160,6 +160,17 @@ export default function AddEquipmentTransportScreen() {
       Alert.alert('錯誤', '請至少選擇一項器材');
       return;
     }
+    
+    // 驗證設備數據的有效性
+    const hasInvalidEquipment = selectedEquipment.some(item => 
+      !item.equipment.weight || item.equipment.weight <= 0 || 
+      !item.quantity || item.quantity <= 0
+    );
+    
+    if (hasInvalidEquipment) {
+      Alert.alert('錯誤', '請確保所有選擇的設備都有有效的重量和數量');
+      return;
+    }
 
     setIsSaving(true);
 

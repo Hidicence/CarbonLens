@@ -17,6 +17,10 @@ expo-env.d.ts
 *.key
 *.mobileprovision
 
+# Generated native folders (Prebuild)
+android/
+ios/
+
 # Metro
 .metro-health-check*
 
@@ -31,6 +35,10 @@ yarn-error.*
 
 # local env files
 .env*.local
+.env
+
+# 安全敏感文件
+config/secrets.ts
 
 # typescript
 *.tsbuildinfo
