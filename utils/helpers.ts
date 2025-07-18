@@ -11,6 +11,14 @@ export const formatEmissions = (amount: number, t?: any): string => {
   return `${amount.toFixed(2)} ${t ? t('units.kg') : '公斤'}CO₂e`;
 };
 
+// Format emissions for compact display (shorter format)
+export const formatEmissionsCompact = (amount: number, t?: any): string => {
+  if (amount >= 1000) {
+    return `${(amount / 1000).toFixed(1)}${t ? t('units.tonnes.short') : '噸'}`;
+  }
+  return `${amount.toFixed(0)}${t ? t('units.kg.short') : 'kg'}`;
+};
+
 // Format currency to display with units
 export const formatCurrency = (amount: number): string => {
   if (amount >= 10000) {

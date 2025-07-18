@@ -140,27 +140,27 @@ export default function RecordsScreen() {
     console.log('記錄是否存在:', recordExists ? '是' : '否');
     
     if (!recordExists) {
-      Alert.alert('錯誤', '找不到要刪除的記錄');
+      Alert.alert(t('common.error'), t('records.record.not.found'));
       return;
     }
     
     Alert.alert(
-      '刪除記錄',
-      '確定要刪除這筆營運記錄嗎？此操作無法復原。',
+      t('records.delete.title'),
+      t('records.delete.message'),
       [
-        { text: '取消', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         { 
-          text: '刪除', 
+          text: t('common.delete'), 
           style: 'destructive',
           onPress: () => {
             console.log('執行刪除，記錄ID:', recordId);
             try {
               deleteNonProjectEmissionRecord(recordId);
               console.log('刪除成功');
-              Alert.alert('成功', '記錄已刪除');
+              Alert.alert(t('common.success'), t('records.delete.success'));
             } catch (error) {
               console.error('刪除失敗:', error);
-              Alert.alert('錯誤', '刪除失敗，請重試');
+              Alert.alert(t('common.error'), t('records.delete.failed'));
             }
           }
         }

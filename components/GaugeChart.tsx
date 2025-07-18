@@ -34,15 +34,14 @@ const GaugeChart: React.FC<GaugeChartProps> = ({
   // 動畫值
   const animatedValue = useRef(new Animated.Value(0)).current;
   const glowAnimation = useRef(new Animated.Value(0)).current;
-  const needleAnimation = useRef(new Animated.Value(0)).current;
   
-  const strokeWidth = 8;
+  const strokeWidth = 18;
   const radius = (size - strokeWidth) / 2 - 10;
   const center = size / 2;
   
-  // 計算角度（從 -135° 到 135°，總共 270°）
-  const startAngle = -135;
-  const endAngle = 135;
+  // 計算角度（從 -180° 到 0°，總共 180°，半圓形）
+  const startAngle = -180;
+  const endAngle = 0;
   const totalAngle = endAngle - startAngle;
   
   // 計算當前值的角度
@@ -59,29 +58,22 @@ const GaugeChart: React.FC<GaugeChartProps> = ({
       useNativeDriver: false,
     }).start();
     
-    // 指針動畫
-    Animated.timing(needleAnimation, {
-      toValue: currentAngle,
-      duration: 1200,
-      useNativeDriver: false,
-    }).start();
-    
     // 發光脈衝動畫
     Animated.loop(
       Animated.sequence([
         Animated.timing(glowAnimation, {
           toValue: 1,
-          duration: 1500,
+          duration: 2000,
           useNativeDriver: false,
         }),
         Animated.timing(glowAnimation, {
-          toValue: 0.3,
-          duration: 1500,
+          toValue: 0.2,
+          duration: 2000,
           useNativeDriver: false,
         })
       ])
     ).start();
-  }, [percentage, currentAngle]);
+  }, [percentage]);
   
   // 轉換角度到弧度
   const toRadians = (degrees: number) => degrees * (Math.PI / 180);
@@ -108,144 +100,93 @@ const GaugeChart: React.FC<GaugeChartProps> = ({
   // 進度弧線
   const progressArc = describeArc(center, center, radius, startAngle, currentAngle);
   
-  // 指針位置
-  const needleAngle = toRadians(currentAngle);
-  const needleLength = radius - 20;
-  const needleX = center + needleLength * Math.cos(needleAngle);
-  const needleY = center + needleLength * Math.sin(needleAngle);
+  // 移除指針相關計算 - 採用更簡潔的設計
   
   return (
-    <View style={[styles.container, { width: size, height: size }]}>
+    <View style={[styles.container, { width: size, height: size * 0.65, overflow: 'hidden' }]}>
       {/* 背景發光效果 */}
       <Animated.View
         style={[
           styles.backgroundGlow,
           {
-            width: size + 20,
-            height: size + 20,
-            borderRadius: (size + 20) / 2,
-            backgroundColor: color + '10',
+            width: size * 0.95,
+            height: size * 0.95,
+            borderRadius: (size * 0.95) / 2,
+            backgroundColor: color + '08',
             opacity: glowAnimation.interpolate({
               inputRange: [0, 1],
-              outputRange: [0.1, 0.3],
+              outputRange: [0.06, 0.18],
             }),
             shadowColor: color,
             shadowOffset: { width: 0, height: 0 },
             shadowOpacity: glowAnimation.interpolate({
               inputRange: [0, 1],
-              outputRange: [0.3, 0.7],
+              outputRange: [0.12, 0.35],
             }),
-            shadowRadius: 20,
-            elevation: 10,
+            shadowRadius: 15,
+            elevation: 8,
           }
         ]}
       />
       
-      <Svg width={size} height={size}>
+      <Svg width={size} height={size * 0.65}>
         <Defs>
-          <SvgLinearGradient id="gaugeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-            <Stop offset="0%" stopColor={color} stopOpacity="0.4" />
-            <Stop offset="50%" stopColor={color} stopOpacity="0.9" />
-            <Stop offset="100%" stopColor={color} stopOpacity="1" />
-          </SvgLinearGradient>
-          <SvgLinearGradient id="needleGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+          <SvgLinearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="0%">
             <Stop offset="0%" stopColor={color} stopOpacity="0.8" />
+            <Stop offset="50%" stopColor={color} stopOpacity="0.95" />
             <Stop offset="100%" stopColor={color} stopOpacity="1" />
           </SvgLinearGradient>
-          <RadialGradient id="centerGradient" cx="50%" cy="50%" r="50%">
-            <Stop offset="0%" stopColor={color} stopOpacity="1" />
-            <Stop offset="100%" stopColor={color} stopOpacity="0.6" />
-          </RadialGradient>
+          <SvgLinearGradient id="backgroundGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <Stop offset="0%" stopColor={isDarkMode ? '#374151' : '#E5E7EB'} stopOpacity="0.8" />
+            <Stop offset="100%" stopColor={isDarkMode ? '#4B5563' : '#F3F4F6'} stopOpacity="0.6" />
+          </SvgLinearGradient>
         </Defs>
         
         {/* 背景弧線 */}
         <Path
           d={backgroundArc}
           fill="none"
-          stroke={theme.border}
+          stroke="url(#backgroundGradient)"
           strokeWidth={strokeWidth}
           strokeLinecap="round"
-          opacity={0.3}
+          opacity={0.9}
         />
         
         {/* 進度弧線 */}
         <Path
           d={progressArc}
           fill="none"
-          stroke="url(#gaugeGradient)"
+          stroke="url(#progressGradient)"
           strokeWidth={strokeWidth}
           strokeLinecap="round"
         />
         
-        {/* 中心點 */}
-        <Circle
-          cx={center}
-          cy={center}
-          r={12}
-          fill="url(#centerGradient)"
-        />
-        
-        {/* 中心點高光 */}
-        <Circle
-          cx={center - 2}
-          cy={center - 2}
-          r={4}
-          fill={color + 'AA'}
-          opacity={0.8}
-        />
-        
-        {/* 指針陰影 */}
+        {/* 進度弧線外層光暈 */}
         <Path
-          d={`M ${center + 1} ${center + 1} L ${needleX + 1} ${needleY + 1}`}
-          stroke={color + '30'}
-          strokeWidth={4}
+          d={progressArc}
+          fill="none"
+          stroke={color}
+          strokeWidth={strokeWidth + 4}
           strokeLinecap="round"
+          opacity={0.15}
         />
         
-        {/* 指針 */}
-        <Path
-          d={`M ${center} ${center} L ${needleX} ${needleY}`}
-          stroke="url(#needleGradient)"
-          strokeWidth={4}
-          strokeLinecap="round"
-        />
+        {/* 移除指針和中心點 - 採用更簡潔的設計 */}
         
-        {/* 刻度線 */}
-        {Array.from({ length: 11 }, (_, i) => {
-          const angle = startAngle + (totalAngle * i / 10);
-          const tickAngle = toRadians(angle);
-          const isMainTick = i % 2 === 0;
-          const tickLength = isMainTick ? 15 : 10;
-          const tickStartRadius = radius - 5;
-          const tickEndRadius = radius - 5 - tickLength;
-          
-          const tickStart = polarToCartesian(center, center, tickStartRadius, angle);
-          const tickEnd = polarToCartesian(center, center, tickEndRadius, angle);
-          
-          return (
-            <Path
-              key={i}
-              d={`M ${tickStart.x} ${tickStart.y} L ${tickEnd.x} ${tickEnd.y}`}
-              stroke={theme.secondaryText}
-              strokeWidth={isMainTick ? 2 : 1}
-              strokeLinecap="round"
-              opacity={0.6}
-            />
-          );
-        })}
+        {/* 刻度線已移除 - 更簡潔的設計 */}
       </Svg>
       
       {/* 文字內容 */}
       <View style={styles.textContainer}>
-        <Text style={[styles.title, { color: theme.text }]}>
-          {title}
-        </Text>
-        
         {showValue && (
-          <Text style={[styles.value, { color }]}>
-            {normalizedValue.toFixed(1)}{unit}
+          <Text style={[styles.value, { color: theme.text }]}>
+            {Math.round(normalizedValue)}
           </Text>
         )}
+        
+        <Text style={[styles.title, { color: theme.secondaryText }]}>
+          {title}
+        </Text>
         
         {subtitle && (
           <Text style={[styles.subtitle, { color: theme.secondaryText }]}>
@@ -275,10 +216,8 @@ const styles = StyleSheet.create({
   },
   backgroundGlow: {
     position: 'absolute',
-    top: -10,
-    left: -10,
-    right: -10,
-    bottom: -10,
+    top: '2%',
+    left: '2.5%',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -286,34 +225,41 @@ const styles = StyleSheet.create({
     position: 'absolute',
     alignItems: 'center',
     justifyContent: 'center',
-    top: '60%',
+    top: '25%',
+    left: 0,
+    right: 0,
   },
   title: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '500',
     textAlign: 'center',
-    marginBottom: 4,
+    marginTop: 6,
+    opacity: 0.9,
   },
   value: {
-    fontSize: 24,
+    fontSize: 52,
     fontWeight: '800',
     textAlign: 'center',
-    marginBottom: 2,
+    marginBottom: 4,
+    letterSpacing: -2,
   },
   subtitle: {
-    fontSize: 12,
+    fontSize: 14,
     textAlign: 'center',
+    marginTop: 4,
   },
   labelsContainer: {
     position: 'absolute',
     flexDirection: 'row',
     justifyContent: 'space-between',
-    width: '80%',
-    bottom: '15%',
+    width: '90%',
+    bottom: '5%',
+    left: '5%',
   },
   label: {
-    fontSize: 10,
+    fontSize: 12,
     fontWeight: '500',
+    opacity: 0.8,
   },
 });
 

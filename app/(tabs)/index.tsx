@@ -13,7 +13,7 @@ import EmptyState from '@/components/EmptyState';
 import ProjectCard from '@/components/ProjectCard';
 import StatusBadge from '@/components/StatusBadge';
 import AIAssistantButton from '@/components/AIAssistantButton';
-import { formatEmissions } from '@/utils/helpers';
+import { formatEmissions, formatEmissionsCompact } from '@/utils/helpers';
 import { generateAllTestData } from '@/utils/testDataGenerator';
 import Colors from '@/constants/colors';
 
@@ -278,7 +278,7 @@ export default function ProjectsScreen() {
           <View style={styles.compactStatsRow}>
             <View style={styles.compactStatItem}>
               <Text style={[styles.compactStatValue, { color: theme.primary }]}>
-                {formatEmissions(totalEmissions)}
+                {formatEmissionsCompact(totalEmissions)}
               </Text>
               <Text style={[styles.compactStatLabel, { color: theme.secondaryText }]}>
                 {t('home.emissions.total')}
@@ -364,7 +364,7 @@ export default function ProjectsScreen() {
               <View style={styles.operationalStatsRow}>
                 <View style={styles.operationalStatItem}>
                   <Text style={[styles.operationalStatValue, { color: '#10B981' }]}>
-                    {formatEmissions(nonProjectEmissionRecords.reduce((sum, r) => sum + r.amount, 0))}
+                    {formatEmissionsCompact(nonProjectEmissionRecords.reduce((sum, r) => sum + r.amount, 0))}
                   </Text>
                   <Text style={[styles.operationalStatLabel, { color: theme.secondaryText }]}>
                     {t('home.operational.total.emissions')}
@@ -529,9 +529,9 @@ const styles = StyleSheet.create({
   // 緊湊版碳排放卡片樣式
   compactEmissionCard: {
     marginHorizontal: 20,
-    marginBottom: 12,
+    marginBottom: 18,
     borderRadius: 12,
-    padding: 14,
+    padding: 16,
     elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -542,7 +542,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 16,
   },
   compactHeaderLeft: {
     flexDirection: 'row',
@@ -561,22 +561,25 @@ const styles = StyleSheet.create({
   compactStatItem: {
     alignItems: 'center',
     flex: 1,
+    minHeight: 45,
+    justifyContent: 'center',
   },
   compactStatDivider: {
     width: 1,
-    height: 20,
+    height: 35,
     backgroundColor: 'rgba(0,0,0,0.1)',
     marginHorizontal: 8,
   },
   compactStatValue: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '700',
-    marginBottom: 2,
+    marginBottom: 4,
   },
   compactStatLabel: {
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '500',
     textAlign: 'center',
+    lineHeight: 14,
   },
   compactTrendContainer: {
     flexDirection: 'row',
@@ -586,9 +589,9 @@ const styles = StyleSheet.create({
   // 日常營運卡片樣式
   operationalCard: {
     marginHorizontal: 20,
-    marginBottom: 16,
+    marginBottom: 20,
     borderRadius: 12,
-    padding: 16,
+    padding: 18,
     elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -599,7 +602,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 18,
   },
   operationalTitleSection: {
     flexDirection: 'row',
@@ -607,16 +610,17 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   operationalTitleInfo: {
-    marginLeft: 12,
+    marginLeft: 14,
     flex: 1,
   },
   operationalTitle: {
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: '600',
   },
   operationalSubtitle: {
-    fontSize: 12,
-    marginTop: 2,
+    fontSize: 13,
+    marginTop: 3,
+    lineHeight: 16,
   },
   operationalMainButton: {
     flexDirection: 'row',
@@ -658,9 +662,9 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   operationalStatsContainer: {
-    marginVertical: 16,
-    paddingVertical: 16,
-    paddingHorizontal: 16,
+    marginVertical: 18,
+    paddingVertical: 18,
+    paddingHorizontal: 18,
     borderRadius: 12,
     borderWidth: 1,
     borderColor: 'rgba(0,0,0,0.08)',
@@ -673,22 +677,29 @@ const styles = StyleSheet.create({
   operationalStatItem: {
     alignItems: 'center',
     flex: 1,
+    paddingVertical: 4,
+    minHeight: 50,
+    justifyContent: 'center',
   },
   operationalStatDivider: {
     width: 1,
-    height: 32,
+    height: 40,
     backgroundColor: 'rgba(0,0,0,0.1)',
-    marginHorizontal: 12,
+    marginHorizontal: 10,
   },
   operationalStatValue: {
     fontSize: 16,
     fontWeight: '700',
-    marginBottom: 4,
+    marginBottom: 6,
+    lineHeight: 20,
+    textAlign: 'center',
   },
   operationalStatLabel: {
     fontSize: 11,
     fontWeight: '500',
     textAlign: 'center',
+    lineHeight: 14,
+    paddingHorizontal: 4,
   },
   activeProjectsIndicator: {
     flexDirection: 'row',

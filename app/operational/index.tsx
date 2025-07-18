@@ -34,7 +34,7 @@ import { useThemeStore } from '@/store/themeStore';
 import { useTranslation } from '@/hooks/useTranslation';
 import Colors from '@/constants/colors';
 import Header from '@/components/Header';
-import { formatEmissions, formatCurrency } from '@/utils/helpers';
+import { formatEmissions, formatEmissionsCompact, formatCurrency } from '@/utils/helpers';
 import { getTranslatedCategoryName, getTranslatedSourceName } from '@/utils/translations';
 import { NonProjectEmissionRecord } from '@/types/project';
 
@@ -226,7 +226,7 @@ export default function OperationalScreen() {
               <BarChart3 size={20} color={theme.primary} />
             </View>
             <Text style={[styles.statValue, { color: theme.primary }]}>
-              {formatEmissions(totalEmissions)}
+              {formatEmissionsCompact(totalEmissions)}
             </Text>
             <Text style={[styles.statLabel, { color: theme.secondaryText }]}>
               {t('operational.total.emissions')}
@@ -307,7 +307,7 @@ export default function OperationalScreen() {
               </View>
               <View style={styles.categoryRight}>
                 <Text style={[styles.categoryAmount, { color: stat.color }]}>
-                  {formatEmissions(stat.totalAmount)}
+                  {formatEmissionsCompact(stat.totalAmount)}
                 </Text>
                 <View style={[styles.categoryProgress, { backgroundColor: theme.background }]}>
                   <View style={[
@@ -392,7 +392,7 @@ export default function OperationalScreen() {
               </View>
               <View style={styles.recordRight}>
                 <Text style={[styles.recordAmount, { color: theme.primary }]}>
-                  {formatEmissions(record.amount)}
+                  {formatEmissionsCompact(record.amount)}
                 </Text>
                 <Text style={[styles.recordQuantity, { color: theme.secondaryText }]}>
                   {record.quantity ? `${record.quantity} ${record.unit || ''}` : ''}
@@ -551,34 +551,41 @@ const styles = StyleSheet.create({
   },
   statsGrid: {
     flexDirection: 'row',
-    gap: 12,
+    gap: 8,
   },
   statCard: {
     flex: 1,
     borderRadius: 12,
-    padding: 16,
+    padding: 14,
     elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
+    minHeight: 100,
+    justifyContent: 'center',
   },
   statIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 12,
+    alignSelf: 'center',
   },
   statValue: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '700',
-    marginBottom: 4,
+    marginBottom: 6,
+    textAlign: 'center',
+    lineHeight: 20,
   },
   statLabel: {
-    fontSize: 12,
+    fontSize: 11,
     textAlign: 'center',
+    lineHeight: 14,
+    paddingHorizontal: 4,
   },
   
   // 類別統計
@@ -620,7 +627,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 12,
+    paddingVertical: 14,
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
   },
@@ -650,11 +657,14 @@ const styles = StyleSheet.create({
   },
   categoryRight: {
     alignItems: 'flex-end',
+    minWidth: 80,
   },
   categoryAmount: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '600',
-    marginBottom: 4,
+    marginBottom: 6,
+    textAlign: 'right',
+    lineHeight: 18,
   },
   categoryProgress: {
     width: 80,
@@ -727,7 +737,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 12,
+    paddingVertical: 14,
     borderBottomWidth: 1,
   },
   recordLeft: {
@@ -758,10 +768,13 @@ const styles = StyleSheet.create({
   },
   recordRight: {
     alignItems: 'flex-end',
+    minWidth: 80,
   },
   recordAmount: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '600',
+    textAlign: 'right',
+    lineHeight: 18,
   },
   recordQuantity: {
     fontSize: 12,

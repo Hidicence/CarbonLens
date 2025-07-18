@@ -112,8 +112,8 @@ export default function EditRecordScreen() {
       setCalculatedEmissions(recordToEdit.amount);
     } else {
       // 如果找不到記錄，返回
-      Alert.alert('錯誤', '找不到指定的記錄', [
-        { text: '確定', onPress: () => router.back() }
+      Alert.alert(t('common.error'), t('edit.record.not.found'), [
+        { text: t('common.ok'), onPress: () => router.back() }
       ]);
     }
   }, [recordToEdit, router]);
@@ -214,13 +214,13 @@ export default function EditRecordScreen() {
       updateNonProjectEmissionRecord(recordToEdit.id!, updatedRecord);
 
       Alert.alert(
-        '成功',
-        '營運記錄已更新',
-        [{ text: '確定', onPress: () => router.back() }]
+        t('common.success'),
+        t('edit.record.update.success'),
+        [{ text: t('common.ok'), onPress: () => router.back() }]
       );
     } catch (error) {
       console.error('更新記錄失敗:', error);
-      Alert.alert('錯誤', '更新記錄失敗，請重試');
+      Alert.alert(t('common.error'), t('edit.record.update.failed'));
     } finally {
       setIsSaving(false);
     }

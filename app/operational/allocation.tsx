@@ -149,7 +149,7 @@ export default function AllocationManagementScreen() {
     }
     
     if (selectedMethod === 'budget' && budgetStats.totalBudget === 0) {
-      Alert.alert('錯誤', '沒有設定預算的專案，無法進行預算分攤');
+      Alert.alert(t('common.error'), t('allocation.budget.not.set'));
       return;
     }
     
@@ -173,7 +173,7 @@ export default function AllocationManagementScreen() {
               
               Alert.alert(t('allocation.batch.success'), t('allocation.batch.success.message').replace('{count}', unallocatedRecords.length.toString()));
             } catch (error) {
-              Alert.alert('分攤失敗', '批量分攤過程中發生錯誤，請重試');
+              Alert.alert(t('allocation.failed'), t('allocation.batch.failed'));
               console.error('Batch allocation error:', error);
             }
           }

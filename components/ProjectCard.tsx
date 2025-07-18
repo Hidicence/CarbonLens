@@ -153,7 +153,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
               {/* 主要內容區域 */}
               <View style={styles.mainContent}>
                 <View style={styles.header}>
-                  <Text style={[styles.title, styles.titleWithBackground]} numberOfLines={1}>{project.name}</Text>
+                  <Text style={[styles.title, styles.titleWithBackground]} numberOfLines={2}>{project.name}</Text>
                   <View style={styles.headerRight}>
                     <AIAssistantButton
                       variant="primary"
@@ -237,7 +237,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
             {/* 主要內容區域 */}
             <View style={styles.mainContent}>
           <View style={styles.header}>
-            <Text style={[styles.title, { color: theme.text }]} numberOfLines={1}>{project.name}</Text>
+            <Text style={[styles.title, { color: theme.text }]} numberOfLines={2}>{project.name}</Text>
             <View style={styles.headerRight}>
               <AIAssistantButton
                 variant="secondary"
@@ -503,12 +503,13 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     marginBottom: 8,
   },
   headerRight: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginTop: 2,
   },
   aiButton: {
     flexDirection: 'row',
@@ -529,7 +530,8 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     flex: 1,
-    marginRight: 8,
+    marginRight: 12,
+    lineHeight: 22,
   },
   optionsButton: {
     padding: 4,

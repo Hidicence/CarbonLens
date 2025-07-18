@@ -414,7 +414,7 @@ const DocumentUploader: React.FC<{
       }
     } catch (error) {
       console.error('照片上傳錯誤:', error);
-      Alert.alert('錯誤', '照片上傳失敗: ' + (error instanceof Error ? error.message : '未知錯誤'));
+      Alert.alert(t('common.error'), t('add.record.photo.upload.failed') + ': ' + (error instanceof Error ? error.message : t('add.record.error.unknown')));
     } finally {
       setUploading(false);
     }
@@ -835,7 +835,7 @@ export default function AddOperationalRecordScreen() {
       }
 
     } catch (error) {
-      Alert.alert('填表失敗', '自動填表時發生錯誤，請手動輸入數據。');
+      Alert.alert(t('add.record.auto.fill.failed'), t('add.record.auto.fill.error'));
     }
   };
   

@@ -540,7 +540,7 @@ export default function AnalyticsScreen() {
           value={Math.round((overallStats.activeProjects / Math.max(projects?.length || 1, 1)) * 100)}
           title="執行效率"
           subtitle="基於專案活躍度"
-          color="#10b981"
+          color="#3B82F6"
           size={200}
           showValue={true}
           unit="%"
@@ -1650,7 +1650,7 @@ const styles = StyleSheet.create({
   // 簡潔儀表圖卡片樣式
   simpleGaugeCard: {
     borderRadius: 16,
-    padding: 24,
+    padding: 20,
     marginBottom: 16,
     elevation: 3,
     shadowColor: '#000',
@@ -1659,6 +1659,7 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
   },
   
   // 性能卡片
