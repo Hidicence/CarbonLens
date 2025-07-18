@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from '@/hooks/useTranslation';
 import { 
   View, 
   Text, 
@@ -18,7 +19,6 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { MapPin, Camera, X, DollarSign, Lightbulb } from 'lucide-react-native';
 import Colors from '@/constants/colors';
 import { useThemeStore } from '@/store/themeStore';
-import { useLanguageStore } from '@/store/languageStore';
 import { useProjectStore } from '@/store/projectStore';
 import Header from '@/components/Header';
 import Button from '@/components/Button';
@@ -29,7 +29,7 @@ export default function EditProjectScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { isDarkMode } = useThemeStore();
-  const { t } = useLanguageStore();
+  const { t } = useTranslation();
   const theme = isDarkMode ? Colors.dark : Colors.light;
   const { projects, updateProject } = useProjectStore();
   

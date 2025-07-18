@@ -512,6 +512,53 @@ const EMISSION_FACTORS = {
   catering: { factor: 0.89, unit: 'kg CO2e/meal', source: 'DEFRA 2023' }
 };
 
+// 獲取生成的報告HTML內容（用於移動端查看）
+export const getGeneratedReportHTML = async (
+  projects: Project[],
+  projectSummaries: { [key: string]: ProjectEmissionSummary },
+  options: ReportOptions,
+  organizationInfo?: any
+): Promise<string> => {
+  try {
+    // 準備報告數據
+    const reportData = await prepareReportData(projects, projectSummaries, organizationInfo);
+    
+    // 生成HTML內容
+    const htmlContent = generateReportHTML(reportData, options);
+    
+    return htmlContent;
+  } catch (error) {
+    console.error('生成報告HTML失敗:', error);
+    throw new Error('生成報告HTML失敗，請稍後重試');
+  }
+};
+
+// 獲取政府標準報告HTML內容（用於移動端查看）
+export const getGovernmentComplianceReportHTML = async (
+  projects: Project[],
+  projectSummaries: { [key: string]: ProjectEmissionSummary },
+  organizationInfo: any,
+  reportingYear: string
+): Promise<string> => {
+  try {
+    // 生成報告數據
+    const reportData = await generateGovernmentComplianceReport(
+      projects, 
+      projectSummaries, 
+      organizationInfo, 
+      reportingYear
+    );
+    
+    // 生成HTML內容
+    const htmlContent = generateGovernmentComplianceReportHTML(reportData);
+    
+    return htmlContent;
+  } catch (error) {
+    console.error('生成政府標準報告HTML失敗:', error);
+    throw new Error('生成政府標準報告HTML失敗，請稍後重試');
+  }
+};
+
 // 生成完整碳足跡報告
 export const generateCarbonFootprintReport = async (
   projects: Project[],

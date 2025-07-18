@@ -5,7 +5,19 @@
       "Bash(npm view:*)",
       "mcp__ide__getDiagnostics",
       "Bash(find:*)",
-      "Bash(npx eas-cli:*)"
+      "Bash(npx eas-cli:*)",
+      "Bash(grep:*)",
+      "Bash(npx tsc:*)",
+      "Bash(rg:*)",
+      "Bash(tail:*)",
+      "Bash(npx expo install:*)",
+      "Bash(npx eas build:cancel:*)",
+      "Bash(npm run start-web:*)",
+      "Bash(eas build:*)",
+      "Bash(eas whoami:*)",
+      "Bash(git commit:*)",
+      "Bash(rm:*)",
+      "Bash(git add:*)"
     ],
     "deny": []
   }

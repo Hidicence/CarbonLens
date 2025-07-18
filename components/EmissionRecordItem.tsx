@@ -88,7 +88,7 @@ export default function EmissionRecordItem({ record, onPress }: EmissionRecordIt
           <View style={[styles.categoryDot, { backgroundColor: category.color }]} />
           <Text style={styles.categoryText}>{category.name}</Text>
         </View>
-        <Text style={styles.amount}>{record.amount.toFixed(2)} 公斤CO₂e</Text>
+        <Text style={styles.amount}>{record.amount.toFixed(2)} {t('unit.kg.co2e.simple')}</Text>
       </View>
       
       <Text style={styles.description} numberOfLines={2}>

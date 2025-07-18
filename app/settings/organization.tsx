@@ -28,13 +28,11 @@ import {
 import Colors from '@/constants/colors';
 import { useThemeStore } from '@/store/themeStore';
 import { useProfileStore } from '@/store/profileStore';
-import { useLanguageStore } from '@/store/languageStore';
-
 export default function OrganizationSettingsScreen() {
   const router = useRouter();
   const { isDarkMode } = useThemeStore();
   const { organization, updateOrganization } = useProfileStore();
-  const { t } = useLanguageStore();
+  const { t } = useTranslation();
   const theme = isDarkMode ? Colors.dark : Colors.light;
 
   const [formData, setFormData] = useState(organization);

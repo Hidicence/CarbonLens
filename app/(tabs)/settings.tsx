@@ -45,19 +45,23 @@ export default function SettingsScreen() {
   const { projects, nonProjectEmissionRecords, allocationRecords, deleteAllProjects } = useProjectStore();
   const { logout } = useAuthStore();
   const { showBetaTools, toggleBetaTools } = useBetaToolsStore();
-  const { language, setLanguage, t } = useLanguageStore();
+  const { language, setLanguage } = useLanguageStore();
+  const { t } = useTranslation();
   
   const [notificationsEnabled, setNotificationsEnabled] = React.useState(true);
   const [offlineMode, setOfflineMode] = React.useState(false);
 
   const theme = isDarkMode ? Colors.dark : Colors.light;
+  
+  // Store 已初始化檢查
+  // 由於現在 isInitialized 預設為 true，不需要額外檢查
 
   // 計算統計數據
   const stats = {
-    totalProjects: projects.length,
-    activeProjects: projects.filter(p => p.status === 'active').length,
-    totalRecords: nonProjectEmissionRecords.length,
-    totalAllocations: allocationRecords.length
+    totalProjects: projects && Array.isArray(projects) ? projects.length : 0,
+    activeProjects: projects && Array.isArray(projects) ? projects.filter(p => p.status === 'active').length : 0,
+    totalRecords: nonProjectEmissionRecords && Array.isArray(nonProjectEmissionRecords) ? nonProjectEmissionRecords.length : 0,
+    totalAllocations: allocationRecords && Array.isArray(allocationRecords) ? allocationRecords.length : 0
   };
 
   const handleClearData = () => {
@@ -103,7 +107,7 @@ export default function SettingsScreen() {
               
             } catch (error) {
               console.error("❌ 登出失敗:", error);
-              Alert.alert('錯誤', '登出失敗，請重試');
+              Alert.alert(t('common.error'), t('auth.logout.failed'));
             }
           }
         }
@@ -168,7 +172,7 @@ export default function SettingsScreen() {
       <View style={styles.statsGrid}>
         <View style={[styles.statItem, { backgroundColor: theme.background }]}>
           <View style={[styles.statIconContainer, { backgroundColor: theme.primary + '15' }]}>
-            <FileText size={16} color={theme.primary} />
+            <FileText size={14} color={theme.primary} />
           </View>
           <Text style={[styles.statValue, { color: theme.primary }]}>{stats.totalProjects}</Text>
           <Text style={[styles.statLabel, { color: theme.secondaryText }]}>{t('settings.stats.totalProjects')}</Text>
@@ -176,7 +180,7 @@ export default function SettingsScreen() {
         
         <View style={[styles.statItem, { backgroundColor: theme.background }]}>
           <View style={[styles.statIconContainer, { backgroundColor: '#34C759' + '15' }]}>
-            <BarChart3 size={16} color="#34C759" />
+            <BarChart3 size={14} color="#34C759" />
           </View>
           <Text style={[styles.statValue, { color: '#34C759' }]}>{stats.activeProjects}</Text>
           <Text style={[styles.statLabel, { color: theme.secondaryText }]}>{t('settings.stats.activeProjects')}</Text>
@@ -184,7 +188,7 @@ export default function SettingsScreen() {
         
         <View style={[styles.statItem, { backgroundColor: theme.background }]}>
           <View style={[styles.statIconContainer, { backgroundColor: '#FF9500' + '15' }]}>
-            <Database size={16} color="#FF9500" />
+            <Database size={14} color="#FF9500" />
           </View>
           <Text style={[styles.statValue, { color: '#FF9500' }]}>{stats.totalRecords}</Text>
           <Text style={[styles.statLabel, { color: theme.secondaryText }]}>{t('settings.stats.totalRecords')}</Text>
@@ -192,7 +196,7 @@ export default function SettingsScreen() {
         
         <View style={[styles.statItem, { backgroundColor: theme.background }]}>
           <View style={[styles.statIconContainer, { backgroundColor: '#007AFF' + '15' }]}>
-            <Activity size={16} color="#007AFF" />
+            <Activity size={14} color="#007AFF" />
           </View>
           <Text style={[styles.statValue, { color: '#007AFF' }]}>{stats.totalAllocations}</Text>
           <Text style={[styles.statLabel, { color: theme.secondaryText }]}>{t('settings.stats.totalAllocations')}</Text>
@@ -612,6 +616,13 @@ export default function SettingsScreen() {
 }
 
 const styles = StyleSheet.create({
+  loadingText: {
+    flex: 1,
+    textAlign: 'center',
+    textAlignVertical: 'center',
+    fontSize: 16,
+    fontWeight: '500',
+  },
   container: {
     flex: 1,
   },
@@ -674,32 +685,35 @@ const styles = StyleSheet.create({
   },
   statsGrid: {
     flexDirection: 'row',
-    gap: 12,
+    justifyContent: 'space-between',
+    gap: 8,
   },
   statItem: {
     flex: 1,
+    minWidth: 70,
+    maxWidth: 90,
     alignItems: 'center',
-    padding: 16,
+    padding: 12,
     borderRadius: 12,
   },
   statIconContainer: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 12,
+    marginBottom: 8,
   },
   statValue: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '800',
-    marginBottom: 6,
+    marginBottom: 4,
   },
   statLabel: {
-    fontSize: 12,
+    fontSize: 10,
     textAlign: 'center',
     fontWeight: '600',
-    lineHeight: 16,
+    lineHeight: 14,
   },
   profileCard: {
     marginHorizontal: 20,

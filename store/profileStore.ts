@@ -37,9 +37,11 @@ export interface OrganizationInfo {
 interface ProfileState {
   profile: UserProfile;
   organization: OrganizationInfo;
+  currentUserId: string | null;
   updateProfile: (profile: Partial<UserProfile>) => void;
   updateOrganization: (organization: Partial<OrganizationInfo>) => void;
   resetProfile: () => void;
+  setCurrentUser: (userId: string | null) => void;
 }
 
 const defaultProfile: UserProfile = {
@@ -67,26 +69,55 @@ const defaultOrganization: OrganizationInfo = {
 
 export const useProfileStore = create<ProfileState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       profile: defaultProfile,
       organization: defaultOrganization,
-      updateProfile: (newProfile) =>
+      currentUserId: null,
+      
+      updateProfile: (newProfile) => {
+        const currentState = get();
+        console.log('🔄 更新 ProfileStore (用戶:', currentState.currentUserId, '):', newProfile);
         set((state) => ({
           profile: { ...state.profile, ...newProfile },
-        })),
+        }));
+      },
+      
       updateOrganization: (newOrganization) =>
         set((state) => ({
           organization: { ...state.organization, ...newOrganization },
         })),
-      resetProfile: () =>
+        
+      resetProfile: () => {
+        console.log('🔄 重置 ProfileStore 到預設值');
         set(() => ({
-          profile: defaultProfile,
-          organization: defaultOrganization,
-        })),
+          profile: { ...defaultProfile },
+          organization: { ...defaultOrganization },
+          currentUserId: null,
+        }));
+      },
+      
+      setCurrentUser: (userId) => {
+        const currentState = get();
+        if (currentState.currentUserId !== userId) {
+          console.log('👤 切換用戶:', currentState.currentUserId, '->', userId);
+          // 當用戶切換時，重置資料
+          set(() => ({
+            profile: { ...defaultProfile },
+            organization: { ...defaultOrganization },
+            currentUserId: userId,
+          }));
+        }
+      },
     }),
     {
       name: 'profile-storage',
       storage: createJSONStorage(() => AsyncStorage),
+      version: 2, // 增加版本號以支援新的結構
+      partialize: (state) => ({
+        profile: state.profile,
+        organization: state.organization,
+        currentUserId: state.currentUserId,
+      }),
     }
   )
 );

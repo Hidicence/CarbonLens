@@ -45,7 +45,7 @@ import {
   Building
 } from 'lucide-react-native';
 import { useProjectStore } from '@/store/projectStore';
-import { useLanguageStore } from '@/store/languageStore';
+import { useTranslation } from '@/hooks/useTranslation';
 import { EMISSION_CATEGORIES } from '@/mocks/projects';
 import { ProductionStage } from '@/types/project';
 import Header from '@/components/Header';
@@ -73,14 +73,13 @@ export default function ProjectDetailScreen() {
     getProjectEmissionRecords
   } = useProjectStore();
   const { isDarkMode } = useThemeStore();
-  const { t } = useLanguageStore();
+  const { t } = useTranslation();
   const theme = isDarkMode ? Colors.dark : Colors.light;
   
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showCollaboratorsModal, setShowCollaboratorsModal] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
-  const [scrollPosition, setScrollPosition] = useState(0);
   const [keyboardVisible, setKeyboardVisible] = useState(false);
   
   // Monitor keyboard visibility
@@ -148,16 +147,6 @@ export default function ProjectDetailScreen() {
     return [...directRecords, ...convertedShootingRecords];
   }, [getProjectEmissionRecords, shootingDayRecords, id]);
   
-  // Restore scroll position after any re-renders
-  useEffect(() => {
-    if (scrollViewRef.current && scrollPosition > 0) {
-      // Use a small timeout to ensure the ScrollView has rendered
-      const timer = setTimeout(() => {
-        scrollViewRef.current?.scrollTo({ y: scrollPosition, animated: false });
-      }, 50);
-      return () => clearTimeout(timer);
-    }
-  }, [scrollPosition]);
   
   if (!project) {
     return (
@@ -414,15 +403,11 @@ export default function ProjectDetailScreen() {
         style={styles.scrollView} 
         showsVerticalScrollIndicator={false}
         ref={scrollViewRef}
-        onScroll={(event) => {
-          // Save scroll position
-          const position = event.nativeEvent.contentOffset.y;
-          setScrollPosition(position);
-        }}
-        scrollEventThrottle={16} // Throttle scroll events for better performance
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
         contentContainerStyle={keyboardVisible ? { paddingBottom: 200 } : undefined}
+        removeClippedSubviews={true}
+        scrollEventThrottle={16}
       >
         {project.thumbnail && (
           <Image 
@@ -460,7 +445,7 @@ export default function ProjectDetailScreen() {
           >
             <Users size={16} color={Colors.dark.primary} />
             <Text style={styles.collaboratorsButtonText}>
-                                {(project.collaborators?.length || 0).toString()} {t('collaborators.count') || '位協作者'}
+              {(project.collaborators?.length || 0).toString()} {t('collaborators.count')}
             </Text>
           </Pressable>
         </View>
@@ -546,7 +531,10 @@ export default function ProjectDetailScreen() {
               
               {projectEmissionSummary && (
                 <Text style={styles.simpleSummaryBreakdown}>
-                  拍攝日 {projectEmissionSummary.directEmissions.toFixed(1)} + 營運 {projectEmissionSummary.allocatedEmissions.toFixed(1)} kg CO₂e
+                  {t('projects.summary.breakdown')
+                    .replace('{shooting}', projectEmissionSummary.directEmissions.toFixed(1))
+                    .replace('{operational}', projectEmissionSummary.allocatedEmissions.toFixed(1))
+                  }
                 </Text>
               )}
             </View>
@@ -555,7 +543,7 @@ export default function ProjectDetailScreen() {
               
         {/* 快速操作區域 */}
         <View style={styles.quickActionsSection}>
-          <Text style={[styles.sectionTitle, { color: Colors.dark.text }]}>快速操作</Text>
+          <Text style={[styles.sectionTitle, { color: Colors.dark.text }]}>{t('projects.quick.actions')}</Text>
           
           {/* 專案器材 */}
           <Pressable 
@@ -566,9 +554,9 @@ export default function ProjectDetailScreen() {
               <Truck size={24} color={Colors.dark.primary} />
                     </View>
             <View style={styles.quickActionContent}>
-              <Text style={[styles.quickActionTitle, { color: Colors.dark.text }]}>{t('projects.equipment') || '專案器材'}</Text>
+              <Text style={[styles.quickActionTitle, { color: Colors.dark.text }]}>{t('projects.equipment')}</Text>
               <Text style={[styles.quickActionDesc, { color: Colors.dark.secondaryText }]}>
-                {t('projects.equipment.subtitle') || '登記專案使用器材總重量'}
+                {t('projects.equipment.subtitle')}
               </Text>
               </View>
             <ArrowUpRight size={20} color={Colors.dark.secondaryText} />
@@ -581,9 +569,9 @@ export default function ProjectDetailScreen() {
                 <Users size={24} color={Colors.dark.success} />
             </View>
               <View style={styles.quickActionContent}>
-                <Text style={[styles.quickActionTitle, { color: Colors.dark.text }]}>{t('projects.shooting.records') || '拍攝日記錄'}</Text>
+                <Text style={[styles.quickActionTitle, { color: Colors.dark.text }]}>{t('projects.shooting.records')}</Text>
                 <Text style={[styles.quickActionDesc, { color: Colors.dark.secondaryText }]}>
-                  {t('projects.shooting.records.subtitle') || '按工作組別記錄拍攝活動'}
+                  {t('projects.shooting.records.subtitle')}
                 </Text>
           </View>
         </View>
@@ -596,7 +584,7 @@ export default function ProjectDetailScreen() {
                 <View style={styles.crewButtonIconContainer}>
                   {getCrewIcon('director', 18, '#FF6B6B')}
                 </View>
-                <Text style={[styles.crewButtonText, { color: '#FF6B6B' }]}>{t('crew.director') || '導演組'}</Text>
+                <Text style={[styles.crewButtonText, { color: '#FF6B6B' }]}>{t('crew.director')}</Text>
               </Pressable>
               
               <Pressable 
@@ -606,7 +594,7 @@ export default function ProjectDetailScreen() {
                 <View style={styles.crewButtonIconContainer}>
                   {getCrewIcon('camera', 18, '#4ECDC4')}
                 </View>
-                <Text style={[styles.crewButtonText, { color: '#4ECDC4' }]}>{t('crew.camera') || '攝影組'}</Text>
+                <Text style={[styles.crewButtonText, { color: '#4ECDC4' }]}>{t('crew.camera')}</Text>
               </Pressable>
               
                 <Pressable 
@@ -616,7 +604,7 @@ export default function ProjectDetailScreen() {
                 <View style={styles.crewButtonIconContainer}>
                   {getCrewIcon('lighting', 18, '#FFE66D')}
                 </View>
-                <Text style={[styles.crewButtonText, { color: '#FFE66D' }]}>{t('crew.lighting') || '燈光組'}</Text>
+                <Text style={[styles.crewButtonText, { color: '#FFE66D' }]}>{t('crew.lighting')}</Text>
               </Pressable>
               
               <Pressable 
@@ -626,7 +614,7 @@ export default function ProjectDetailScreen() {
                 <View style={styles.crewButtonIconContainer}>
                   {getCrewIcon('sound', 18, '#A8E6CF')}
                       </View>
-                <Text style={[styles.crewButtonText, { color: '#A8E6CF' }]}>{t('crew.sound') || '收音組'}</Text>
+                <Text style={[styles.crewButtonText, { color: '#A8E6CF' }]}>{t('crew.sound')}</Text>
               </Pressable>
               
               <Pressable 
@@ -636,7 +624,7 @@ export default function ProjectDetailScreen() {
                 <View style={styles.crewButtonIconContainer}>
                   {getCrewIcon('makeup', 18, '#FFB3BA')}
                       </View>
-                <Text style={[styles.crewButtonText, { color: '#FFB3BA' }]}>{t('crew.makeup') || '梳化組'}</Text>
+                <Text style={[styles.crewButtonText, { color: '#FFB3BA' }]}>{t('crew.makeup')}</Text>
               </Pressable>
                   
                   <Pressable 
@@ -646,7 +634,7 @@ export default function ProjectDetailScreen() {
                 <View style={styles.crewButtonIconContainer}>
                   {getCrewIcon('production', 18, '#D4E6B7')}
                 </View>
-                <Text style={[styles.crewButtonText, { color: '#D4E6B7' }]}>{t('crew.production') || '製片組'}</Text>
+                <Text style={[styles.crewButtonText, { color: '#D4E6B7' }]}>{t('crew.production')}</Text>
                   </Pressable>
             </View>
           </View>
@@ -694,7 +682,7 @@ export default function ProjectDetailScreen() {
               style={styles.viewAllButton}
               onPress={() => id && router.push(`/project/${id}/records`)}
             >
-              <Text style={styles.viewAllButtonText}>{t('common.view.all') || '查看全部'}</Text>
+              <Text style={styles.viewAllButtonText}>{t('common.view.all')}</Text>
             </Pressable>
           )}
         </View>
@@ -719,7 +707,7 @@ export default function ProjectDetailScreen() {
             <AlertCircle size={16} color={Colors.dark.secondary} />
           </View>
           <Text style={styles.tipText}>
-            {t('tips.title')}: t('analytics.stage.analysis')
+            {t('tips.title')}: {t('analytics.stage.analysis')}
           </Text>
         </View>
         

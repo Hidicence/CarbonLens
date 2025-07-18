@@ -3,7 +3,6 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { View } from 'react-native';
 import { Tabs } from 'expo-router';
 import { useThemeStore } from '@/store/themeStore';
-import { useLanguageStore } from '@/store/languageStore';
 import Colors from '@/constants/colors';
 import { Home, BarChart2, Lightbulb, Settings } from 'lucide-react-native';
 import { useAuthStore } from '@/store/authStore';

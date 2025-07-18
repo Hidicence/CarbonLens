@@ -93,9 +93,9 @@ export default function ProjectCard({ project }: ProjectCardProps) {
   
   const formatEmissionsShort = (emissions: number) => {
     if (emissions >= 1000) {
-      return `${(emissions / 1000).toFixed(1)}噸`;
+      return `${(emissions / 1000).toFixed(1)}${t('unit.ton.short') || '噸'}`;
     }
-    return `${emissions.toFixed(0)}kg`;
+    return `${emissions.toFixed(0)}${t('unit.kg.short') || 'kg'}`;
   };
   
   // Check carbon budget status

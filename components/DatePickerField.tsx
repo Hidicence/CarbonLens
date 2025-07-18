@@ -37,7 +37,7 @@ const DatePickerField: React.FC<DatePickerFieldProps> = ({
   label,
   value,
   onChange,
-  placeholder = '選擇日期',
+  placeholder,
   error,
   minDate,
   maxDate,
@@ -53,6 +53,7 @@ const DatePickerField: React.FC<DatePickerFieldProps> = ({
 }) => {
   const { isDarkMode } = useThemeStore();
   const theme = isDarkMode ? Colors.dark : Colors.light;
+  const { t } = useTranslation();
   
   const [showPicker, setShowPicker] = useState(false);
   
@@ -101,7 +102,7 @@ const DatePickerField: React.FC<DatePickerFieldProps> = ({
             textStyle
           ]}
         >
-          {value ? formatDate(value) : placeholder}
+          {value ? formatDate(value) : (placeholder || t('common.select.date'))}
         </Text>
       </TouchableOpacity>
       

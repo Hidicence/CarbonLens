@@ -33,7 +33,6 @@ import {
 } from 'lucide-react-native';
 import Colors from '@/constants/colors';
 import { useThemeStore } from '@/store/themeStore';
-import { useLanguageStore } from '@/store/languageStore';
 import Header from '@/components/Header';
 
 // 導入增強設備數據
@@ -80,18 +79,18 @@ interface Category {
 }
 
 // 定義設備類別和圖示
-const CATEGORIES: Category[] = [
-  { id: 'all', name: '全部設備', icon: null, data: [], color: '#6366F1' },
-  { id: 'camera', name: '攝影設備', icon: Camera, data: ENHANCED_CAMERA_EQUIPMENT as Equipment[], color: '#F59E0B' },
-  { id: 'lighting', name: '照明設備', icon: Zap, data: ENHANCED_LIGHTING_EQUIPMENT as Equipment[], color: '#FBBF24' },
-  { id: 'editing', name: '編輯設備', icon: Laptop, data: ENHANCED_EDITING_EQUIPMENT as Equipment[], color: '#3B82F6' },
-  { id: 'storage', name: '存儲設備', icon: HardDrive, data: ENHANCED_STORAGE_EQUIPMENT as Equipment[], color: '#8B5CF6' },
-  { id: 'transport', name: '交通設備', icon: Car, data: ENHANCED_TRANSPORT_EQUIPMENT as Equipment[], color: '#EC4899' },
-  { id: 'office', name: '辦公設備', icon: Laptop, data: ENHANCED_OFFICE_EQUIPMENT as Equipment[], color: '#10B981' },
-  { id: 'food', name: '餐飲設備', icon: Utensils, data: ENHANCED_FOOD_EQUIPMENT as Equipment[], color: '#F97316' },
-  { id: 'accommodation', name: '住宿設備', icon: Home, data: ENHANCED_ACCOMMODATION_EQUIPMENT as Equipment[], color: '#14B8A6' },
-  { id: 'waste', name: '廢棄物設備', icon: Trash2, data: ENHANCED_WASTE_EQUIPMENT as Equipment[], color: '#6366F1' },
-  { id: 'fuel', name: '燃料與能源', icon: Zap, data: ENHANCED_FUEL_EQUIPMENT as Equipment[], color: '#4F46E5' }
+const getCategoriesWithTranslation = (t: any): Category[] => [
+  { id: 'all', name: t('equipment.categories.all'), icon: null, data: [], color: '#6366F1' },
+  { id: 'camera', name: t('equipment.categories.camera'), icon: Camera, data: ENHANCED_CAMERA_EQUIPMENT as Equipment[], color: '#F59E0B' },
+  { id: 'lighting', name: t('equipment.categories.lighting'), icon: Zap, data: ENHANCED_LIGHTING_EQUIPMENT as Equipment[], color: '#FBBF24' },
+  { id: 'editing', name: t('equipment.categories.editing'), icon: Laptop, data: ENHANCED_EDITING_EQUIPMENT as Equipment[], color: '#3B82F6' },
+  { id: 'storage', name: t('equipment.categories.storage'), icon: HardDrive, data: ENHANCED_STORAGE_EQUIPMENT as Equipment[], color: '#8B5CF6' },
+  { id: 'transport', name: t('equipment.categories.transport'), icon: Car, data: ENHANCED_TRANSPORT_EQUIPMENT as Equipment[], color: '#EC4899' },
+  { id: 'office', name: t('equipment.categories.office'), icon: Laptop, data: ENHANCED_OFFICE_EQUIPMENT as Equipment[], color: '#10B981' },
+  { id: 'food', name: t('equipment.categories.food'), icon: Utensils, data: ENHANCED_FOOD_EQUIPMENT as Equipment[], color: '#F97316' },
+  { id: 'accommodation', name: t('equipment.categories.accommodation'), icon: Home, data: ENHANCED_ACCOMMODATION_EQUIPMENT as Equipment[], color: '#14B8A6' },
+  { id: 'waste', name: t('equipment.categories.waste'), icon: Trash2, data: ENHANCED_WASTE_EQUIPMENT as Equipment[], color: '#6366F1' },
+  { id: 'fuel', name: t('equipment.categories.fuel'), icon: Zap, data: ENHANCED_FUEL_EQUIPMENT as Equipment[], color: '#4F46E5' }
 ];
 
 // 合併所有設備數據到一個數組
@@ -109,17 +108,20 @@ const ALL_EQUIPMENT: Equipment[] = [
 ];
 
 // 標籤/篩選選項
-const FILTER_TAGS = [
-  { id: 'lowCarbon', name: '低碳設備', color: '#16A34A', backgroundColor: '#16A34A20' },
-  { id: 'greenEnergy', name: '綠色能源', color: '#059669', backgroundColor: '#05966920' },
-  { id: 'isoStandard', name: 'ISO認證', color: '#0284C7', backgroundColor: '#0284C720' }
+const getFilterTagsWithTranslation = (t: any) => [
+  { id: 'lowCarbon', name: t('equipment.filters.low.carbon'), color: '#16A34A', backgroundColor: '#16A34A20' },
+  { id: 'greenEnergy', name: t('equipment.filters.green.energy'), color: '#059669', backgroundColor: '#05966920' },
+  { id: 'isoStandard', name: t('equipment.filters.iso.standard'), color: '#0284C7', backgroundColor: '#0284C720' }
 ];
 
 export default function EquipmentDatabaseScreen() {
   const router = useRouter();
   const { isDarkMode } = useThemeStore();
-  const { t } = useLanguageStore();
+  const { t } = useTranslation();
   const theme = isDarkMode ? Colors.dark : Colors.light;
+  
+  const CATEGORIES = getCategoriesWithTranslation(t);
+  const FILTER_TAGS = getFilterTagsWithTranslation(t);
   
   // 狀態管理
   const [searchQuery, setSearchQuery] = useState('');
@@ -128,9 +130,8 @@ export default function EquipmentDatabaseScreen() {
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
   const detailsHeight = useRef(new Animated.Value(0)).current;
   
-  // 處理類別選擇
+  // {t('equipment.handle.category.select')}
   const handleCategorySelect = (categoryId: string) => {
-  const { t } = useTranslation();
 
     setSelectedCategory(categoryId);
     setSelectedEquipment(null);
@@ -349,7 +350,7 @@ export default function EquipmentDatabaseScreen() {
                 {category.icon && <category.icon size={18} color={category.color} style={styles.categoryHeaderIcon} />}
                 <Text style={[styles.categoryHeaderTitle, { color: theme.text }]}>{category.name}</Text>
                 <Text style={[styles.categoryHeaderCount, { color: theme.secondaryText }]}>
-                  {category.data.length.toString()}項
+                  {category.data.length.toString()}{t('equipment.items.count')}
                 </Text>
               </View>
               
@@ -383,19 +384,19 @@ export default function EquipmentDatabaseScreen() {
                             
                             {isLowCarbon && (
                               <View style={[styles.tagBadge, { backgroundColor: '#16A34A20' }]}>
-                                <Text style={[styles.tagText, { color: '#16A34A' }]}>低碳</Text>
+                                <Text style={[styles.tagText, { color: '#16A34A' }]}>{t('equipment.filters.low.carbon')}</Text>
                               </View>
                             )}
                             
                             {isGreenEnergy && (
                               <View style={[styles.tagBadge, { backgroundColor: '#05966920' }]}>
-                                <Text style={[styles.tagText, { color: '#059669' }]}>綠色能源</Text>
+                                <Text style={[styles.tagText, { color: '#059669' }]}>{t('equipment.filters.green.energy')}</Text>
                               </View>
                             )}
                             
                             {equipment.isoCertification && (
                               <View style={[styles.tagBadge, { backgroundColor: '#0284C720' }]}>
-                                <Text style={[styles.tagText, { color: '#0284C7' }]}>ISO認證</Text>
+                                <Text style={[styles.tagText, { color: '#0284C7' }]}>{t('equipment.filters.iso.standard')}</Text>
                               </View>
                             )}
                           </View>
@@ -421,7 +422,7 @@ export default function EquipmentDatabaseScreen() {
                           {equipment.technicalSpecs && (
                             <View style={styles.detailSection}>
                               <Text style={[styles.detailSectionTitle, { color: theme.secondaryText }]}>
-                                技術規格
+                                {t('equipment.tech.specs')}
                               </Text>
                               {Object.entries(equipment.technicalSpecs).map(([key, value]) => (
                                 <View key={key} style={styles.specRow}>
@@ -435,7 +436,7 @@ export default function EquipmentDatabaseScreen() {
                           {equipment.lifeCycleData && (
                             <View style={styles.detailSection}>
                               <Text style={[styles.detailSectionTitle, { color: theme.secondaryText }]}>
-                                生命週期數據
+                                {t('equipment.lifecycle.data')}
                               </Text>
                               <View style={styles.lifeCycleStats}>
                                 <View style={styles.lifeCycleStat}>
@@ -443,7 +444,7 @@ export default function EquipmentDatabaseScreen() {
                                     {equipment.lifeCycleData.totalLifeCycle}
                                   </Text>
                                   <Text style={[styles.lifeCycleLabel, { color: theme.secondaryText }]}>
-                                    總碳排放 (kg CO₂e)
+                                    {t('equipment.lifecycle.total.emissions')}
                                   </Text>
                                 </View>
                                 <View style={styles.lifeCycleStat}>
@@ -451,7 +452,7 @@ export default function EquipmentDatabaseScreen() {
                                     {equipment.lifeCycleData.lifespan}
                                   </Text>
                                   <Text style={[styles.lifeCycleLabel, { color: theme.secondaryText }]}>
-                                    預計壽命 (年)
+                                    {t('equipment.lifecycle.expected.life')}
                                   </Text>
                                 </View>
                               </View>
@@ -461,7 +462,7 @@ export default function EquipmentDatabaseScreen() {
                           {equipment.notes && (
                             <View style={styles.detailSection}>
                               <Text style={[styles.detailSectionTitle, { color: theme.secondaryText }]}>
-                                備註
+                                {t('equipment.notes')}
                               </Text>
                               <Text style={[styles.notesText, { color: theme.text }]}>
                                 {equipment.notes}
@@ -478,19 +479,19 @@ export default function EquipmentDatabaseScreen() {
           )}
           ListEmptyComponent={
             <View style={[styles.emptyState, { backgroundColor: theme.card }]}>
-              <Text style={[styles.emptyStateTitle, { color: theme.text }]}>沒有符合條件的設備</Text>
+              <Text style={[styles.emptyStateTitle, { color: theme.text }]}>{t('equipment.empty.state.title')}</Text>
               <Text style={[styles.emptyStateText, { color: theme.secondaryText }]}>
-                請嘗試修改您的搜尋條件或選擇其他分類
+                {t('equipment.empty.state.text')}
               </Text>
             </View>
           }
           ListFooterComponent={
             <View style={styles.footer}>
               <Text style={[styles.footerText, { color: theme.secondaryText }]}>
-                數據來源：ISO 14064/14067碳足跡標準
+                {t('equipment.data.source')}
               </Text>
               <Text style={[styles.footerText, { color: theme.secondaryText }]}>
-                最後更新: 2023年12月
+                {t('equipment.last.updated')}
               </Text>
             </View>
           }
@@ -522,7 +523,7 @@ export default function EquipmentDatabaseScreen() {
                   <View style={styles.equipmentInfo}>
                     <Text style={[styles.equipmentName, { color: theme.text }]}>{equipment.name}</Text>
                     <Text style={[styles.equipmentCategory, { color: theme.secondaryText }]}>
-                      {category ? category.name : '其他設備'}
+                      {category ? category.name : t('equipment.other')}
                     </Text>
                     
                     <View style={styles.equipmentTags}>
@@ -534,19 +535,19 @@ export default function EquipmentDatabaseScreen() {
                       
                       {isLowCarbon && (
                         <View style={[styles.tagBadge, { backgroundColor: '#16A34A20' }]}>
-                          <Text style={[styles.tagText, { color: '#16A34A' }]}>低碳</Text>
+                          <Text style={[styles.tagText, { color: '#16A34A' }]}>{t('equipment.filters.low.carbon')}</Text>
                         </View>
                       )}
                       
                       {isGreenEnergy && (
                         <View style={[styles.tagBadge, { backgroundColor: '#05966920' }]}>
-                          <Text style={[styles.tagText, { color: '#059669' }]}>綠色能源</Text>
+                          <Text style={[styles.tagText, { color: '#059669' }]}>{t('equipment.filters.green.energy')}</Text>
                         </View>
                       )}
                       
                       {equipment.isoCertification && (
                         <View style={[styles.tagBadge, { backgroundColor: '#0284C720' }]}>
-                          <Text style={[styles.tagText, { color: '#0284C7' }]}>ISO認證</Text>
+                          <Text style={[styles.tagText, { color: '#0284C7' }]}>{t('equipment.filters.iso.standard')}</Text>
                         </View>
                       )}
                     </View>
@@ -572,7 +573,7 @@ export default function EquipmentDatabaseScreen() {
                     {equipment.technicalSpecs && (
                       <View style={styles.detailSection}>
                         <Text style={[styles.detailSectionTitle, { color: theme.secondaryText }]}>
-                          技術規格
+                          {t('equipment.tech.specs')}
                         </Text>
                         {Object.entries(equipment.technicalSpecs).map(([key, value]) => (
                           <View key={key} style={styles.specRow}>
@@ -586,7 +587,7 @@ export default function EquipmentDatabaseScreen() {
                     {equipment.lifeCycleData && (
                       <View style={styles.detailSection}>
                         <Text style={[styles.detailSectionTitle, { color: theme.secondaryText }]}>
-                          生命週期數據
+                          {t('equipment.lifecycle.data')}
                         </Text>
                         <View style={styles.lifeCycleStats}>
                           <View style={styles.lifeCycleStat}>
@@ -594,7 +595,7 @@ export default function EquipmentDatabaseScreen() {
                               {equipment.lifeCycleData.totalLifeCycle}
                             </Text>
                             <Text style={[styles.lifeCycleLabel, { color: theme.secondaryText }]}>
-                              總碳排放 (kg CO₂e)
+                              {t('equipment.lifecycle.total.emissions')}
                             </Text>
                           </View>
                           <View style={styles.lifeCycleStat}>
@@ -602,7 +603,7 @@ export default function EquipmentDatabaseScreen() {
                               {equipment.lifeCycleData.lifespan}
                             </Text>
                             <Text style={[styles.lifeCycleLabel, { color: theme.secondaryText }]}>
-                              預計壽命 (年)
+                              {t('equipment.lifecycle.expected.life')}
                             </Text>
                           </View>
                         </View>
@@ -612,7 +613,7 @@ export default function EquipmentDatabaseScreen() {
                     {equipment.notes && (
                       <View style={styles.detailSection}>
                         <Text style={[styles.detailSectionTitle, { color: theme.secondaryText }]}>
-                          備註
+                          {t('equipment.notes')}
                         </Text>
                         <Text style={[styles.notesText, { color: theme.text }]}>
                           {equipment.notes}
@@ -626,19 +627,19 @@ export default function EquipmentDatabaseScreen() {
           }}
           ListEmptyComponent={
             <View style={[styles.emptyState, { backgroundColor: theme.card }]}>
-              <Text style={[styles.emptyStateTitle, { color: theme.text }]}>沒有符合條件的設備</Text>
+              <Text style={[styles.emptyStateTitle, { color: theme.text }]}>{t('equipment.empty.state.title')}</Text>
               <Text style={[styles.emptyStateText, { color: theme.secondaryText }]}>
-                請嘗試修改您的搜尋條件或選擇其他分類
+                {t('equipment.empty.state.text')}
               </Text>
             </View>
           }
           ListFooterComponent={
             <View style={styles.footer}>
               <Text style={[styles.footerText, { color: theme.secondaryText }]}>
-                數據來源：ISO 14064/14067碳足跡標準
+                {t('equipment.data.source')}
               </Text>
               <Text style={[styles.footerText, { color: theme.secondaryText }]}>
-                最後更新: 2023年12月
+                {t('equipment.last.updated')}
               </Text>
             </View>
           }

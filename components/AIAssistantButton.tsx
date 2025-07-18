@@ -2,6 +2,7 @@ import React from 'react';
 import { TouchableOpacity, Text, StyleSheet, ViewStyle, TextStyle } from 'react-native';
 import { MessageSquare, Bot } from 'lucide-react-native';
 import { useThemeStore } from '@/store/themeStore';
+import { useTranslation } from '@/hooks/useTranslation';
 import Colors from '@/constants/colors';
 
 interface AIAssistantButtonProps {
@@ -19,7 +20,7 @@ export default function AIAssistantButton({
   onPress,
   variant = 'primary',
   size = 'medium',
-  title = 'AI助手',
+  title,
   icon = 'message',
   style,
   textStyle,
@@ -27,6 +28,7 @@ export default function AIAssistantButton({
 }: AIAssistantButtonProps) {
   const { isDarkMode } = useThemeStore();
   const theme = isDarkMode ? Colors.dark : Colors.light;
+  const { t } = useTranslation();
 
   // 根據變體選擇樣式
   const getButtonStyle = (): ViewStyle => {
@@ -168,7 +170,7 @@ export default function AIAssistantButton({
           textStyle
         ]}
       >
-        {title}
+        {title || t('ui.ai.assistant')}
       </Text>
     </TouchableOpacity>
   );

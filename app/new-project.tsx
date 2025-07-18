@@ -22,14 +22,13 @@ import Header from '@/components/Header';
 import Button from '@/components/Button';
 import Colors from '@/constants/colors';
 import { useThemeStore } from '@/store/themeStore';
-import { useLanguageStore } from '@/store/languageStore';
 import DatePickerField from '@/components/DatePickerField';
 
 export default function NewProjectScreen() {
   const router = useRouter();
   const { addProject } = useProjectStore();
   const { isDarkMode } = useThemeStore();
-  const { t } = useLanguageStore();
+  const { t } = useTranslation();
   const theme = isDarkMode ? Colors.dark : Colors.light;
   const scrollViewRef = useRef<ScrollView>(null);
   

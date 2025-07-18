@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, Dimensions, Platform } from 'react-native';
 import { useThemeStore } from '@/store/themeStore';
+import { useTranslation } from '@/hooks/useTranslation';
 import Colors from '@/constants/colors';
 
 // 只在動態導入圖表庫（不是在頂層導入）
@@ -52,11 +53,12 @@ interface PieChartProps {
 const SimpleLineChart = ({ data, width, height, chartConfig, style, yAxisSuffix }: LineChartProps) => {
   const { isDarkMode } = useThemeStore();
   const theme = isDarkMode ? Colors.dark : Colors.light;
+  const { t } = useTranslation();
   
   if (!data || !data.labels || !data.datasets || data.labels.length === 0) {
     return (
       <View style={[styles.placeholderContainer, { height, width }, style]}>
-        <Text style={{ color: theme.secondaryText }}>無法顯示圖表</Text>
+        <Text style={{ color: theme.secondaryText }}>{t('ui.chart.cannot.display')}</Text>
       </View>
     );
   }
@@ -125,11 +127,12 @@ const SimpleLineChart = ({ data, width, height, chartConfig, style, yAxisSuffix 
 const SimplePieChart = ({ data, width, height, chartConfig, accessor, backgroundColor, style = {} }: PieChartProps & { style?: any }) => {
   const { isDarkMode } = useThemeStore();
   const theme = isDarkMode ? Colors.dark : Colors.light;
+  const { t } = useTranslation();
   
   if (!data || data.length === 0) {
     return (
       <View style={[styles.placeholderContainer, { height, width }, style]}>
-        <Text style={{ color: theme.secondaryText }}>無法顯示圖表</Text>
+        <Text style={{ color: theme.secondaryText }}>{t('ui.chart.cannot.display')}</Text>
       </View>
     );
   }
@@ -175,6 +178,8 @@ const SimplePieChart = ({ data, width, height, chartConfig, accessor, background
 
 // 線圖適配器組件
 export const LineChartAdapter = (props: LineChartProps) => {
+  const { t } = useTranslation();
+  
   // 懶加載圖表庫，僅在第一次渲染時進行
   React.useEffect(() => {
     if (Platform.OS !== 'web' && !LineChart) {
@@ -200,13 +205,15 @@ export const LineChartAdapter = (props: LineChartProps) => {
   // 圖表庫尚未加載或加載失敗時顯示佔位符
   return (
     <View style={[styles.placeholderContainer, { height: props.height, width: props.width }, props.style]}>
-      <Text style={{ color: '#888' }}>圖表無法顯示</Text>
+      <Text style={{ color: '#888' }}>{t('ui.chart.cannot.display')}</Text>
     </View>
   );
 };
 
 // 餅圖適配器組件
 export const PieChartAdapter = (props: PieChartProps & { style?: any }) => {
+  const { t } = useTranslation();
+  
   // 懶加載圖表庫，僅在第一次渲染時進行
   React.useEffect(() => {
     if (Platform.OS !== 'web' && !PieChart) {
@@ -232,7 +239,7 @@ export const PieChartAdapter = (props: PieChartProps & { style?: any }) => {
   // 圖表庫尚未加載或加載失敗時顯示佔位符
   return (
     <View style={[styles.placeholderContainer, { height: props.height, width: props.width }, props.style]}>
-      <Text style={{ color: '#888' }}>圖表無法顯示</Text>
+      <Text style={{ color: '#888' }}>{t('ui.chart.cannot.display')}</Text>
     </View>
   );
 };

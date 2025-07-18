@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from '@/hooks/useTranslation';
 import { 
   View, 
   Text, 
@@ -20,7 +21,6 @@ import Colors from '@/constants/colors';
 import { useThemeStore } from '@/store/themeStore';
 import DatePickerField from '@/components/DatePickerField';
 import { CREW_OPTIONS, getCrewIcon, getCrewColor } from '@/constants/crews';
-import { useLanguageStore } from '@/store/languageStore';
 
 const EMISSION_CATEGORIES = [
   { 
@@ -110,9 +110,9 @@ const getCategoryIcon = (categoryKey: string, size: number = 24, color?: string)
 export default function AddShootingDayRecord() {
   const router = useRouter();
   const { projectId, crew: initialCrew } = useLocalSearchParams<{ projectId: string, crew?: FilmCrew }>();
-  const { addShootingDayRecord } = useProjectStore();
+  const { addShootingDayRecord, getProjectEmissionRecords } = useProjectStore();
   const { isDarkMode } = useThemeStore();
-  const { t } = useLanguageStore();
+  const { t } = useTranslation();
   const theme = isDarkMode ? Colors.dark : Colors.light;
 
   // 獲取翻譯過的活動類別
@@ -159,7 +159,6 @@ export default function AddShootingDayRecord() {
     if (!projectId) return 0;
     
     // 查找專案器材記錄
-    const { getProjectEmissionRecords } = useProjectStore();
     const projectRecords = getProjectEmissionRecords(projectId);
     const equipmentRecords = projectRecords.filter(
       record => record.categoryId === 'project-equipment'

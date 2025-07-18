@@ -15,7 +15,6 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Search, Filter, ArrowUp, ArrowDown, X, Calendar, DollarSign, MessageSquare } from 'lucide-react-native';
 import { useProjectStore } from '@/store/projectStore';
 import { useFloatingAIStore } from '@/store/floatingAIStore';
-import { useLanguageStore } from '@/store/languageStore';
 import { ProjectEmissionRecord, ProductionStage } from '@/types/project';
 import Header from '@/components/Header';
 import EmissionRecordItem from '@/components/EmissionRecordItem';
@@ -31,7 +30,7 @@ export default function ProjectRecordsScreen() {
   const { projects, getProjectEmissionRecords } = useProjectStore();
   const { isDarkMode } = useThemeStore();
   const { showFloatingAI } = useFloatingAIStore();
-  const { t } = useLanguageStore();
+  const { t } = useTranslation();
   const theme = isDarkMode ? Colors.dark : Colors.light;
   
   const [isLoading, setIsLoading] = useState(true);
@@ -104,8 +103,8 @@ export default function ProjectRecordsScreen() {
   };
 
   const handleAIButtonPress = () => {
-    console.log('專案記錄頁面 - AI 按鈕被點擊');
-    alert('AI 按鈕被點擊了！');
+    console.log(t('projects.records.ai.button.pressed'));
+    alert(t('projects.records.ai.button.pressed'));
     showFloatingAI();
   };
 
@@ -285,7 +284,7 @@ export default function ProjectRecordsScreen() {
             style={[styles.clearFiltersButton, { borderColor: theme.border }]}
             onPress={clearFilters}
           >
-            <Text style={[styles.clearFiltersText, { color: theme.primary }]}>{t('common.filter')}</Text>
+            <Text style={[styles.clearFiltersText, { color: theme.primary }]}>{t('common.clear.filters')}</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -319,7 +318,7 @@ export default function ProjectRecordsScreen() {
         </View>
       )}
       
-      {/* 浮動按鈕組 - 總是顯示 */}
+      {/* {t('projects.records.floating.buttons')} */}
         <View style={styles.fabContainer}>
         <TouchableOpacity
           style={{

@@ -1,8 +1,8 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, ScrollView, Pressable, TouchableOpacity, Alert, ActivityIndicator, Platform, Share, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, ScrollView, Pressable, TouchableOpacity, Alert, ActivityIndicator, Platform, Share, Dimensions, Modal } from 'react-native';
 import { useThemeStore } from '@/store/themeStore';
 import { useProjectStore } from '@/store/projectStore';
-import { useLanguageStore } from '@/store/languageStore';
+import { useTranslation } from '@/hooks/useTranslation';
 import { useProfileStore } from '@/store/profileStore';
 import Colors from '@/constants/colors';
 import PageTitle from '@/components/PageTitle';
@@ -30,9 +30,14 @@ import {
 } from 'lucide-react-native';
 import { formatEmissions } from '@/utils/helpers';
 import { LineChartAdapter, PieChartAdapter } from '@/components/ChartAdapter';
+import ModernDashboardCard from '@/components/ModernDashboardCard';
+import GaugeChart from '@/components/GaugeChart';
+import ModernGaugeChart from '@/components/ModernGaugeChart';
+import ModernProgressBar from '@/components/ModernProgressBar';
 import { useRouter } from 'expo-router';
 import { generateCarbonFootprintReport, setReportGeneratingCallback, shareReport, ReportOptions } from '@/utils/reportGenerator';
 import { ProjectEmissionSummary } from '@/types/project';
+import HtmlReportViewer from '@/components/HtmlReportViewer';
 
 // 移到組件內部使用 hook
 
@@ -63,12 +68,15 @@ export default function AnalyticsScreen() {
     allocationRecords,
     calculateProjectEmissions 
   } = useProjectStore();
-  const { t } = useLanguageStore();
+  const { t } = useTranslation();
   const theme = isDarkMode ? Colors.dark : Colors.light;
   const { width: screenWidth } = Dimensions.get('window');
 
   const [selectedTab, setSelectedTab] = useState<AnalysisType>('overview');
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
+  
+  // Store 已初始化檢查
+  // 由於現在 isInitialized 預設為 true，不需要額外檢查
   const [reportOptions, setReportOptions] = useState({
     includeOrganizationInfo: true,
     includeExecutiveSummary: true,
@@ -80,6 +88,9 @@ export default function AnalyticsScreen() {
     format: 'comprehensive' as 'comprehensive' | 'summary' | 'executive'
   });
   const [selectedProjects, setSelectedProjects] = useState<string[]>([]);
+  const [showReportViewer, setShowReportViewer] = useState(false);
+  const [reportHtmlContent, setReportHtmlContent] = useState<string>('');
+  const [reportTitle, setReportTitle] = useState<string>('');
 
   // 設定報告生成回調
   useEffect(() => {
@@ -89,7 +100,7 @@ export default function AnalyticsScreen() {
   // 計算專案摘要數據
   const projectSummaries = useMemo(() => {
     const summaries: { [key: string]: ProjectEmissionSummary } = {};
-    if (projects && projects.length > 0) {
+    if (projects && Array.isArray(projects) && projects.length > 0) {
       projects.forEach(project => {
         summaries[project.id] = calculateProjectEmissions(project.id);
       });
@@ -103,11 +114,13 @@ export default function AnalyticsScreen() {
     let totalProjectEmissions = 0;
     let totalRecords = 0;
 
-    (projects || []).forEach(project => {
-      const projectSummary = calculateProjectEmissions(project.id);
-      totalProjectEmissions += projectSummary.totalEmissions;
-      totalRecords += projectSummary.directRecordCount + projectSummary.allocatedRecordCount;
-    });
+    if (projects && Array.isArray(projects)) {
+      projects.forEach(project => {
+        const projectSummary = calculateProjectEmissions(project.id);
+        totalProjectEmissions += projectSummary.totalEmissions;
+        totalRecords += projectSummary.directRecordCount + projectSummary.allocatedRecordCount;
+      });
+    }
 
     // 計算未分攤的日常營運排放
     const totalOperationalEmissions = (nonProjectEmissionRecords || []).reduce((sum, record) => sum + record.amount, 0);
@@ -120,8 +133,8 @@ export default function AnalyticsScreen() {
     return {
       totalEmissions,
       totalRecords,
-      averageEmissions: (projects && projects.length > 0) ? totalEmissions / projects.length : 0,
-      activeProjects: projects ? projects.filter(p => p.status === 'active').length : 0
+      averageEmissions: (projects && Array.isArray(projects) && projects.length > 0) ? totalEmissions / projects.length : 0,
+      activeProjects: projects && Array.isArray(projects) ? projects.filter(p => p.status === 'active').length : 0
     };
   }, [projects, calculateProjectEmissions, nonProjectEmissionRecords, allocationRecords]);
 
@@ -184,7 +197,7 @@ export default function AnalyticsScreen() {
 
   // 計算效率指標數據
   const efficiencyStats = useMemo(() => {
-    if (!projects || projects.length === 0) {
+    if (!projects || !Array.isArray(projects) || projects.length === 0) {
       return {
         carbonPerBudget: 0,
         avgDailyEmissions: 0,
@@ -274,7 +287,7 @@ export default function AnalyticsScreen() {
       ...(nonProjectEmissionRecords || [])
     ];
 
-    if (allEmissionRecords.length === 0) {
+    if (!allEmissionRecords || allEmissionRecords.length === 0) {
       return {
         labels: [],
         datasets: [{ data: [0] }],
@@ -297,7 +310,7 @@ export default function AnalyticsScreen() {
       new Date(record.date) >= thirtyDaysAgo
     );
 
-    if (recentRecords.length === 0) {
+    if (!recentRecords || recentRecords.length === 0) {
       return {
         labels: [],
         datasets: [{ data: [0] }],
@@ -358,9 +371,11 @@ export default function AnalyticsScreen() {
         horizontal 
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.tabScrollContent}
+        style={styles.tabScrollView}
       >
-        {ANALYSIS_TABS.map((tab) => {
+        {ANALYSIS_TABS.map((tab, index) => {
           const isSelected = selectedTab === tab.id;
+          const tabTitle = t(tab.title);
           return (
             <TouchableOpacity 
               key={tab.id}
@@ -369,7 +384,8 @@ export default function AnalyticsScreen() {
                 {
                   backgroundColor: isSelected ? theme.primary : 'transparent',
                   borderColor: isSelected ? theme.primary : theme.border,
-                  minWidth: 100, // 確保標籤有最小寬度
+                  minWidth: Math.max(100, tabTitle.length * 8 + 40),
+                  marginRight: index === ANALYSIS_TABS.length - 1 ? 20 : 12,
                   shadowColor: isSelected ? theme.primary : 'transparent',
                   shadowOffset: { width: 0, height: 2 },
                   shadowOpacity: isSelected ? 0.3 : 0,
@@ -383,14 +399,19 @@ export default function AnalyticsScreen() {
                 size={16} 
                 color={isSelected ? '#FFFFFF' : theme.text} 
               />
-              <Text style={[
-                styles.tabText,
-                { 
-                  color: isSelected ? '#FFFFFF' : theme.text,
-                  fontWeight: isSelected ? '600' : '500'
-                }
-              ]}>
-                {t(tab.title)}
+              <Text 
+                style={[
+                  styles.tabText,
+                  { 
+                    color: isSelected ? '#FFFFFF' : theme.text,
+                    fontWeight: isSelected ? '600' : '500',
+                    textAlign: 'center',
+                  }
+                ]}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+              >
+                {tabTitle}
               </Text>
             </TouchableOpacity>
           );
@@ -468,48 +489,72 @@ export default function AnalyticsScreen() {
 
   const renderOverview = () => (
     <View style={styles.contentContainer}>
-      {/* 統計卡片 */}
-      <View style={styles.statsGrid}>
-        <StatCard
-          title={t('emissions.total')}
-          value={formatEmissions(overallStats.totalEmissions, t)}
-          change={0}
-          icon={Globe}
-          color="#3b82f6"
-        />
-        <StatCard
-          title={t('projects.active')}
-          value={overallStats.activeProjects.toString()}
-          change={0}
-          icon={Target}
+      {/* 主要統計卡片 */}
+      <View style={[styles.compactOverviewCard, { backgroundColor: theme.card }]}>
+        <View style={styles.compactCardHeader}>
+          <View style={styles.compactHeaderLeft}>
+            <BarChart3 size={18} color={theme.primary} />
+            <Text style={[styles.compactCardTitle, { color: theme.text }]}>
+              {t('analytics.overview.title')}
+            </Text>
+          </View>
+        </View>
+        
+        <View style={styles.compactStatsRow}>
+          <View style={styles.compactStatItem}>
+            <Text style={[styles.compactStatValue, { color: theme.primary }]}>
+              {formatEmissions(overallStats.totalEmissions, t)}
+            </Text>
+            <Text style={[styles.compactStatLabel, { color: theme.secondaryText }]}>
+              {t('emissions.total')}
+            </Text>
+          </View>
+          
+          <View style={styles.compactStatDivider} />
+          
+          <View style={styles.compactStatItem}>
+            <Text style={[styles.compactStatValue, { color: '#10b981' }]}>
+              {overallStats.activeProjects.toString()}
+            </Text>
+            <Text style={[styles.compactStatLabel, { color: theme.secondaryText }]}>
+              {t('projects.active')}
+            </Text>
+          </View>
+          
+          <View style={styles.compactStatDivider} />
+          
+          <View style={styles.compactStatItem}>
+            <Text style={[styles.compactStatValue, { color: '#f59e0b' }]}>
+              {overallStats.totalRecords.toString()}
+            </Text>
+            <Text style={[styles.compactStatLabel, { color: theme.secondaryText }]}>
+              {t('analytics.record.count')}
+            </Text>
+          </View>
+        </View>
+      </View>
+      
+      {/* 執行效率儀表圖 */}
+      <View style={[styles.simpleGaugeCard, { backgroundColor: theme.card }]}>
+        <GaugeChart
+          value={Math.round((overallStats.activeProjects / Math.max(projects?.length || 1, 1)) * 100)}
+          title="執行效率"
+          subtitle="基於專案活躍度"
           color="#10b981"
+          size={200}
+          showValue={true}
+          unit="%"
         />
       </View>
-
-      <View style={styles.statsGrid}>
-        <StatCard
-          title={t('emissions.average')}
-          value={formatEmissions(overallStats.averageEmissions, t)}
-          change={0}
-          icon={BarChart3}
-          color="#f59e0b"
-        />
-        <StatCard
-          title={t('analytics.record.count')}
-          value={overallStats.totalRecords.toString()}
-          change={0}
-          icon={Activity}
-          color="#8b5cf6"
-        />
-      </View>
-
+      
+      
       {/* 趨勢圖表 */}
-              <ChartCard title={t('analytics.trends.recent.emissions')}>
-        {chartData.labels.length > 0 ? (
+      <ChartCard title={t('analytics.trends.recent.emissions')}>
+        {chartData && chartData.labels && chartData.labels.length > 0 ? (
           <LineChartAdapter
             data={chartData}
-            width={screenWidth - 60}
-            height={180}
+            width={Math.min(screenWidth - 80, 320)}
+            height={Math.min(Math.max(180, screenWidth * 0.35), 220)}
             chartConfig={chartData.chartConfig}
             bezier
             style={styles.chartStyle}
@@ -523,7 +568,7 @@ export default function AnalyticsScreen() {
           </View>
         )}
       </ChartCard>
-
+      
       {/* 洞察建議 */}
       <View style={[styles.insightCard, { backgroundColor: theme.card }]}>
         <Text style={[styles.insightTitle, { color: theme.text }]}>{t('analytics.insights')}</Text>
@@ -542,7 +587,7 @@ export default function AnalyticsScreen() {
       {/* 專案統計 */}
       <View style={[styles.projectCard, { backgroundColor: theme.card }]}>
         <Text style={[styles.sectionTitle, { color: theme.text }]}>{t('analytics.project.performance')}</Text>
-        {(projects && projects.length > 0) ? (
+        {(projects && Array.isArray(projects) && projects.length > 0) ? (
           <View style={styles.projectList}>
             {projects.map((project) => {
               const projectSummary = calculateProjectEmissions(project.id);
@@ -559,10 +604,12 @@ export default function AnalyticsScreen() {
                     </Text>
                   </View>
                   <View style={[styles.statusBadge, { 
-                    backgroundColor: project.status === 'active' ? '#10b981' : '#f59e0b' 
+                    backgroundColor: project.status === 'active' ? '#10b981' : 
+                                   project.status === 'completed' ? '#3b82f6' : '#f59e0b' 
                   }]}>
                     <Text style={styles.statusText}>
-                      {project.status === 'active' ? t('status.active') : t('status.planning')}
+                      {project.status === 'active' ? t('status.active') : 
+                       project.status === 'completed' ? t('status.completed') : t('status.planning')}
                     </Text>
                   </View>
                 </TouchableOpacity>
@@ -586,8 +633,8 @@ export default function AnalyticsScreen() {
     return (
       <View style={styles.contentContainer}>
         {/* 階段統計卡片 */}
-        <View style={styles.statsGrid}>
-          <View style={[styles.statCard, { backgroundColor: theme.card }]}>
+        <View style={styles.stageStatsGrid}>
+          <View style={[styles.stageStatCard, { backgroundColor: theme.card }]}>
             <View style={styles.statCardHeader}>
               <View style={[styles.statIconContainer, { backgroundColor: '#3b82f6' + '15' }]}>
                 <Layers size={20} color="#3b82f6" />
@@ -602,7 +649,7 @@ export default function AnalyticsScreen() {
             <Text style={[styles.statLabel, { color: theme.secondaryText }]}>{t('stage.pre-production')}</Text>
           </View>
           
-          <View style={[styles.statCard, { backgroundColor: theme.card }]}>
+          <View style={[styles.stageStatCard, { backgroundColor: theme.card }]}>
             <View style={styles.statCardHeader}>
               <View style={[styles.statIconContainer, { backgroundColor: '#f59e0b' + '15' }]}>
                 <Activity size={20} color="#f59e0b" />
@@ -616,10 +663,8 @@ export default function AnalyticsScreen() {
             </Text>
             <Text style={[styles.statLabel, { color: theme.secondaryText }]}>{t('stage.production')}</Text>
           </View>
-        </View>
-
-        <View style={styles.statsGrid}>
-          <View style={[styles.statCard, { backgroundColor: theme.card }]}>
+          
+          <View style={[styles.stageStatCard, { backgroundColor: theme.card }]}>
             <View style={styles.statCardHeader}>
               <View style={[styles.statIconContainer, { backgroundColor: '#10b981' + '15' }]}>
                 <Building size={20} color="#10b981" />
@@ -634,7 +679,7 @@ export default function AnalyticsScreen() {
             <Text style={[styles.statLabel, { color: theme.secondaryText }]}>{t('stage.post-production')}</Text>
           </View>
 
-          <View style={[styles.statCard, { backgroundColor: theme.card }]}>
+          <View style={[styles.stageStatCard, { backgroundColor: theme.card }]}>
             <View style={styles.statCardHeader}>
               <View style={[styles.statIconContainer, { backgroundColor: '#8b5cf6' + '15' }]}>
                 <Globe size={20} color="#8b5cf6" />
@@ -652,11 +697,11 @@ export default function AnalyticsScreen() {
 
         {/* 階段分佈圖表 */}
         <ChartCard title={t('analytics.lifecycle.stage.distribution')}>
-          {stageChartData.length > 0 ? (
+          {stageChartData && stageChartData.length > 0 ? (
             <PieChartAdapter
               data={stageChartData}
-              width={screenWidth - 60}
-              height={180}
+              width={Math.min(screenWidth - 80, 320)}
+              height={Math.min(Math.max(200, screenWidth * 0.4), 240)}
               chartConfig={chartData.chartConfig}
               accessor="value"
               backgroundColor="transparent"
@@ -684,7 +729,7 @@ export default function AnalyticsScreen() {
         {/* 專案階段詳情 */}
         <View style={[styles.projectCard, { backgroundColor: theme.card }]}>
           <Text style={[styles.sectionTitle, { color: theme.text }]}>{t('analytics.project.stage.details')}</Text>
-          {(projects && projects.length > 0) ? (
+          {(projects && Array.isArray(projects) && projects.length > 0) ? (
             <View style={styles.projectList}>
               {projects.map((project) => {
                 const projectSummary = calculateProjectEmissions(project.id);
@@ -751,8 +796,8 @@ export default function AnalyticsScreen() {
     return (
       <View style={styles.contentContainer}>
         {/* 核心效率指標 */}
-        <View style={styles.statsGrid}>
-          <View style={[styles.statCard, { backgroundColor: theme.card }]}>
+        <View style={styles.efficiencyStatsGrid}>
+          <View style={[styles.efficiencyStatCard, { backgroundColor: theme.card }]}>
             <View style={styles.statCardHeader}>
               <View style={[styles.statIconContainer, { backgroundColor: '#8b5cf6' + '15' }]}>
                 <TrendingUp size={20} color="#8b5cf6" />
@@ -767,7 +812,7 @@ export default function AnalyticsScreen() {
             <Text style={[styles.statLabel, { color: theme.secondaryText }]}>每元碳排放 (kg/NT$)</Text>
           </View>
           
-          <View style={[styles.statCard, { backgroundColor: theme.card }]}>
+          <View style={[styles.efficiencyStatCard, { backgroundColor: theme.card }]}>
             <View style={styles.statCardHeader}>
               <View style={[styles.statIconContainer, { backgroundColor: '#f59e0b' + '15' }]}>
                 <Activity size={20} color="#f59e0b" />
@@ -786,7 +831,7 @@ export default function AnalyticsScreen() {
         {/* 專案效率排名 */}
         <View style={[styles.projectCard, { backgroundColor: theme.card }]}>
           <Text style={[styles.sectionTitle, { color: theme.text }]}>{t('analytics.project.efficiency.ranking')}</Text>
-          {efficiencyStats.projectEfficiency.length > 0 ? (
+          {efficiencyStats && efficiencyStats.projectEfficiency && efficiencyStats.projectEfficiency.length > 0 ? (
             <View style={styles.projectList}>
               {efficiencyStats.projectEfficiency
                 .sort((a, b) => a.carbonPerBudget - b.carbonPerBudget)
@@ -832,7 +877,7 @@ export default function AnalyticsScreen() {
 
         {/* 效率趨勢圖 */}
         <ChartCard title={t('analytics.efficiency.trend.analysis')}>
-          {efficiencyStats.monthlyTrend.length > 0 ? (
+          {efficiencyStats && efficiencyStats.monthlyTrend && efficiencyStats.monthlyTrend.length > 0 ? (
             <LineChartAdapter
               data={{
                 labels: efficiencyStats.monthlyTrend.map(d => d.month),
@@ -840,8 +885,8 @@ export default function AnalyticsScreen() {
                   data: efficiencyStats.monthlyTrend.map(d => d.efficiency)
                 }]
               }}
-              width={screenWidth - 60}
-              height={180}
+              width={Math.min(screenWidth - 80, 320)}
+              height={Math.min(Math.max(180, screenWidth * 0.35), 220)}
               chartConfig={chartData.chartConfig}
               bezier
               style={styles.chartStyle}
@@ -925,7 +970,7 @@ export default function AnalyticsScreen() {
     try {
       if (isGeneratingReport) return;
       
-      if (!projects || projects.length === 0) {
+      if (!projects || !Array.isArray(projects) || projects.length === 0) {
         Alert.alert(t('analytics.reports.generate.no.projects'), t('analytics.reports.generate.no.projects.message'));
         return;
       }
@@ -934,11 +979,11 @@ export default function AnalyticsScreen() {
       const { organization } = useProfileStore.getState();
       
       // 根據選擇的專案過濾數據
-          const filteredProjects = (selectedProjects && selectedProjects.length > 0)
+          const filteredProjects = (selectedProjects && Array.isArray(selectedProjects) && selectedProjects.length > 0)
       ? (projects || []).filter(p => selectedProjects.includes(p.id))
       : (projects || []);
 
-    const filteredSummaries = (selectedProjects && selectedProjects.length > 0)
+    const filteredSummaries = (selectedProjects && Array.isArray(selectedProjects) && selectedProjects.length > 0)
         ? Object.fromEntries(
             Object.entries(projectSummaries).filter(([projectId]) => 
               selectedProjects.includes(projectId)
@@ -948,15 +993,42 @@ export default function AnalyticsScreen() {
       
       const filePath = await generateCarbonFootprintReport(filteredProjects, filteredSummaries, reportOptions, organization);
       
-              Alert.alert(
-        t('analytics.reports.generate.success'),
-        t('analytics.reports.generate.success.message'),
-        [
-          { text: t('analytics.reports.generate.view.report'), onPress: () => console.log('查看報告:', filePath) },
-          { text: t('analytics.reports.generate.share.report'), onPress: () => shareReport(filePath, organization.name) },
-          { text: t('analytics.reports.generate.confirm'), style: 'cancel' }
-        ]
-      );
+      if (Platform.OS !== 'web') {
+        // 移動端：讀取HTML內容並顯示查看器
+        const htmlContent = await import('@/utils/reportGenerator').then(module => 
+          module.getGeneratedReportHTML(filteredProjects, filteredSummaries, reportOptions, organization)
+        );
+        
+        setReportHtmlContent(htmlContent);
+        setReportTitle(`${organization?.name || '組織'} - 碳足跡報告`);
+        
+        Alert.alert(
+          t('analytics.reports.generate.success'),
+          t('analytics.reports.generate.success.message'),
+          [
+            { 
+              text: t('analytics.reports.generate.view.report'), 
+              onPress: () => setShowReportViewer(true) 
+            },
+            { 
+              text: t('analytics.reports.generate.share.report'), 
+              onPress: () => shareReport(filePath, organization.name) 
+            },
+            { text: t('analytics.reports.generate.confirm'), style: 'cancel' }
+          ]
+        );
+      } else {
+        // Web環境：保持原有邏輯
+        Alert.alert(
+          t('analytics.reports.generate.success'),
+          t('analytics.reports.generate.success.message'),
+          [
+            { text: t('analytics.reports.generate.view.report'), onPress: () => console.log('查看報告:', filePath) },
+            { text: t('analytics.reports.generate.share.report'), onPress: () => shareReport(filePath, organization.name) },
+            { text: t('analytics.reports.generate.confirm'), style: 'cancel' }
+          ]
+        );
+      }
     } catch (error) {
       console.error('報告生成失敗:', error);
       Alert.alert(t('analytics.reports.generate.error'), t('analytics.reports.generate.error.message'));
@@ -976,7 +1048,7 @@ export default function AnalyticsScreen() {
     try {
       if (isGeneratingReport) return;
       
-      if (!projects || projects.length === 0) {
+      if (!projects || !Array.isArray(projects) || projects.length === 0) {
         Alert.alert('無專案數據', '目前沒有可用的專案數據，請先新增專案記錄。');
         return;
       }
@@ -1001,7 +1073,7 @@ export default function AnalyticsScreen() {
         ? (projects || []).filter(p => selectedProjects.includes(p.id))
         : (projects || []);
 
-      const filteredSummaries = (selectedProjects && selectedProjects.length > 0)
+      const filteredSummaries = (selectedProjects && Array.isArray(selectedProjects) && selectedProjects.length > 0)
         ? Object.fromEntries(
             Object.entries(projectSummaries).filter(([projectId]) => 
               selectedProjects.includes(projectId)
@@ -1020,15 +1092,40 @@ export default function AnalyticsScreen() {
         new Date().getFullYear().toString()
       );
       
-      Alert.alert(
-        '🏛️ 政府標準報告生成成功',
-        '已生成符合環保署113年版標準的溫室氣體盤查報告書，包含完整的組織邊界設定、排放源識別、數據品質管理等11個章節，可用於政府申報和第三方查證。',
-        [
-          { text: '查看報告', onPress: () => console.log('查看報告:', reportPath) },
-          { text: '分享報告', onPress: () => shareReport(reportPath, `政府標準盤查報告書_${organizationInfo.name}`) },
-          { text: '確定', style: 'cancel' }
-        ]
-      );
+      if (Platform.OS !== 'web') {
+        // 移動端：生成HTML內容並顯示查看器
+        const { getGovernmentComplianceReportHTML } = await import('@/utils/reportGenerator');
+        const htmlContent = await getGovernmentComplianceReportHTML(
+          filteredProjects,
+          filteredSummaries,
+          organizationInfo,
+          new Date().getFullYear().toString()
+        );
+        
+        setReportHtmlContent(htmlContent);
+        setReportTitle(`政府標準盤查報告書 - ${organizationInfo.name}`);
+        
+        Alert.alert(
+          '🏛️ 政府標準報告生成成功',
+          '已生成符合環保署113年版標準的溫室氣體盤查報告書，包含完整的組織邊界設定、排放源識別、數據品質管理等11個章節，可用於政府申報和第三方查證。',
+          [
+            { text: '查看報告', onPress: () => setShowReportViewer(true) },
+            { text: '分享報告', onPress: () => shareReport(reportPath, `政府標準盤查報告書_${organizationInfo.name}`) },
+            { text: '確定', style: 'cancel' }
+          ]
+        );
+      } else {
+        // Web環境：保持原有邏輯
+        Alert.alert(
+          '🏛️ 政府標準報告生成成功',
+          '已生成符合環保署113年版標準的溫室氣體盤查報告書，包含完整的組織邊界設定、排放源識別、數據品質管理等11個章節，可用於政府申報和第三方查證。',
+          [
+            { text: '查看報告', onPress: () => console.log('查看報告:', reportPath) },
+            { text: '分享報告', onPress: () => shareReport(reportPath, `政府標準盤查報告書_${organizationInfo.name}`) },
+            { text: '確定', style: 'cancel' }
+          ]
+        );
+      }
     } catch (error) {
       console.error('政府標準報告生成失敗:', error);
       Alert.alert(
@@ -1059,7 +1156,7 @@ export default function AnalyticsScreen() {
               </View>
             </View>
                           <Text style={[styles.statValue, { color: theme.text }]}>
-                {projects ? projects.length.toString() : '0'}
+                {projects && Array.isArray(projects) ? projects.length.toString() : '0'}
               </Text>
             <Text style={[styles.statLabel, { color: theme.secondaryText }]}>
               {t('analytics.common.available.projects')}
@@ -1094,7 +1191,7 @@ export default function AnalyticsScreen() {
               styles.selectAllButton,
               { 
                 borderColor: theme.border,
-                                  backgroundColor: (selectedProjects && selectedProjects.length === 0) ? theme.primary + '10' : 'transparent'
+                                  backgroundColor: (selectedProjects && Array.isArray(selectedProjects) && selectedProjects.length === 0) ? theme.primary + '10' : 'transparent'
               }
             ]}
             onPress={() => setSelectedProjects([])}
@@ -1102,10 +1199,10 @@ export default function AnalyticsScreen() {
             <Text style={[
               styles.selectAllText,
               { 
-                                  color: (selectedProjects && selectedProjects.length === 0) ? theme.primary : theme.text
+                                  color: (selectedProjects && Array.isArray(selectedProjects) && selectedProjects.length === 0) ? theme.primary : theme.text
               }
             ]}>
-                              {(selectedProjects && selectedProjects.length === 0) ? '✓ ' : ''}{t('analytics.common.all.projects')} ({projects ? projects.length.toString() : '0'})
+                              {(selectedProjects && Array.isArray(selectedProjects) && selectedProjects.length === 0) ? '✓ ' : ''}{t('analytics.common.all.projects')} ({projects && Array.isArray(projects) ? projects.length.toString() : '0'})
             </Text>
           </Pressable>
           
@@ -1271,8 +1368,8 @@ export default function AnalyticsScreen() {
           )}
           <Text style={styles.generateButtonText}>
             {isGeneratingReport ? t('analytics.reports.generate.generating') : 
-             (selectedProjects && selectedProjects.length > 0)
-              ? t('analytics.reports.generate.selected.projects').replace('{count}', selectedProjects.length.toString())
+             (selectedProjects && Array.isArray(selectedProjects) && selectedProjects.length > 0)
+              ? t('analytics.reports.generate.selected.projects').replace('{count}', selectedProjects?.length?.toString() || '0')
               : t('analytics.reports.generate.all.projects').replace('{count}', (projects ? projects.length : 0).toString())}
           </Text>
         </Pressable>
@@ -1361,11 +1458,32 @@ export default function AnalyticsScreen() {
       >
         {renderContent()}
       </ScrollView>
+      
+      {/* HTML報告查看器 Modal */}
+      <Modal
+        visible={showReportViewer}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowReportViewer(false)}
+      >
+        <HtmlReportViewer
+          htmlContent={reportHtmlContent}
+          reportTitle={reportTitle}
+          onClose={() => setShowReportViewer(false)}
+        />
+      </Modal>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  loadingText: {
+    flex: 1,
+    textAlign: 'center',
+    textAlignVertical: 'center',
+    fontSize: 16,
+    fontWeight: '500',
+  },
   container: {
     flex: 1,
   },
@@ -1376,7 +1494,8 @@ const styles = StyleSheet.create({
     paddingBottom: 32,
   },
   contentContainer: {
-    padding: 20,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
     gap: 16,
   },
   
@@ -1391,10 +1510,14 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 12,
   },
+  tabScrollView: {
+    flexGrow: 1,
+  },
   tabScrollContent: {
     paddingHorizontal: 20,
     paddingVertical: 16,
     gap: 12,
+    flexGrow: 1,
   },
   tab: {
     flexDirection: 'row',
@@ -1413,7 +1536,405 @@ const styles = StyleSheet.create({
   // 統計卡片
   statsGrid: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginHorizontal: 20,
+    marginBottom: 16,
+    gap: 12,
+    flexWrap: 'wrap',
+  },
+  
+  // 階段統計容器
+  stageStatsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+    gap: 12,
+  },
+  
+  // 階段統計網格
+  stageStatsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+    gap: 12,
+  },
+  
+  // 階段統計卡片
+  stageStatCard: {
+    width: '48%',
+    borderRadius: 16,
+    padding: 20,
+    elevation: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    minHeight: 120,
+  },
+  
+  // 效率指標網格
+  efficiencyStatsGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+    gap: 12,
+  },
+  
+  // 效率指標卡片
+  efficiencyStatCard: {
+    flex: 1,
+    borderRadius: 16,
+    padding: 20,
+    elevation: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    minHeight: 120,
+    maxWidth: '48%',
+  },
+  
+  // 緊湊版總覽卡片樣式
+  compactOverviewCard: {
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 12,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  compactCardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  compactHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  compactCardTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  compactStatsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  compactStatItem: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  compactStatValue: {
+    fontSize: 16,
+    fontWeight: '700',
+    marginBottom: 2,
+  },
+  compactStatLabel: {
+    fontSize: 11,
+    fontWeight: '500',
+    textAlign: 'center',
+  },
+  compactStatDivider: {
+    width: 1,
+    height: 32,
+    backgroundColor: 'rgba(0, 0, 0, 0.1)',
+    marginHorizontal: 12,
+  },
+  
+  // 簡潔儀表圖卡片樣式
+  simpleGaugeCard: {
+    borderRadius: 16,
+    padding: 24,
+    marginBottom: 16,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  
+  // 性能卡片
+  performanceCard: {
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 16,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  performanceHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  performanceHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  performanceIconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  performanceTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  
+  gaugeGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 20,
+    paddingHorizontal: 10,
     gap: 16,
+    flexWrap: 'wrap',
+  },
+  
+  singleGaugeContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 20,
+    paddingHorizontal: 20,
+  },
+  
+  // 進度卡片
+  progressCard: {
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 16,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  progressHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  progressHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  progressIconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  progressTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  progressBarsContainer: {
+    gap: 16,
+  },
+  
+  // 現代化性能卡片
+  modernPerformanceCard: {
+    borderRadius: 16,
+    padding: 24,
+    marginBottom: 16,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+  },
+  
+  modernCardHeader: {
+    marginBottom: 20,
+  },
+  
+  modernHeaderContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  
+  modernIconWrapper: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  
+  modernIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  
+  modernHeaderText: {
+    flex: 1,
+  },
+  
+  modernCardTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  
+  modernCardSubtitle: {
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  
+  modernGaugeSection: {
+    alignItems: 'center',
+  },
+  
+  modernGaugeWrapper: {
+    marginBottom: 20,
+  },
+  
+  modernStatsGrid: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 16,
+  },
+  
+  modernStatItem: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 12,
+    alignItems: 'center',
+    minWidth: 100,
+  },
+  
+  modernStatValue: {
+    fontSize: 16,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  
+  modernStatLabel: {
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  
+  
+  
+  // 現代化性能卡片
+  modernPerformanceCard: {
+    borderRadius: 20,
+    padding: 24,
+    marginBottom: 20,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+  },
+  
+  modernPerformanceContent: {
+    gap: 20,
+  },
+  
+  modernStatsGrid: {
+    flexDirection: 'row',
+    gap: 16,
+  },
+  
+  modernStatCard: {
+    flex: 1,
+    borderRadius: 16,
+    padding: 20,
+    alignItems: 'center',
+    elevation: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+  },
+  
+  modernStatIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  
+  modernStatValue: {
+    fontSize: 24,
+    fontWeight: '800',
+    marginBottom: 4,
+    textAlign: 'center',
+  },
+  
+  modernStatLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  
+  modernEmissionsCard: {
+    borderRadius: 16,
+    padding: 20,
+    elevation: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+  },
+  
+  modernEmissionsContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+  },
+  
+  modernEmissionsIcon: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  
+  modernEmissionsText: {
+    flex: 1,
+  },
+  
+  modernEmissionsValue: {
+    fontSize: 28,
+    fontWeight: '800',
+    marginBottom: 4,
+  },
+  
+  modernEmissionsLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  
+  modernGaugeContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
   },
   statCard: {
     flex: 1,
@@ -1424,6 +1945,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
     shadowRadius: 12,
+    minWidth: 140,
   },
   statCardHeader: {
     flexDirection: 'row',
@@ -1508,13 +2030,14 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
   },
   projectList: {
-    gap: 8,
+    gap: 16,
   },
   projectItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 4,
     borderBottomWidth: 1,
   },
   projectInfo: {
@@ -1535,14 +2058,16 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   statusText: {
-    fontSize: 10,
+    fontSize: 12,
     fontWeight: '600',
     color: '#FFFFFF',
   },
   sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 16,
+    fontSize: 20,
+    fontWeight: '800',
+    marginBottom: 20,
+    textAlign: 'center',
+    letterSpacing: 0.5,
   },
   
   // 佔位符
@@ -1590,26 +2115,29 @@ const styles = StyleSheet.create({
   stageBreakdown: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 8,
-    gap: 8,
+    marginTop: 12,
+    gap: 12,
   },
   stageItem: {
     flex: 1,
     alignItems: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 4,
-    borderRadius: 6,
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    borderRadius: 8,
     backgroundColor: 'rgba(0, 0, 0, 0.02)',
+    minWidth: 80,
   },
   stageLabel: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '600',
     marginBottom: 4,
+    textAlign: 'center',
   },
   stageValue: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '700',
     marginBottom: 2,
+    textAlign: 'center',
   },
   stageAllocation: {
     fontSize: 10,

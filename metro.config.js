@@ -42,6 +42,32 @@ config.resolver = {
     // 防止 import.meta 相關錯誤
     'import-meta-resolve': false,
   },
+  // Add protocol resolver for simulator
+  protocols: ['http', 'https', 'exp', 'exps']
 };
+
+// Add server configuration to help with protocol parsing issues
+config.server = {
+  ...config.server,
+  port: 8081,
+  enhanceMiddleware: (middleware, server) => {
+    return (req, res, next) => {
+      // Set proper headers for React Native
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+      
+      // Handle preflight requests
+      if (req.method === 'OPTIONS') {
+        res.writeHead(200);
+        res.end();
+        return;
+      }
+      
+      return middleware(req, res, next);
+    };
+  }
+};
+
 
 module.exports = config; 

@@ -25,16 +25,13 @@ import {
 import Header from '@/components/Header';
 import Colors from '@/constants/colors';
 import { useThemeStore } from '@/store/themeStore';
-import { useLanguageStore } from '@/store/languageStore';
-
 export default function PrivacyScreen() {
   const router = useRouter();
   const { isDarkMode } = useThemeStore();
-  const { t } = useLanguageStore();
+  const { t } = useTranslation();
   const theme = isDarkMode ? Colors.dark : Colors.light;
 
   const handleOpenLink = (url: string) => {
-  const { t } = useTranslation();
 
     // For demo URLs, show an alert instead of trying to open them
     if (url.includes('carbonlens.example.com') || url.includes('example.com')) {

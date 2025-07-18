@@ -11,6 +11,7 @@ import { GestureHandlerRootView, PanGestureHandler, State } from 'react-native-g
 import { MessageSquare, X, Minimize2, Maximize2 } from 'lucide-react-native';
 import { useProjectStore } from '@/store/projectStore';
 import { useThemeStore } from '@/store/themeStore';
+import { useTranslation } from '@/hooks/useTranslation';
 import { Dimensions } from 'react-native';
 import AIAssistant from '@/components/AIAssistant';
 import Colors from '@/constants/colors';
@@ -29,6 +30,7 @@ export default function FloatingAIAssistant({
   const { projects } = useProjectStore();
   const { isDarkMode } = useThemeStore();
   const theme = isDarkMode ? Colors.dark : Colors.light;
+  const { t } = useTranslation();
   const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
   
   const [isExpanded, setIsExpanded] = useState(false);
@@ -46,9 +48,11 @@ export default function FloatingAIAssistant({
 
   // 初始化專案
   useEffect(() => {
-    const activeProjects = projects.filter(p => p.status === 'active');
-    if (activeProjects.length > 0 && !selectedProject) {
-      setSelectedProject(activeProjects[0].id);
+    if (projects && Array.isArray(projects)) {
+      const activeProjects = projects.filter(p => p.status === 'active');
+      if (activeProjects.length > 0 && !selectedProject) {
+        setSelectedProject(activeProjects[0].id);
+      }
     }
   }, [projects, selectedProject]);
 
@@ -179,7 +183,7 @@ export default function FloatingAIAssistant({
               <View style={styles.headerLeft}>
                 <MessageSquare size={20} color="#10B981" />
                 <Text style={[styles.headerTitle, { color: theme.text }]}>
-                  AI 助手
+                  {t('ui.ai.assistant')}
                 </Text>
               </View>
               

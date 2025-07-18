@@ -12,6 +12,7 @@ import {
 import { X, ChevronLeft, ChevronRight, Calendar } from 'lucide-react-native';
 import Colors from '@/constants/colors';
 import { useThemeStore } from '@/store/themeStore';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface CustomDatePickerProps {
   visible: boolean;
@@ -21,13 +22,6 @@ interface CustomDatePickerProps {
   minDate?: Date;
   maxDate?: Date;
 }
-
-const MONTHS = [
-  '一月', '二月', '三月', '四月', '五月', '六月',
-  '七月', '八月', '九月', '十月', '十一月', '十二月'
-];
-
-const DAYS_OF_WEEK = ['日', '一', '二', '三', '四', '五', '六'];
 
 const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
   visible,
@@ -39,6 +33,19 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
 }) => {
   const { isDarkMode } = useThemeStore();
   const theme = isDarkMode ? Colors.dark : Colors.light;
+  const { t } = useTranslation();
+
+  const MONTHS = [
+    t('date.month.jan'), t('date.month.feb'), t('date.month.mar'),
+    t('date.month.apr'), t('date.month.may'), t('date.month.jun'),
+    t('date.month.jul'), t('date.month.aug'), t('date.month.sep'),
+    t('date.month.oct'), t('date.month.nov'), t('date.month.dec')
+  ];
+
+  const DAYS_OF_WEEK = [
+    t('date.day.sun'), t('date.day.mon'), t('date.day.tue'),
+    t('date.day.wed'), t('date.day.thu'), t('date.day.fri'), t('date.day.sat')
+  ];
   
   const [selectedDate, setSelectedDate] = useState(initialDate);
   const [currentMonth, setCurrentMonth] = useState(initialDate.getMonth());
@@ -150,7 +157,7 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
         <View style={styles.yearPickerModalOverlay}>
           <View style={[styles.yearPickerContainer, { backgroundColor: theme.card }]}>
             <View style={[styles.yearPickerHeader, { borderBottomColor: theme.border }]}>
-              <Text style={[styles.yearPickerTitle, { color: theme.text }]}>選擇年份</Text>
+              <Text style={[styles.yearPickerTitle, { color: theme.text }]}>{t('ui.select.year')}</Text>
               <TouchableOpacity onPress={() => setShowYearPicker(false)}>
                 <X size={24} color={theme.text} />
               </TouchableOpacity>
@@ -203,7 +210,7 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
       <View style={styles.modalOverlay}>
         <View style={[styles.container, { backgroundColor: theme.card }]}>
           <View style={[styles.header, { borderBottomColor: theme.border }]}>
-            <Text style={[styles.title, { color: theme.text }]}>選擇日期</Text>
+            <Text style={[styles.title, { color: theme.text }]}>{t('common.select.date')}</Text>
             <TouchableOpacity onPress={onClose} style={styles.closeButton}>
               <X size={24} color={theme.text} />
             </TouchableOpacity>
@@ -282,14 +289,14 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
               style={[styles.cancelButton, { borderColor: theme.border }]}
               onPress={onClose}
             >
-              <Text style={[styles.cancelButtonText, { color: theme.text }]}>取消</Text>
+              <Text style={[styles.cancelButtonText, { color: theme.text }]}>{t('common.cancel')}</Text>
             </TouchableOpacity>
             
             <TouchableOpacity 
               style={[styles.confirmButton, { backgroundColor: theme.primary }]}
               onPress={handleConfirm}
             >
-              <Text style={styles.confirmButtonText}>確認</Text>
+              <Text style={styles.confirmButtonText}>{t('common.confirm')}</Text>
             </TouchableOpacity>
           </View>
         </View>

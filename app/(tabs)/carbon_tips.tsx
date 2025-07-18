@@ -4,7 +4,7 @@ import { Lightbulb, Car, Laptop, Utensils, Hotel, Trash, Fuel, Droplet, Wind, Za
 import { LinearGradient } from 'expo-linear-gradient';
 import Colors from '@/constants/colors';
 import { useThemeStore } from '@/store/themeStore';
-import { useLanguageStore } from '@/store/languageStore';
+import { useTranslation } from '@/hooks/useTranslation';
 import { useDimensions } from '@/hooks/useDimensions';
 import PageTitle from '@/components/PageTitle';
 import Button from '@/components/Button';
@@ -299,7 +299,7 @@ const PLANT_BASED_CATERING = [
 
 export default function CarbonTipsScreen() {
   const { isDarkMode } = useThemeStore();
-  const { t } = useLanguageStore();
+  const { t } = useTranslation();
   const theme = isDarkMode ? Colors.dark : Colors.light;
   const { width } = useDimensions();
   const cardWidth = width - 40;

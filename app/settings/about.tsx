@@ -26,16 +26,13 @@ import {
 import Header from '@/components/Header';
 import Colors from '@/constants/colors';
 import { useThemeStore } from '@/store/themeStore';
-import { useLanguageStore } from '@/store/languageStore';
-
 export default function AboutScreen() {
   const router = useRouter();
   const { isDarkMode } = useThemeStore();
-  const { t } = useLanguageStore();
+  const { t } = useTranslation();
   const theme = isDarkMode ? Colors.dark : Colors.light;
 
   const handleOpenLink = (url: string) => {
-  const { t } = useTranslation();
 
     // For demo URLs, show an alert instead of trying to open them
     if (url.includes('carbonlens.example.com') || url.includes('example.com')) {
@@ -65,11 +62,11 @@ export default function AboutScreen() {
       <ScrollView style={styles.scrollView}>
         <View style={styles.logoContainer}>
           <Image 
-            source={{ uri: 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?q=80&w=2874&auto=format&fit=crop' }} 
+            source={require('@/assets/images/icon.png')} 
             style={styles.logo}
           />
           <Text style={[styles.appName, { color: theme.text }]}>{t('about.app.name')}</Text>
-          <Text style={[styles.appVersion, { color: theme.secondaryText }]}>{t('about.app.version')}</Text>
+          <Text style={[styles.appVersion, { color: theme.secondaryText }]}>v1.17</Text>
           <Text style={[styles.appTagline, { color: theme.primary }]}>{t('about.app.tagline')}</Text>
         </View>
         

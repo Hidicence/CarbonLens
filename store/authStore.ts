@@ -16,7 +16,7 @@ try {
 }
 import { User } from '@/types/auth';
 import { Platform } from 'react-native';
-// import { useProfileStore } from '@/store/profileStore'; // 暫時禁用避免初始化問題
+import { useProfileStore } from '@/store/profileStore';
 
 // 直接導入Firebase Auth功能
 import {
@@ -88,14 +88,20 @@ const mapFirebaseUserToUser = (firebaseUser: FirebaseUser): User => {
     provider
   };
   
-  // 暫時禁用 profileStore 同步，避免初始化問題
-  // TODO: 重新啟用 profileStore 同步
-  // const profileStore = useProfileStore.getState();
-  // profileStore.updateProfile({
-  //   name: user.name,
-  //   email: user.email,
-  //   avatar: user.avatar || profileStore.profile.avatar,
-  // });
+  // 同步用戶信息到 profileStore
+  try {
+    const profileStore = useProfileStore.getState();
+    // 設置當前用戶，如果是新用戶會自動重置資料
+    profileStore.setCurrentUser(user.id);
+    // 更新用戶基本信息
+    profileStore.updateProfile({
+      name: user.name,
+      email: user.email,
+      avatar: user.avatar || profileStore.profile.avatar,
+    });
+  } catch (error) {
+    console.error('同步到 profileStore 失敗:', error);
+  }
   
   return user;
 };
@@ -122,13 +128,22 @@ export const useAuthStore = create<AuthState>()(
                 isAuthLoading: false
               });
             } else {
-              // 用戶已登出
+              // 用戶已登出 - 清除本地狀態和 profileStore
               set({
                 isLoggedIn: false,
                 user: null,
                 isLoading: false,
                 isAuthLoading: false
               });
+              
+              // 清除 profileStore 資料
+              try {
+                const profileStore = useProfileStore.getState();
+                profileStore.setCurrentUser(null);
+                console.log('✅ ProfileStore 已重置');
+              } catch (error) {
+                console.error('重置 ProfileStore 失敗:', error);
+              }
             }
           });
           
@@ -408,13 +423,18 @@ export const useAuthStore = create<AuthState>()(
             await firebaseUser.reload();
           }
           
-          // 暫時禁用 profileStore 同步，避免初始化問題
-          // TODO: 重新啟用 profileStore 同步
-          // useProfileStore.getState().updateProfile({
-          //   name: name,
-          //   email: email,
-          //   role: '影視製作人員', // 設置默認角色
-          // });
+          // 同步新用戶信息到 profileStore
+          try {
+            const profileStore = useProfileStore.getState();
+            profileStore.setCurrentUser(firebaseUser.uid);
+            profileStore.updateProfile({
+              name: name,
+              email: email,
+              role: 'user', // 設置默認角色
+            });
+          } catch (error) {
+            console.error('同步新用戶到 profileStore 失敗:', error);
+          }
           
           // 註冊成功
           set({

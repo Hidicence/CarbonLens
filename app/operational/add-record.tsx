@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { useTranslation } from '@/hooks/useTranslation';
 import {
   View,
   Text,
@@ -49,7 +50,6 @@ import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
 import { useProjectStore } from '@/store/projectStore';
 import { useThemeStore } from '@/store/themeStore';
-import { useLanguageStore } from '@/store/languageStore';
 import Colors from '@/constants/colors';
 import Header from '@/components/Header';
 import Button from '@/components/Button';
@@ -245,7 +245,7 @@ const DataQualityBadge: React.FC<{
   animated?: boolean;
   theme: any;
 }> = ({ quality, animated = true, theme }) => {
-  const { t } = useLanguageStore();
+  const { t } = useTranslation();
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const rotateAnim = useRef(new Animated.Value(0)).current;
   
@@ -344,7 +344,7 @@ const DocumentUploader: React.FC<{
   onAIAnalysis: (doc: EvidenceDocument) => Promise<void>;
   aiProcessing: AIProcessingState;
 }> = ({ documents, onDocumentsChange, theme, onAIAnalysis, aiProcessing }) => {
-  const { t } = useLanguageStore();
+  const { t } = useTranslation();
   const [uploading, setUploading] = useState(false);
   
   const pickDocument = async () => {
@@ -711,7 +711,7 @@ interface ElectricityFields {
 
 export default function AddOperationalRecordScreen() {
   const router = useRouter();
-  const { t } = useLanguageStore();
+  const { t } = useTranslation();
   const { addNonProjectEmissionRecord, projects } = useProjectStore();
   const { isDarkMode } = useThemeStore();
   const theme = isDarkMode ? Colors.dark : Colors.light;
@@ -721,6 +721,7 @@ export default function AddOperationalRecordScreen() {
   const slideAnim = useRef(new Animated.Value(50)).current;
   const scaleAnim = useRef(new Animated.Value(0.95)).current;
   const progressAnim = useRef(new Animated.Value(0)).current;
+  const [animationReady, setAnimationReady] = useState(false);
   
   // 表單狀態
   const [formData, setFormData] = useState({
@@ -944,12 +945,15 @@ export default function AddOperationalRecordScreen() {
 
   // 更新進度動畫
   React.useEffect(() => {
+    setAnimationReady(false);
     const progress = calculateProgress();
     Animated.timing(progressAnim, {
       toValue: progress,
       duration: 500,
       useNativeDriver: false,
-    }).start();
+    }).start(() => {
+      setAnimationReady(true);
+    });
   }, [formData.categoryId, formData.sourceId, formData.description, formData.quantity, formData.date, formData.isAllocated, formData.targetProjects.length]);
 
   const validateForm = () => {
@@ -1654,11 +1658,11 @@ export default function AddOperationalRecordScreen() {
         <View style={styles.progressHeader}>
           <Text style={[styles.progressLabel, { color: theme.text }]}>{t('add.record.progress.label')}</Text>
           <Animated.Text style={[styles.progressPercentage, { color: theme.primary }]}>
-            {progressAnim.interpolate({
+            {animationReady ? progressAnim.interpolate({
               inputRange: [0, 1],
               outputRange: ['0%', '100%'],
               extrapolate: 'clamp',
-            })}
+            }) : '0%'}
           </Animated.Text>
         </View>
         <View style={[styles.progressTrack, { backgroundColor: theme.border }]}>
@@ -1667,11 +1671,11 @@ export default function AddOperationalRecordScreen() {
               styles.progressBar,
               { 
                 backgroundColor: theme.primary,
-                width: progressAnim.interpolate({
+                width: animationReady ? progressAnim.interpolate({
                   inputRange: [0, 1],
                   outputRange: ['0%', '100%'],
                   extrapolate: 'clamp',
-                })
+                }) : '0%'
               }
             ]} 
           />

@@ -15,7 +15,6 @@ import {
 import { useRouter } from 'expo-router';
 import { Mail, ArrowLeft, CheckCircle } from 'lucide-react-native';
 import { useThemeStore } from '@/store/themeStore';
-import { useLanguageStore } from '@/store/languageStore';
 import { useAuthStore } from '@/store/authStore';
 import Colors from '@/constants/colors';
 import Button from '@/components/Button';
@@ -23,7 +22,7 @@ import Button from '@/components/Button';
 export default function ForgotPasswordScreen() {
   const router = useRouter();
   const { isDarkMode } = useThemeStore();
-  const { t } = useLanguageStore();
+  const { t } = useTranslation();
   const { resetPassword, isLoading, error, clearError } = useAuthStore();
   const theme = isDarkMode ? Colors.dark : Colors.light;
   

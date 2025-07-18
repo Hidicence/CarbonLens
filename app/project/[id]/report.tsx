@@ -29,7 +29,6 @@ import {
 } from 'lucide-react-native';
 import * as FileSystem from 'expo-file-system';
 import { useProjectStore } from '@/store/projectStore';
-import { useLanguageStore } from '@/store/languageStore';
 import { useThemeStore } from '@/store/themeStore';
 import Colors from '@/constants/colors';
 import Header from '@/components/Header';
@@ -41,7 +40,7 @@ import { EMISSION_CATEGORIES } from '@/mocks/projects';
 export default function ProjectReportScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { t } = useLanguageStore();
+  const { t } = useTranslation();
   const { isDarkMode } = useThemeStore();
   const theme = isDarkMode ? Colors.dark : Colors.light;
   const { projects, getProjectEmissionRecords } = useProjectStore();
@@ -61,7 +60,7 @@ export default function ProjectReportScreen() {
   const project = projects.find(p => p.id === id);
   const projectRecords = id ? getProjectEmissionRecords(id) : [];
   
-  // 模擬加載
+  // Loading simulation
   useEffect(() => {
     setIsLoading(true);
     const timer = setTimeout(() => {
@@ -96,7 +95,7 @@ export default function ProjectReportScreen() {
     try {
       setIsGenerating(true);
       
-      // 準備報告數據
+      // {t('reports.prepare.data')}
       const reportData = {
         project,
         records: projectRecords,
@@ -108,7 +107,7 @@ export default function ProjectReportScreen() {
         date: new Date().toISOString(),
       };
       
-      // 生成PDF
+      // {t('reports.generate.pdf')}
       const pdfPath = await generatePDF(reportData);
       
       setIsGenerating(false);

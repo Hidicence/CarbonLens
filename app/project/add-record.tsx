@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from '@/hooks/useTranslation';
 import { 
   View, 
   Text, 
@@ -82,7 +83,6 @@ import {
   calculateMultipleEquipmentEmissions
 } from '@/utils/helpers';
 import ARScanner from '@/components/ARScanner';
-import { useLanguageStore } from '@/store/languageStore';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -95,7 +95,7 @@ export default function AddRecordScreen() {
   }>();
   const { addProjectEmissionRecord, projects } = useProjectStore();
   const { isDarkMode } = useThemeStore();
-  const { t } = useLanguageStore();
+  const { t } = useTranslation();
   const theme = isDarkMode ? Colors.dark : Colors.light;
   
   const scrollViewRef = useRef<ScrollView>(null);

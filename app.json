@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "Carbon Tracker",
-    "slug": "carbon-tracker",
-    "version": "1.0.6",
+    "name": "CarbonLens",
+    "slug": "carbonlens",
+    "version": "1.17",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "carbon-tracker",
+    "scheme": "carbonlens",
     "userInterfaceStyle": "automatic",
     "splash": {
       "image": "./assets/images/splash-icon.png",
@@ -38,6 +38,10 @@
         "INTERNET",
         "CAMERA",
         "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "INTERNET",
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
         "WRITE_EXTERNAL_STORAGE"
       ]
     },
@@ -59,12 +63,12 @@
         "origin": false
       },
       "eas": {
-        "projectId": "80220fcd-95e7-4fcf-9c23-f3cfb22d7808"
+        "projectId": "508f14b0-fafa-4b8b-9e78-9c751a706989"
       }
     },
     "owner": "hidicence",
     "updates": {
-      "url": "https://u.expo.dev/80220fcd-95e7-4fcf-9c23-f3cfb22d7808"
+      "url": "https://u.expo.dev/508f14b0-fafa-4b8b-9e78-9c751a706989"
     }
   }
 }

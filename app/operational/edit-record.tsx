@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useTranslation } from '@/hooks/useTranslation';
 import {
   View,
   Text,
@@ -34,7 +35,6 @@ import {
 } from 'lucide-react-native';
 import { useProjectStore } from '@/store/projectStore';
 import { useThemeStore } from '@/store/themeStore';
-import { useLanguageStore } from '@/store/languageStore';
 import Colors from '@/constants/colors';
 import Header from '@/components/Header';
 import { formatEmissions } from '@/utils/helpers';
@@ -72,7 +72,7 @@ export default function EditRecordScreen() {
   const { id } = useLocalSearchParams();
   const { nonProjectEmissionRecords, projects, updateNonProjectEmissionRecord } = useProjectStore();
   const { isDarkMode } = useThemeStore();
-  const { t } = useLanguageStore();
+  const { t } = useTranslation();
   const theme = isDarkMode ? Colors.dark : Colors.light;
 
   // 找到要編輯的記錄

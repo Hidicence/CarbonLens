@@ -46,6 +46,9 @@ export default function ProjectsScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchActive, setIsSearchActive] = useState(false);
   const searchInputRef = useRef<TextInput>(null);
+  
+  // Store 已初始化檢查
+  // 由於現在 isInitialized 預設為 true，不需要額外檢查
 
   // 使用正確的計算方法計算總排放量
   const totalEmissions = useMemo(() => {
@@ -73,14 +76,14 @@ export default function ProjectsScreen() {
   ];
   
   // 計算進行中專案數量
-  const activeProjectsCount = projects.filter(p => p.status === 'active').length;
+  const activeProjectsCount = projects && Array.isArray(projects) ? projects.filter(p => p.status === 'active').length : 0;
   
   // 獲取最近30天的記錄
   const now = new Date();
   const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-  const recentRecords = allEmissionRecords.filter(record => 
+  const recentRecords = allEmissionRecords && Array.isArray(allEmissionRecords) ? allEmissionRecords.filter(record => 
     new Date(record.date) >= thirtyDaysAgo
-  );
+  ) : [];
   
   // 計算最近30天的排放量
   const recentEmissions = recentRecords.reduce((total, record) => total + record.amount, 0);
@@ -89,9 +92,9 @@ export default function ProjectsScreen() {
   const calculateTrend = () => {
     // 獲取前30天的記錄 (60-30天前)
     const sixtyDaysAgo = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
-    const previousPeriodRecords = allEmissionRecords.filter(record => 
+    const previousPeriodRecords = allEmissionRecords && Array.isArray(allEmissionRecords) ? allEmissionRecords.filter(record => 
       new Date(record.date) >= sixtyDaysAgo && new Date(record.date) < thirtyDaysAgo
-    );
+    ) : [];
     
     const previousEmissions = previousPeriodRecords.reduce((total, record) => total + record.amount, 0);
     
@@ -103,12 +106,12 @@ export default function ProjectsScreen() {
   const emissionTrend = calculateTrend();
   const isDecreasing = emissionTrend <= 0;
 
-  const filteredProjects = searchQuery && projects
+  const filteredProjects = searchQuery && projects && Array.isArray(projects)
     ? projects.filter(project => 
         (project.name && project.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
         (project.description && project.description.toLowerCase().includes(searchQuery.toLowerCase()))
       )
-    : (projects || []);
+    : (projects && Array.isArray(projects) ? projects : []);
 
   const handleAddProject = () => {
     router.push('/new-project');
@@ -135,7 +138,7 @@ export default function ProjectsScreen() {
     try {
       console.log('開始添加測試數據...');
       
-      if (projects.length > 0 || nonProjectEmissionRecords.length > 0) {
+      if ((projects && Array.isArray(projects) && projects.length > 0) || (nonProjectEmissionRecords && nonProjectEmissionRecords.length > 0)) {
         console.log('⚠️ 檢測到已有數據，請先清空所有數據再添加測試數據');
         return;
       }
@@ -243,14 +246,14 @@ export default function ProjectsScreen() {
             
             <Text style={[styles.testDataDescription, { color: theme.secondaryText }]}>
               {(() => {
-                if (projects.length === 0 && nonProjectEmissionRecords.length === 0) {
+                if ((!projects || !Array.isArray(projects) || projects.length === 0) && (!nonProjectEmissionRecords || nonProjectEmissionRecords.length === 0)) {
                   return t('home.beta.description.empty') || '新增測試數據以開始使用';
                 } else {
                   const template = t('home.beta.description.has.data') || '目前有 {projectCount} 個專案，{operationalCount} 筆營運記錄，{projectRecordCount} 筆專案記錄';
                   return template
-                    .replace('{projectCount}', projects.length.toString())
-                    .replace('{operationalCount}', nonProjectEmissionRecords.length.toString())
-                    .replace('{projectRecordCount}', projectEmissionRecords.length.toString());
+                    .replace('{projectCount}', projects && Array.isArray(projects) ? projects.length.toString() : '0')
+                    .replace('{operationalCount}', nonProjectEmissionRecords && Array.isArray(nonProjectEmissionRecords) ? nonProjectEmissionRecords.length.toString() : '0')
+                    .replace('{projectRecordCount}', projectEmissionRecords && Array.isArray(projectEmissionRecords) ? projectEmissionRecords.length.toString() : '0');
                 }
               })()}
             </Text>
@@ -356,7 +359,7 @@ export default function ProjectsScreen() {
           </View>
 
           {/* 營運排放統計概覽 */}
-          {nonProjectEmissionRecords.length > 0 && (
+          {nonProjectEmissionRecords && Array.isArray(nonProjectEmissionRecords) && nonProjectEmissionRecords.length > 0 && (
             <View style={[styles.operationalStatsContainer, { backgroundColor: theme.background }]}>
               <View style={styles.operationalStatsRow}>
                 <View style={styles.operationalStatItem}>
@@ -370,7 +373,7 @@ export default function ProjectsScreen() {
                 <View style={styles.operationalStatDivider} />
                 <View style={styles.operationalStatItem}>
                   <Text style={[styles.operationalStatValue, { color: '#F59E0B' }]}>
-                    {nonProjectEmissionRecords.filter(r => r.isAllocated).length.toString()}/{nonProjectEmissionRecords.length.toString()}
+                    {nonProjectEmissionRecords && Array.isArray(nonProjectEmissionRecords) ? nonProjectEmissionRecords.filter(r => r.isAllocated).length.toString() : '0'}/{nonProjectEmissionRecords && Array.isArray(nonProjectEmissionRecords) ? nonProjectEmissionRecords.length.toString() : '0'}
                   </Text>
                   <Text style={[styles.operationalStatLabel, { color: theme.secondaryText }]}>
                     {t('home.operational.allocated.records')}
@@ -379,7 +382,7 @@ export default function ProjectsScreen() {
                 <View style={styles.operationalStatDivider} />
                 <View style={styles.operationalStatItem}>
                   <Text style={[styles.operationalStatValue, { color: theme.primary }]}>
-                    {projects.filter(p => p.status === 'active').length.toString()}
+                    {projects && Array.isArray(projects) ? projects.filter(p => p.status === 'active').length.toString() : '0'}
                   </Text>
                   <Text style={[styles.operationalStatLabel, { color: theme.secondaryText }]}>
                     {t('home.operational.active.projects')}
@@ -411,13 +414,13 @@ export default function ProjectsScreen() {
           </View>
 
           {/* 活躍專案指示器 */}
-          {projects.filter(p => p.status === 'active').length > 0 && (
+          {projects && Array.isArray(projects) && projects.filter(p => p.status === 'active').length > 0 && (
             <View style={[styles.activeProjectsIndicator, { backgroundColor: theme.background }]}>
               <View style={styles.indicatorLeft}>
                 <View style={[styles.activeIndicatorDot, { backgroundColor: '#10B981' }]} />
                 <Text style={[styles.activeProjectsText, { color: theme.text }]}>
                   {(() => {
-                    const activeCount = projects.filter(p => p.status === 'active').length;
+                    const activeCount = projects && Array.isArray(projects) ? projects.filter(p => p.status === 'active').length : 0;
                     const indicatorText = t('home.operational.active.indicator') || '目前有 {count} 個進行中專案';
                     return indicatorText.replace('{count}', activeCount.toString());
                   })()}
@@ -515,6 +518,13 @@ export default function ProjectsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  loadingText: {
+    flex: 1,
+    textAlign: 'center',
+    textAlignVertical: 'center',
+    fontSize: 16,
+    fontWeight: '500',
   },
   // 緊湊版碳排放卡片樣式
   compactEmissionCard: {

@@ -16,7 +16,6 @@ import { useRouter } from 'expo-router';
 import { Mail, Lock, Eye, EyeOff, User, ArrowLeft } from 'lucide-react-native';
 import { useAuthStore } from '@/store/authStore';
 import { useThemeStore } from '@/store/themeStore';
-import { useLanguageStore } from '@/store/languageStore';
 import Colors from '@/constants/colors';
 import Button from '@/components/Button';
 
@@ -24,7 +23,7 @@ export default function RegisterScreen() {
   const router = useRouter();
   const { register, error, clearError, isLoading } = useAuthStore();
   const { isDarkMode } = useThemeStore();
-  const { t } = useLanguageStore();
+  const { t } = useTranslation();
   const theme = isDarkMode ? Colors.dark : Colors.light;
   
   const [name, setName] = useState('');

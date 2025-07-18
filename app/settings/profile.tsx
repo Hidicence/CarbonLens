@@ -9,8 +9,6 @@ import { useThemeStore } from '@/store/themeStore';
 import { useProfileStore } from '@/store/profileStore';
 import { useAuthStore } from '@/store/authStore';
 import Header from '@/components/Header';
-import { useLanguageStore } from '@/store/languageStore';
-
 export default function ProfileScreen() {
   const router = useRouter();
   const { isDarkMode } = useThemeStore();
@@ -18,7 +16,7 @@ export default function ProfileScreen() {
   
   const { profile, updateProfile } = useProfileStore();
   const { user } = useAuthStore();
-  const { t } = useLanguageStore();
+  const { t } = useTranslation();
   
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -47,7 +45,6 @@ export default function ProfileScreen() {
   }, [user, profile]);
   
   const handleChange = (field: string, value: string) => {
-  const { t } = useTranslation();
 
     setFormData({
       ...formData,

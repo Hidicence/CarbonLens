@@ -17,6 +17,7 @@ import {
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useThemeStore } from '@/store/themeStore';
 import { useAuthStore } from '@/store/authStore';
+import { useTranslation } from '@/hooks/useTranslation';
 import Colors from '@/constants/colors';
 import { Mail, Lock, Eye, EyeOff, Film, ArrowRight } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -37,6 +38,8 @@ export default function LoginScreen() {
   
   const { login, loginWithGoogle, logout, isLoading, error, clearError, isLoggedIn } = useAuthStore();
   console.log('authStore 已載入, isLoading:', isLoading, 'isLoggedIn:', isLoggedIn);
+  
+  const { t } = useTranslation();
   
   const theme = isDarkMode ? Colors.dark : Colors.light;
   console.log('theme 已計算:', theme.background);
@@ -81,11 +84,11 @@ export default function LoginScreen() {
   useEffect(() => {
     if (showLogoutDialog) {
       Alert.alert(
-        '已登入',
-        '您目前已經登入，是否要登出並重新登入？',
+        t('auth.already.logged.in'),
+        t('auth.already.logged.in.message'),
         [
           {
-            text: '返回主頁',
+            text: t('auth.back.to.home'),
             onPress: () => {
               setShowLogoutDialog(false);
       router.replace('/(tabs)');
@@ -93,7 +96,7 @@ export default function LoginScreen() {
             style: 'cancel'
           },
           {
-            text: '登出重新登入',
+            text: t('auth.logout.and.relogin'),
             onPress: async () => {
               setShowLogoutDialog(false);
               console.log('用戶選擇登出重新登入');
@@ -122,7 +125,7 @@ export default function LoginScreen() {
     console.log('登入按鈕被點擊');
     
     if (!email.trim() || !password.trim()) {
-      Alert.alert('錯誤', '請輸入電子郵件和密碼');
+      Alert.alert(t('common.login.error.title'), t('common.login.error.message'));
       return;
     }
 
@@ -153,12 +156,12 @@ export default function LoginScreen() {
   const handleGuestLogin = async () => {
     console.log('訪客登入被點擊');
     Alert.alert(
-      '訪客模式', 
-      '訪客模式僅供體驗使用，數據不會保存。建議註冊帳戶以完整使用功能。',
+      t('auth.guest.mode'), 
+      t('auth.guest.mode.warning'),
       [
-        { text: '取消', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         { 
-          text: '繼續', 
+          text: t('auth.continue'), 
           onPress: async () => {
             try {
               const success = await login('guest@example.com', 'guest123', false);
@@ -212,15 +215,15 @@ export default function LoginScreen() {
             </View>
             <Text style={[styles.appName, { color: theme.text }]}>CarbonLens</Text>
             <Text style={[styles.tagline, { color: theme.secondaryText }]}>
-              專為影視製作行業設計的碳足跡追蹤與管理工具
+              {t('auth.tagline')}
             </Text>
           </View>
 
           {/* 登入表單 */}
           <View style={[styles.formContainer, { backgroundColor: theme.card }]}>
-            <Text style={[styles.formTitle, { color: theme.text }]}>歡迎回來</Text>
+            <Text style={[styles.formTitle, { color: theme.text }]}>{t('auth.welcome.back')}</Text>
             <Text style={[styles.formSubtitle, { color: theme.secondaryText }]}>
-              請登入您的帳戶以繼續使用
+              {t('auth.login.subtitle')}
             </Text>
             
 
@@ -233,7 +236,7 @@ export default function LoginScreen() {
                 <Mail size={20} color={theme.secondaryText} style={styles.inputIcon} />
                 <TextInput
                   style={[styles.textInput, { color: theme.text }]}
-                  placeholder="電子郵件"
+                  placeholder={t('auth.email')}
                   placeholderTextColor={theme.secondaryText}
                   value={email}
                   onChangeText={setEmail}
@@ -253,7 +256,7 @@ export default function LoginScreen() {
                 <Lock size={20} color={theme.secondaryText} style={styles.inputIcon} />
                 <TextInput
                   style={[styles.textInput, { color: theme.text, flex: 1 }]}
-                  placeholder="密碼"
+                  placeholder={t('auth.password')}
                   placeholderTextColor={theme.secondaryText}
                   value={password}
                   onChangeText={setPassword}
@@ -286,10 +289,10 @@ export default function LoginScreen() {
                 }]}>
                   {rememberMe && <Check size={12} color="white" />}
                 </View>
-                <Text style={[styles.rememberMeText, { color: theme.secondaryText }]}>記住我</Text>
+                <Text style={[styles.rememberMeText, { color: theme.secondaryText }]}>{t('auth.remember.me')}</Text>
               </TouchableOpacity>
               <TouchableOpacity onPress={() => router.push('/forgot-password')}>
-                <Text style={[styles.forgotPassword, { color: theme.primary }]}>忘記密碼?</Text>
+                <Text style={[styles.forgotPassword, { color: theme.primary }]}>{t('auth.forgot.password')}</Text>
               </TouchableOpacity>
             </View>
 
@@ -303,7 +306,7 @@ export default function LoginScreen() {
                 <ActivityIndicator color="white" />
               ) : (
                 <>
-                  <Text style={styles.loginButtonText}>登入</Text>
+                  <Text style={styles.loginButtonText}>{t('auth.login')}</Text>
                   <ArrowRight size={20} color="white" />
                 </>
               )}
@@ -312,7 +315,7 @@ export default function LoginScreen() {
             {/* 分隔線 */}
             <View style={styles.dividerContainer}>
               <View style={[styles.divider, { backgroundColor: theme.border }]} />
-              <Text style={[styles.dividerText, { color: theme.secondaryText }]}>或</Text>
+              <Text style={[styles.dividerText, { color: theme.secondaryText }]}>{t('common.or')}</Text>
               <View style={[styles.divider, { backgroundColor: theme.border }]} />
             </View>
             
@@ -327,7 +330,7 @@ export default function LoginScreen() {
                 disabled={isLoading}
               >
                 <Ionicons name="logo-google" size={24} color="white" />
-                <Text style={[styles.googleButtonText]}>使用 Google 登入</Text>
+                <Text style={[styles.googleButtonText]}>{t('auth.login.with.google')}</Text>
               </TouchableOpacity>
               <TouchableOpacity 
                 style={[styles.socialButton, { backgroundColor: theme.background, borderColor: theme.border }]}
@@ -335,7 +338,7 @@ export default function LoginScreen() {
                 disabled={isLoading}
               >
                 <Ionicons name="person-circle-outline" size={24} color={theme.text} />
-                <Text style={[styles.socialButtonText, { color: theme.text }]}>訪客體驗</Text>
+                <Text style={[styles.socialButtonText, { color: theme.text }]}>{t('auth.guest.experience')}</Text>
               </TouchableOpacity>
             </View>
 
@@ -350,10 +353,10 @@ export default function LoginScreen() {
           {/* 註冊提示 */}
           <View style={styles.registerContainer}>
             <Text style={[styles.registerText, { color: theme.secondaryText }]}>
-              還沒有帳號？{' '}
+              {t('auth.no.account')}{' '}
             </Text>
             <TouchableOpacity onPress={() => router.push('/register')}>
-              <Text style={[styles.registerLink, { color: theme.primary }]}>立即註冊</Text>
+              <Text style={[styles.registerLink, { color: theme.primary }]}>{t('auth.register.now')}</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
